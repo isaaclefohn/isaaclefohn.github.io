@@ -246,10 +246,11 @@
     <div class="container">
         <div class="download-btn">
             <a href="Isaac_Lefohn_Resume.pdf" download class="btn btn-primary">Download PDF Resume</a>
+            <a href="Isaac_Lefohn_Resume.pdf" target="_blank" class="btn btn-primary mobile-view-btn" style="display:none; margin-left: 12px;">View Resume</a>
         </div>
 
-        <!-- Resume PDF Embed -->
-        <div style="max-width: 900px; margin: 0 auto;">
+        <!-- Resume PDF Embed — desktop only -->
+        <div class="pdf-embed-wrapper" style="max-width: 900px; margin: 0 auto;">
             <iframe src="Isaac_Lefohn_Resume.pdf" width="100%" height="1100px"
                 style="border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: block;"
                 title="Isaac Lefohn Resume">
@@ -257,7 +258,20 @@
                 <a href="Isaac_Lefohn_Resume.pdf">Download the PDF</a> to view it.</p>
             </iframe>
         </div>
+
+        <!-- Mobile fallback message -->
+        <div class="mobile-resume-msg" style="display:none; max-width: 600px; margin: 0 auto; text-align: center; padding: 40px 20px;">
+            <p style="color:#555; font-size:1em; margin-bottom: 20px;">For the best viewing experience, use the buttons above to download or open the PDF.</p>
+        </div>
     </div>
+
+    <style>
+        @media (max-width: 768px) {
+            .pdf-embed-wrapper { display: none !important; }
+            .mobile-resume-msg { display: block !important; }
+            .mobile-view-btn { display: inline-block !important; }
+        }
+    </style>
 
     <!-- Footer -->
     <footer>
