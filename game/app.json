@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Block Blitz",
+    "slug": "block-blitz",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.isaaclefohn.blockblitz",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a1a2e"
+      },
+      "package": "com.isaaclefohn.blockblitz"
+    },
+    "plugins": [
+      "expo-haptics",
+      "expo-av"
+    ]
+  }
+}
