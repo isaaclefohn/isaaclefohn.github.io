@@ -66,6 +66,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           )}
 
           <Button
+            title="Daily Challenge"
+            onPress={() => navigation.navigate('DailyChallenge')}
+            variant="secondary"
+            size="medium"
+            style={styles.menuButton}
+          />
+
+          <Button
             title="Level Select"
             onPress={() => navigation.navigate('LevelSelect')}
             variant="secondary"
@@ -73,13 +81,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             style={styles.menuButton}
           />
 
-          <Button
-            title="Settings"
-            onPress={() => navigation.navigate('Settings')}
-            variant="ghost"
-            size="medium"
-            style={styles.menuButton}
-          />
+          <View style={styles.bottomRow}>
+            <Button
+              title="Shop"
+              onPress={() => navigation.navigate('Shop')}
+              variant="ghost"
+              size="medium"
+            />
+            <Button
+              title="Settings"
+              onPress={() => navigation.navigate('Settings')}
+              variant="ghost"
+              size="medium"
+            />
+          </View>
         </View>
 
         {/* Level indicator */}
@@ -162,6 +177,11 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     width: '80%',
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 4,
   },
   levelIndicator: {
     fontSize: 13,
