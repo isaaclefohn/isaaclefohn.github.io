@@ -1,30 +1,16 @@
 /**
  * Ad management service for Color Block Blast.
- * Wraps react-native-google-mobile-ads with frequency capping and ad-free detection.
- * Falls back gracefully when ads fail to load.
+ * Handles frequency capping and ad-free detection.
+ *
+ * In Expo Go (development), ads are simulated.
+ * In production builds, wire in react-native-google-mobile-ads.
  */
 
 import { usePlayerStore } from '../store/playerStore';
+import Constants from 'expo-constants';
 
-// Lazy-load the ads SDK to avoid crashes if not configured
-let MobileAds: typeof import('react-native-google-mobile-ads').default | null = null;
-let RewardedAd: typeof import('react-native-google-mobile-ads').RewardedAd | null = null;
-let InterstitialAd: typeof import('react-native-google-mobile-ads').InterstitialAd | null = null;
-let AdEventType: typeof import('react-native-google-mobile-ads').AdEventType | null = null;
-let RewardedAdEventType: typeof import('react-native-google-mobile-ads').RewardedAdEventType | null = null;
-
-let sdkInitialized = false;
-
-try {
-  const ads = require('react-native-google-mobile-ads');
-  MobileAds = ads.default;
-  RewardedAd = ads.RewardedAd;
-  InterstitialAd = ads.InterstitialAd;
-  AdEventType = ads.AdEventType;
-  RewardedAdEventType = ads.RewardedAdEventType;
-} catch {
-  // SDK not available — ads will be disabled
-}
+// Detect if running in Expo Go (no native ad support)
+const isExpoGo = Constants.appOwnership === 'expo';
 
 // Ad unit IDs (env vars with test ID fallbacks)
 const REWARDED_AD_ID =
@@ -44,13 +30,8 @@ let levelsCompletedSinceAd = 0;
 
 /** Initialize the Mobile Ads SDK. Call once at app startup. */
 export async function initializeAds(): Promise<void> {
-  if (sdkInitialized || !MobileAds) return;
-  try {
-    await MobileAds().initialize();
-    sdkInitialized = true;
-  } catch {
-    // Initialization failed — ads stay disabled
-  }
+  if (isExpoGo) return; // Ads not available in Expo Go
+  // In production builds, initialize the ads SDK here
 }
 
 /** Check if ads should be shown (respects ad-free purchase) */
@@ -71,7 +52,7 @@ export function onLevelCompleted(): boolean {
   ) {
     levelsCompletedSinceAd = 0;
     lastInterstitialTime = now;
-    return true; // Show interstitial
+    return true;
   }
 
   return false;
@@ -97,85 +78,26 @@ export function onRewardedShown(): void {
 
 /**
  * Show a rewarded ad. Returns true if the user earned the reward.
- * Returns false if the ad failed to load or user dismissed early.
+ * In Expo Go, simulates a successful ad view.
  */
-export function showRewardedAd(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (!RewardedAd || !AdEventType || !RewardedAdEventType || !sdkInitialized) {
-      resolve(false);
-      return;
-    }
-
-    const ad = RewardedAd.createForAdRequest(REWARDED_AD_ID);
-    let earned = false;
-
-    const unsubscribeLoaded = ad.addAdEventListener(AdEventType.LOADED, () => {
-      ad.show();
-    });
-
-    const unsubscribeEarned = ad.addAdEventListener(
-      RewardedAdEventType.EARNED_REWARD,
-      () => {
-        earned = true;
-        onRewardedShown();
-      }
-    );
-
-    const unsubscribeClosed = ad.addAdEventListener(AdEventType.CLOSED, () => {
-      cleanup();
-      resolve(earned);
-    });
-
-    const unsubscribeError = ad.addAdEventListener(AdEventType.ERROR, () => {
-      cleanup();
-      resolve(false);
-    });
-
-    function cleanup() {
-      unsubscribeLoaded();
-      unsubscribeEarned();
-      unsubscribeClosed();
-      unsubscribeError();
-    }
-
-    ad.load();
-  });
+export async function showRewardedAd(): Promise<boolean> {
+  if (isExpoGo) {
+    // Simulate ad in development
+    onRewardedShown();
+    return true;
+  }
+  // Production: wire in react-native-google-mobile-ads here
+  return false;
 }
 
 /**
  * Show an interstitial ad. Returns true if shown successfully.
+ * In Expo Go, returns immediately.
  */
-export function showInterstitialAd(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (!InterstitialAd || !AdEventType || !sdkInitialized) {
-      resolve(false);
-      return;
-    }
-
-    const ad = InterstitialAd.createForAdRequest(INTERSTITIAL_AD_ID);
-
-    const unsubscribeLoaded = ad.addAdEventListener(AdEventType.LOADED, () => {
-      ad.show();
-    });
-
-    const unsubscribeClosed = ad.addAdEventListener(AdEventType.CLOSED, () => {
-      cleanup();
-      resolve(true);
-    });
-
-    const unsubscribeError = ad.addAdEventListener(AdEventType.ERROR, () => {
-      cleanup();
-      resolve(false);
-    });
-
-    function cleanup() {
-      unsubscribeLoaded();
-      unsubscribeClosed();
-      unsubscribeError();
-    }
-
-    ad.load();
-  });
+export async function showInterstitialAd(): Promise<boolean> {
+  if (isExpoGo) return true;
+  // Production: wire in react-native-google-mobile-ads here
+  return false;
 }
 
 /** Get ad unit IDs */
@@ -186,9 +108,6 @@ export function getAdIds() {
   };
 }
 
-/**
- * Reward types that can be granted from watching an ad.
- */
 export type AdRewardType = 'coins' | 'extraLife' | 'powerup';
 
 export interface AdReward {

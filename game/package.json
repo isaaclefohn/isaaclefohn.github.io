@@ -17,6 +17,7 @@
     "@react-navigation/native-stack": "^7.14.10",
     "@shopify/react-native-skia": "2.2.12",
     "@supabase/supabase-js": "^2.101.0",
+    "babel-preset-expo": "^55.0.13",
     "expo": "~54.0.33",
     "expo-apple-authentication": "~8.0.8",
     "expo-av": "~16.0.8",
