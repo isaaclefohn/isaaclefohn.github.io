@@ -14,7 +14,9 @@ import {
 } from '../game/engine/GameLoop';
 import { Piece } from '../game/engine/Piece';
 import { SeededRandom } from '../utils/seededRandom';
-import { ScoreEvent } from '../game/engine/Scoring';
+import { ScoreEvent, scorePlacement } from '../game/engine/Scoring';
+import { PowerUpType, applyBomb, applyRowClear, applyColorClear } from '../game/powerups/PowerUpManager';
+import { isGameOver } from '../game/engine/GameOver';
 
 interface GameStore {
   // State
@@ -27,6 +29,7 @@ interface GameStore {
   startLevel: (config: LevelConfig) => void;
   selectPiece: (index: number | null) => void;
   placePiece: (pieceIndex: number, row: number, col: number) => boolean;
+  applyPowerUp: (type: PowerUpType, row: number, col: number, colorIndex?: number) => { cellsCleared: number } | null;
   pauseGame: () => void;
   resumeGame: () => void;
   resetLevel: () => void;
@@ -75,6 +78,48 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch {
       return false;
     }
+  },
+
+  applyPowerUp: (type: PowerUpType, row: number, col: number, colorIndex?: number) => {
+    const { gameState } = get();
+    if (!gameState || gameState.status !== 'playing') return null;
+
+    let result: { grid: number[][]; cellsCleared: number };
+
+    switch (type) {
+      case 'bomb':
+        result = applyBomb(gameState.grid, row, col);
+        break;
+      case 'rowClear':
+        result = applyRowClear(gameState.grid, row);
+        break;
+      case 'colorClear':
+        result = applyColorClear(gameState.grid, colorIndex ?? gameState.grid[row][col]);
+        break;
+      default:
+        return null;
+    }
+
+    if (result.cellsCleared === 0) return null;
+
+    const scoreEvent = scorePlacement(result.cellsCleared);
+    const newScore = gameState.score + scoreEvent.points;
+
+    // Re-check game state after power-up
+    const remainingPieces = gameState.availablePieces.filter((p): p is Piece => p !== null);
+    const gameOver = remainingPieces.length > 0 && isGameOver(result.grid, remainingPieces);
+
+    set({
+      gameState: {
+        ...gameState,
+        grid: result.grid,
+        score: newScore,
+        status: gameOver ? 'lost' : gameState.status,
+        lastScoreEvent: scoreEvent,
+      },
+    });
+
+    return { cellsCleared: result.cellsCleared };
   },
 
   pauseGame: () => {

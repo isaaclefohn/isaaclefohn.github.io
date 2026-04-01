@@ -2,10 +2,11 @@
  * Home screen — main menu for Block Blitz.
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { usePlayerStore } from '../store/playerStore';
 import { Button } from '../components/common/Button';
+import { Tutorial } from '../components/Tutorial';
 import { COLORS } from '../utils/constants';
 import { formatScore, formatCompact } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +18,11 @@ type HomeScreenProps = {
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { highestLevel, coins, gems, totalScore } = usePlayerStore();
+  const [showTutorial, setShowTutorial] = useState(highestLevel === 0);
+
+  const handleTutorialComplete = useCallback(() => {
+    setShowTutorial(false);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -110,6 +116,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </Text>
         )}
       </View>
+
+      {/* Tutorial overlay for first-time players */}
+      {showTutorial && <Tutorial onComplete={handleTutorialComplete} />}
     </SafeAreaView>
   );
 };

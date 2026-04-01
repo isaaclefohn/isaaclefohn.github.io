@@ -8,18 +8,30 @@ import { usePlayerStore } from '../store/playerStore';
 import { COLORS } from '../utils/constants';
 import { formatCompact } from '../utils/formatters';
 
-export const CurrencyDisplay: React.FC = () => {
-  const { coins, gems } = usePlayerStore();
+interface CurrencyDisplayProps {
+  coins?: number;
+  gems?: number;
+  compact?: boolean;
+}
+
+export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
+  coins: coinsProp,
+  gems: gemsProp,
+  compact = false,
+}) => {
+  const store = usePlayerStore();
+  const coins = coinsProp ?? store.coins;
+  const gems = gemsProp ?? store.gems;
 
   return (
     <View style={styles.container}>
-      <View style={styles.currencyItem}>
-        <Text style={styles.icon}>{'\uD83E\uDE99'}</Text>
-        <Text style={styles.value}>{formatCompact(coins)}</Text>
+      <View style={[styles.currencyItem, compact && styles.compactItem]}>
+        <Text style={[styles.icon, compact && styles.compactIcon]}>{'\uD83E\uDE99'}</Text>
+        <Text style={[styles.value, compact && styles.compactValue]}>{formatCompact(coins)}</Text>
       </View>
-      <View style={styles.currencyItem}>
-        <Text style={styles.icon}>{'\uD83D\uDC8E'}</Text>
-        <Text style={styles.value}>{formatCompact(gems)}</Text>
+      <View style={[styles.currencyItem, compact && styles.compactItem]}>
+        <Text style={[styles.icon, compact && styles.compactIcon]}>{'\uD83D\uDC8E'}</Text>
+        <Text style={[styles.value, compact && styles.compactValue]}>{formatCompact(gems)}</Text>
       </View>
     </View>
   );
@@ -39,12 +51,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     gap: 4,
   },
+  compactItem: {
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    gap: 3,
+  },
   icon: {
     fontSize: 14,
+  },
+  compactIcon: {
+    fontSize: 12,
   },
   value: {
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.accentGold,
+  },
+  compactValue: {
+    fontSize: 12,
   },
 });

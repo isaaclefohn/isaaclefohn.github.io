@@ -1,24 +1,26 @@
 /**
  * Core gameplay screen for Block Blitz.
- * Composes the game board, piece tray, score display, and game-over/win modals.
+ * Composes the game board, piece tray, score display, power-ups, and modals.
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { useGameEngine } from '../hooks/useGameEngine';
 import { useSound } from '../hooks/useSound';
-import { useDragAndDrop } from '../hooks/useDragAndDrop';
+import { usePlayerStore } from '../store/playerStore';
 import { GameBoard } from '../components/GameBoard';
 import { PieceTray } from '../components/PieceTray';
 import { ScoreDisplay } from '../components/ScoreDisplay';
+import { PowerUpBar } from '../components/PowerUpBar';
+import { CurrencyDisplay } from '../components/CurrencyDisplay';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
 import { Piece } from '../game/engine/Piece';
-import { canPlace } from '../game/engine/Board';
-import { getPieceCells } from '../game/engine/Piece';
+import { PowerUpType } from '../game/powerups/PowerUpManager';
 import { COLORS } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 import { calculateCoinReward } from '../game/engine/Scoring';
+import { canShowRewarded, onLevelCompleted, AD_REWARDS } from '../services/ads';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -38,12 +40,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     loadLevel,
     selectPiece,
     placePiece,
+    applyPowerUp,
+    pauseGame,
+    resumeGame,
     resetLevel,
   } = useGameEngine();
 
   const { playSound } = useSound();
+  const { powerUps, usePowerUp, coins, gems, addCoins } = usePlayerStore();
+
   const [showWinModal, setShowWinModal] = useState(false);
   const [showLoseModal, setShowLoseModal] = useState(false);
+  const [showPauseMenu, setShowPauseMenu] = useState(false);
+  const [activePowerUp, setActivePowerUp] = useState<PowerUpType | null>(null);
 
   // Ghost preview state
   const [ghostCells, setGhostCells] = useState<{ row: number; col: number; colorIndex: number }[]>([]);
@@ -58,6 +67,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     if (gameState?.status === 'won') {
       playSound('levelWin');
       setShowWinModal(true);
+      // Check if interstitial ad should show after win
+      onLevelCompleted();
     } else if (gameState?.status === 'lost') {
       playSound('gameOver');
       setShowLoseModal(true);
@@ -76,6 +87,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   }, [gameState?.lastScoreEvent, playSound]);
 
   const handleSelectPiece = useCallback((index: number) => {
+    // Deactivate power-up if selecting a piece
+    setActivePowerUp(null);
+
     if (selectedPieceIndex === index) {
       selectPiece(null);
       setGhostCells([]);
@@ -87,18 +101,58 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   }, [selectedPieceIndex, selectPiece, playSound]);
 
   const handleCellTap = useCallback((row: number, col: number) => {
-    if (selectedPieceIndex === null || !gameState) return;
+    if (!gameState) return;
+
+    // If a power-up is active, apply it instead of placing a piece
+    if (activePowerUp) {
+      const success = usePowerUp(activePowerUp);
+      if (success) {
+        const result = applyPowerUp(activePowerUp, row, col);
+        if (result) {
+          playSound('clear');
+          setActivePowerUp(null);
+          return;
+        }
+      }
+      setActivePowerUp(null);
+      return;
+    }
+
+    // Normal piece placement
+    if (selectedPieceIndex === null) return;
 
     const success = placePiece(selectedPieceIndex, row, col);
     if (success) {
       playSound('place');
       setGhostCells([]);
     }
-  }, [selectedPieceIndex, gameState, placePiece, playSound]);
+  }, [selectedPieceIndex, gameState, placePiece, activePowerUp, applyPowerUp, usePowerUp, playSound]);
 
   const handleBoardLayout = useCallback((_x: number, _y: number) => {
     // Board position tracked for future drag-and-drop
   }, []);
+
+  const handleActivatePowerUp = useCallback((type: PowerUpType) => {
+    if (activePowerUp === type) {
+      setActivePowerUp(null);
+    } else {
+      // Deselect piece when activating power-up
+      selectPiece(null);
+      setGhostCells([]);
+      setActivePowerUp(type);
+      playSound('select');
+    }
+  }, [activePowerUp, selectPiece, playSound]);
+
+  const handlePause = useCallback(() => {
+    pauseGame();
+    setShowPauseMenu(true);
+  }, [pauseGame]);
+
+  const handleResume = useCallback(() => {
+    setShowPauseMenu(false);
+    resumeGame();
+  }, [resumeGame]);
 
   const handleNextLevel = useCallback(() => {
     setShowWinModal(false);
@@ -108,12 +162,23 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const handleRetry = useCallback(() => {
     setShowLoseModal(false);
     setShowWinModal(false);
+    setShowPauseMenu(false);
+    setActivePowerUp(null);
     resetLevel();
   }, [resetLevel]);
 
   const handleHome = useCallback(() => {
     navigation.navigate('Home');
   }, [navigation]);
+
+  const handleWatchAd = useCallback(() => {
+    // In production, this would show a real rewarded ad via AdMob
+    // For now, grant the reward directly (will be wired to AdMob later)
+    if (canShowRewarded()) {
+      addCoins(AD_REWARDS.coins.amount);
+      playSound('select');
+    }
+  }, [addCoins, playSound]);
 
   if (!gameState || !levelConfig) {
     return (
@@ -126,12 +191,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const selectedPiece: Piece | null =
     selectedPieceIndex !== null ? (gameState.availablePieces[selectedPieceIndex] ?? null) : null;
 
+  const isPowerUpMode = activePowerUp !== null;
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Button title="Back" onPress={handleHome} variant="ghost" size="small" />
-        <Button title="Retry" onPress={handleRetry} variant="ghost" size="small" />
+        <CurrencyDisplay coins={coins} gems={gems} compact />
+        <Button title="Pause" onPress={handlePause} variant="ghost" size="small" />
       </View>
 
       {/* Score display */}
@@ -143,24 +211,55 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         stars={stars}
       />
 
+      {/* Power-up targeting hint */}
+      {isPowerUpMode && (
+        <View style={styles.powerUpHint}>
+          <Text style={styles.powerUpHintText}>
+            Tap the board to use {activePowerUp === 'bomb' ? 'Bomb' : activePowerUp === 'rowClear' ? 'Row Clear' : 'Color Clear'}
+          </Text>
+        </View>
+      )}
+
       {/* Game board */}
       <View style={styles.boardContainer}>
         <GameBoard
           grid={gameState.grid}
           gridSize={gameState.gridSize}
-          selectedPiece={selectedPiece}
+          selectedPiece={isPowerUpMode ? null : selectedPiece}
           ghostCells={ghostCells}
           onCellTap={handleCellTap}
           onBoardLayout={handleBoardLayout}
         />
       </View>
 
+      {/* Power-up bar */}
+      <PowerUpBar
+        inventory={powerUps}
+        activePowerUp={activePowerUp}
+        onActivate={handleActivatePowerUp}
+        disabled={gameState.status !== 'playing'}
+      />
+
       {/* Piece tray */}
       <PieceTray
         pieces={gameState.availablePieces}
-        selectedIndex={selectedPieceIndex}
+        selectedIndex={isPowerUpMode ? null : selectedPieceIndex}
         onSelectPiece={handleSelectPiece}
       />
+
+      {/* Pause Menu */}
+      <Modal visible={showPauseMenu} onClose={handleResume} dismissable>
+        <Text style={styles.modalTitle}>Paused</Text>
+        <View style={styles.pauseStats}>
+          <Text style={styles.pauseStatText}>Level {gameState.level}</Text>
+          <Text style={styles.pauseStatText}>Score: {formatScore(gameState.score)}</Text>
+        </View>
+        <View style={styles.modalButtons}>
+          <Button title="Resume" onPress={handleResume} variant="primary" size="medium" />
+          <Button title="Restart" onPress={handleRetry} variant="secondary" size="medium" />
+          <Button title="Quit to Menu" onPress={handleHome} variant="ghost" size="small" />
+        </View>
+      </Modal>
 
       {/* Win Modal */}
       <Modal visible={showWinModal} onClose={() => {}} dismissable={false}>
@@ -193,6 +292,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         </Text>
         <View style={styles.modalButtons}>
           <Button title="Try Again" onPress={handleRetry} variant="primary" size="medium" />
+          {canShowRewarded() && (
+            <Button
+              title={`Watch Ad (+${AD_REWARDS.coins.amount} coins)`}
+              onPress={handleWatchAd}
+              variant="secondary"
+              size="medium"
+            />
+          )}
           <Button title="Home" onPress={handleHome} variant="ghost" size="small" />
         </View>
       </Modal>
@@ -208,6 +315,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingTop: 4,
   },
@@ -221,6 +329,27 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     marginTop: 100,
+  },
+  powerUpHint: {
+    alignItems: 'center',
+    paddingVertical: 6,
+    backgroundColor: `${COLORS.accentGold}20`,
+    marginHorizontal: 16,
+    borderRadius: 8,
+  },
+  powerUpHintText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.accentGold,
+  },
+  pauseStats: {
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 20,
+  },
+  pauseStatText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
   },
   modalTitle: {
     fontSize: 28,
