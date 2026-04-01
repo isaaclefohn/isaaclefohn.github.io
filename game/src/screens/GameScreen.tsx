@@ -15,6 +15,8 @@ import { PowerUpBar } from '../components/PowerUpBar';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
+import { ScorePopup } from '../components/animations/ScorePopup';
+import { ComboBanner } from '../components/animations/ComboBanner';
 import { Piece } from '../game/engine/Piece';
 import { PowerUpType } from '../game/powerups/PowerUpManager';
 import { COLORS } from '../utils/constants';
@@ -53,6 +55,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [showLoseModal, setShowLoseModal] = useState(false);
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   const [activePowerUp, setActivePowerUp] = useState<PowerUpType | null>(null);
+  const [showScorePopup, setShowScorePopup] = useState(false);
+  const [showComboBanner, setShowComboBanner] = useState(false);
+  const [lastPoints, setLastPoints] = useState(0);
+  const [lastCombo, setLastCombo] = useState(0);
 
   // Ghost preview state
   const [ghostCells, setGhostCells] = useState<{ row: number; col: number; colorIndex: number }[]>([]);
@@ -75,12 +81,20 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     }
   }, [gameState?.status, playSound]);
 
-  // Handle score events for sound
+  // Handle score events for sound and animations
   useEffect(() => {
     if (gameState?.lastScoreEvent) {
-      if (gameState.lastScoreEvent.combo > 1) {
+      const event = gameState.lastScoreEvent;
+
+      // Trigger score popup
+      setLastPoints(event.points);
+      setLastCombo(event.combo);
+      setShowScorePopup(true);
+
+      if (event.combo > 1) {
         playSound('combo');
-      } else if (gameState.lastScoreEvent.breakdown.clearBonus > 0) {
+        setShowComboBanner(true);
+      } else if (event.breakdown.clearBonus > 0) {
         playSound('clear');
       }
     }
@@ -229,6 +243,20 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           ghostCells={ghostCells}
           onCellTap={handleCellTap}
           onBoardLayout={handleBoardLayout}
+        />
+
+        {/* Score popup animation */}
+        <ScorePopup
+          points={lastPoints}
+          combo={lastCombo}
+          visible={showScorePopup}
+          onComplete={() => setShowScorePopup(false)}
+        />
+
+        {/* Combo banner animation */}
+        <ComboBanner
+          combo={lastCombo}
+          visible={showComboBanner}
         />
       </View>
 
