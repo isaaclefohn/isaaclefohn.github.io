@@ -11,6 +11,7 @@ import { LevelSelectScreen } from '../screens/LevelSelectScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { DailyChallengeScreen } from '../screens/DailyChallengeScreen';
+import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   Settings: undefined;
   Shop: undefined;
   DailyChallenge: undefined;
+  Leaderboard: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -40,6 +42,7 @@ export const RootNavigator: React.FC = () => {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Shop" component={ShopScreen} />
         <Stack.Screen name="DailyChallenge" component={DailyChallengeScreen} />
+        <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

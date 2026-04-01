@@ -89,6 +89,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               size="medium"
             />
             <Button
+              title="Rankings"
+              onPress={() => navigation.navigate('Leaderboard')}
+              variant="ghost"
+              size="medium"
+            />
+            <Button
               title="Settings"
               onPress={() => navigation.navigate('Settings')}
               variant="ghost"
