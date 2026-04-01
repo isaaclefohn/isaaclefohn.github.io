@@ -45,7 +45,7 @@ export const useSettingsStore = create<SettingsStore>()(
       toggleGhostPreview: () => set((s) => ({ showGhostPreview: !s.showGhostPreview })),
     }),
     {
-      name: 'block-blitz-settings',
+      name: 'color-block-blast-settings',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

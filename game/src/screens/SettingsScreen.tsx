@@ -85,7 +85,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
         </View>
 
         {/* Version */}
-        <Text style={styles.version}>Block Blitz v1.0.0</Text>
+        <Text style={styles.version}>Color Block Blast v1.0.0</Text>
       </View>
     </SafeAreaView>
   );

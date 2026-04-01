@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Block Blitz",
-    "slug": "block-blitz",
+    "name": "Color Block Blast",
+    "slug": "color-block-blast",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.isaaclefohn.blockblitz",
+      "bundleIdentifier": "com.isaaclefohn.colorblockblast",
       "buildNumber": "1"
     },
     "android": {
@@ -22,11 +22,17 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1a1a2e"
       },
-      "package": "com.isaaclefohn.blockblitz"
+      "package": "com.isaaclefohn.colorblockblast"
     },
     "plugins": [
       "expo-haptics",
-      "expo-av"
+      "expo-av",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "iosAppId": "ca-app-pub-9923892524770034~9844822777"
+        }
+      ]
     ]
   }
 }

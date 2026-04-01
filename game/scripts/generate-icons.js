@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * App icon and splash screen generator for Block Blitz.
+ * App icon and splash screen generator for Color Block Blast.
  *
  * Prerequisites:
  *   npm install sharp
@@ -76,7 +76,7 @@ function createIconSVG(size) {
     <rect width="${size}" height="${size}" rx="${Math.floor(size * 0.22)}" fill="url(#bg)"/>
     <circle cx="${size / 2}" cy="${size * 0.45}" r="${size * 0.35}" fill="url(#glow)"/>
     ${blocks}
-    <text x="${size / 2}" y="${textY}" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="${fontSize}" fill="${GOLD}" letter-spacing="${Math.floor(fontSize * 0.1)}">BLITZ</text>
+    <text x="${size / 2}" y="${textY}" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="${fontSize}" fill="${GOLD}" letter-spacing="${Math.floor(fontSize * 0.1)}">BLAST</text>
   </svg>`;
 }
 

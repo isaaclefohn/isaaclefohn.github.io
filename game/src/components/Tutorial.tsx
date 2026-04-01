@@ -15,7 +15,7 @@ interface TutorialStep {
 
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    title: 'Welcome to Block Blitz!',
+    title: 'Welcome to Color Block Blast!',
     description: 'Place blocks on the grid to fill complete rows or columns. Cleared lines score points!',
     emoji: '\uD83C\uDFAE',
   },

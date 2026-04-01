@@ -158,7 +158,7 @@ export const usePlayerStore = create<PlayerStore>()(
       setDisplayName: (name) => set({ displayName: name }),
     }),
     {
-      name: 'block-blitz-player',
+      name: 'color-block-blast-player',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

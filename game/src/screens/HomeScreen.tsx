@@ -29,8 +29,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <View style={styles.content}>
         {/* Title */}
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>BLOCK</Text>
-          <Text style={styles.titleAccent}>BLITZ</Text>
+          <Text style={styles.title}>COLOR BLOCK</Text>
+          <Text style={styles.titleAccent}>BLAST</Text>
         </View>
 
         {/* Stats bar */}

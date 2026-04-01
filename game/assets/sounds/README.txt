@@ -1,4 +1,4 @@
-Block Blitz Sound Effects
+Color Block Blast Sound Effects
 =========================
 
 Add the following .mp3 files to this directory, then uncomment the
