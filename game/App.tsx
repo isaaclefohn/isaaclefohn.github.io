@@ -3,9 +3,6 @@
  * Sets up gesture handler, navigation, ads SDK, and status bar.
  */
 
-// MUST be first import — initializes the Reanimated runtime
-import 'react-native-reanimated';
-
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
