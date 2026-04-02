@@ -1,5 +1,5 @@
 /**
- * Renders a single piece in the piece tray.
+ * Premium piece renderer with 3D block style matching the board.
  * Uses standard React Native Views (Expo Go compatible).
  */
 
@@ -17,8 +17,10 @@ interface PieceRendererProps {
 }
 
 const BLOCK_COLORS = COLORS.blocks;
+const BLOCK_LIGHT = COLORS.blocksLight;
+const BLOCK_DARK = COLORS.blocksDark;
 const TRAY_CELL_SIZE = 28;
-const TRAY_GAP = 2;
+const TRAY_GAP = 3;
 
 export const PieceRenderer: React.FC<PieceRendererProps> = ({
   piece,
@@ -34,7 +36,10 @@ export const PieceRenderer: React.FC<PieceRendererProps> = ({
   const { width, height } = getPieceSize(piece);
   const totalWidth = width * (cellSize + gap) + gap;
   const totalHeight = height * (cellSize + gap) + gap;
-  const baseColor = BLOCK_COLORS[piece.colorIndex - 1] || BLOCK_COLORS[0];
+  const colorIdx = piece.colorIndex - 1;
+  const baseColor = BLOCK_COLORS[colorIdx] || BLOCK_COLORS[0];
+  const lightColor = BLOCK_LIGHT[colorIdx] || BLOCK_LIGHT[0];
+  const darkColor = BLOCK_DARK[colorIdx] || BLOCK_DARK[0];
   const radius = CELL_RADIUS * (cellSize / 40);
 
   return (
@@ -42,8 +47,8 @@ export const PieceRenderer: React.FC<PieceRendererProps> = ({
       style={{
         width: totalWidth,
         height: totalHeight,
-        opacity: disabled ? 0.3 : selected ? 1 : 0.85,
-        position: 'relative',
+        opacity: disabled ? 0.3 : selected ? 1 : 0.8,
+        transform: [{ scale: selected ? 1.05 : 1 }],
       }}
     >
       {piece.shape.map((row, r) =>
@@ -63,6 +68,18 @@ export const PieceRenderer: React.FC<PieceRendererProps> = ({
                   height: cellSize,
                   backgroundColor: baseColor,
                   borderRadius: radius,
+                  borderTopColor: lightColor,
+                  borderLeftColor: lightColor,
+                  borderBottomColor: darkColor,
+                  borderRightColor: darkColor,
+                  borderTopWidth: 1.5,
+                  borderLeftWidth: 1.5,
+                  borderBottomWidth: 1.5,
+                  borderRightWidth: 1.5,
+                  shadowColor: baseColor,
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: selected ? 0.6 : 0.3,
+                  shadowRadius: selected ? 4 : 2,
                 },
               ]}
             >
@@ -70,8 +87,12 @@ export const PieceRenderer: React.FC<PieceRendererProps> = ({
                 style={[
                   styles.highlight,
                   {
-                    height: cellSize / 3,
-                    borderRadius: Math.max(1, radius - 1),
+                    height: cellSize * 0.35,
+                    borderTopLeftRadius: Math.max(1, radius - 2),
+                    borderTopRightRadius: Math.max(1, radius - 2),
+                    borderBottomLeftRadius: cellSize * 0.4,
+                    borderBottomRightRadius: cellSize * 0.4,
+                    backgroundColor: `${lightColor}35`,
                   },
                 ]}
               />
@@ -90,9 +111,8 @@ const styles = StyleSheet.create({
   },
   highlight: {
     position: 'absolute',
-    top: 1.5,
+    top: 1,
     left: 1.5,
     right: 1.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
 });

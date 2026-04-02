@@ -1,13 +1,23 @@
 /**
- * Level selection screen with a scrollable grid of levels.
+ * Level selection screen with animated grid, premium cards, and smooth entrance.
  */
 
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity } from 'react-native';
+import React, { useMemo, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  FlatList,
+  TouchableOpacity,
+  Animated,
+  Easing,
+} from 'react-native';
 import { usePlayerStore } from '../store/playerStore';
 import { getTotalLevels, isBossLevel } from '../game/levels/LevelGenerator';
 import { Button } from '../components/common/Button';
-import { COLORS } from '../utils/constants';
+import { CurrencyDisplay } from '../components/CurrencyDisplay';
+import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -22,9 +32,87 @@ interface LevelItem {
   isBoss: boolean;
 }
 
+const LevelCard: React.FC<{
+  item: LevelItem;
+  onPress: () => void;
+}> = ({ item, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(0.7)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const delay = (item.level % 5) * 50;
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+        delay,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 200,
+        delay,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }], opacity: opacityAnim }}>
+      <TouchableOpacity
+        style={[
+          styles.levelCard,
+          item.unlocked && styles.levelUnlocked,
+          item.isBoss && item.unlocked && styles.levelBoss,
+          !item.unlocked && styles.levelLocked,
+        ]}
+        onPress={item.unlocked ? onPress : undefined}
+        disabled={!item.unlocked}
+        activeOpacity={0.7}
+      >
+        {item.isBoss && item.unlocked && (
+          <View style={styles.bossGlow} />
+        )}
+        <Text style={[styles.levelNumber, !item.unlocked && styles.levelNumberLocked]}>
+          {item.unlocked ? item.level : '\uD83D\uDD12'}
+        </Text>
+        {item.unlocked && (
+          <View style={styles.starsRow}>
+            {[1, 2, 3].map((s) => (
+              <Text
+                key={s}
+                style={[styles.star, s <= item.stars && styles.starActive]}
+              >
+                {s <= item.stars ? '\u2605' : '\u2606'}
+              </Text>
+            ))}
+          </View>
+        )}
+        {item.isBoss && item.unlocked && (
+          <View style={styles.bossTag}>
+            <Text style={styles.bossLabel}>BOSS</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation }) => {
-  const { highestLevel, levelStars } = usePlayerStore();
+  const { highestLevel, levelStars, coins, gems } = usePlayerStore();
   const totalLevels = getTotalLevels();
+
+  // Header entrance animation
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const headerSlide = useRef(new Animated.Value(-20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(headerOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(headerSlide, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const levels = useMemo<LevelItem[]>(() => {
     const items: LevelItem[] = [];
@@ -39,44 +127,33 @@ export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation
     return items;
   }, [highestLevel, levelStars, totalLevels]);
 
+  // Progress stats
+  const totalStars = Object.values(levelStars).reduce((sum, s) => sum + s, 0);
+  const maxStars = totalLevels * 3;
+
   const renderLevel = ({ item }: { item: LevelItem }) => (
-    <TouchableOpacity
-      style={[
-        styles.levelCard,
-        item.unlocked && styles.levelUnlocked,
-        item.isBoss && styles.levelBoss,
-      ]}
-      onPress={() => item.unlocked && navigation.navigate('Game', { level: item.level })}
-      disabled={!item.unlocked}
-      activeOpacity={0.7}
-    >
-      <Text style={[styles.levelNumber, !item.unlocked && styles.levelLocked]}>
-        {item.unlocked ? item.level : '\uD83D\uDD12'}
-      </Text>
-      {item.unlocked && (
-        <View style={styles.starsRow}>
-          {[1, 2, 3].map((s) => (
-            <Text
-              key={s}
-              style={[styles.star, s <= item.stars && styles.starActive]}
-            >
-              {s <= item.stars ? '\u2605' : '\u2606'}
-            </Text>
-          ))}
-        </View>
-      )}
-      {item.isBoss && item.unlocked && (
-        <Text style={styles.bossLabel}>BOSS</Text>
-      )}
-    </TouchableOpacity>
+    <LevelCard
+      item={item}
+      onPress={() => navigation.navigate('Game', { level: item.level })}
+    />
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Button title="Back" onPress={() => navigation.goBack()} variant="ghost" size="small" />
-        <Text style={styles.headerTitle}>Select Level</Text>
-        <View style={{ width: 60 }} />
+      <Animated.View style={[styles.header, { opacity: headerOpacity, transform: [{ translateY: headerSlide }] }]}>
+        <Button title="‹" onPress={() => navigation.goBack()} variant="ghost" size="small" />
+        <Text style={styles.headerTitle}>Levels</Text>
+        <CurrencyDisplay coins={coins} gems={gems} compact />
+      </Animated.View>
+
+      {/* Progress bar */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${Math.min((totalStars / maxStars) * 100, 100)}%` }]} />
+        </View>
+        <Text style={styles.progressText}>
+          {'\u2605'} {totalStars}/{maxStars}
+        </Text>
       </View>
 
       <FlatList
@@ -89,8 +166,8 @@ export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation
         showsVerticalScrollIndicator={false}
         initialScrollIndex={Math.max(0, Math.floor(highestLevel / 5) - 2)}
         getItemLayout={(_, index) => ({
-          length: 76,
-          offset: 76 * Math.floor(index / 5),
+          length: 84,
+          offset: 84 * Math.floor(index / 5),
           index,
         })}
       />
@@ -107,16 +184,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
     color: COLORS.textPrimary,
+    letterSpacing: 1,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.sm,
+    gap: 10,
+  },
+  progressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: COLORS.surfaceLight,
+    borderRadius: RADII.round,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: COLORS.accentGold,
+    borderRadius: RADII.round,
+  },
+  progressText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.accentGold,
   },
   grid: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingBottom: 24,
   },
   gridRow: {
@@ -126,44 +228,73 @@ const styles = StyleSheet.create({
   },
   levelCard: {
     width: 64,
-    height: 68,
-    borderRadius: 12,
+    height: 72,
+    borderRadius: RADII.md,
     backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.surfaceBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    opacity: 0.4,
+    ...SHADOWS.small,
   },
   levelUnlocked: {
-    opacity: 1,
+    borderColor: COLORS.surfaceBorder,
+  },
+  levelLocked: {
+    opacity: 0.35,
+    borderColor: 'transparent',
   },
   levelBoss: {
     borderWidth: 2,
     borderColor: COLORS.accentGold,
+    backgroundColor: `${COLORS.accentGold}10`,
+  },
+  bossGlow: {
+    position: 'absolute',
+    top: -1,
+    left: -1,
+    right: -1,
+    bottom: -1,
+    borderRadius: RADII.md,
+    borderWidth: 1,
+    borderColor: `${COLORS.accentGold}40`,
   },
   levelNumber: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     color: COLORS.textPrimary,
   },
-  levelLocked: {
+  levelNumberLocked: {
     fontSize: 16,
   },
   starsRow: {
     flexDirection: 'row',
     marginTop: 2,
+    gap: 1,
   },
   star: {
-    fontSize: 10,
-    color: COLORS.textSecondary,
+    fontSize: 11,
+    color: COLORS.textMuted,
   },
   starActive: {
     color: COLORS.accentGold,
+    textShadowColor: COLORS.accentGold,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  bossTag: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: COLORS.accentGold,
+    borderRadius: RADII.sm,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
   },
   bossLabel: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: COLORS.accentGold,
-    letterSpacing: 1,
-    marginTop: 1,
+    fontSize: 7,
+    fontWeight: '900',
+    color: COLORS.background,
+    letterSpacing: 0.5,
   },
 });

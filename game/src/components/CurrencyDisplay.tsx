@@ -1,11 +1,11 @@
 /**
- * Currency display showing coins and gems in the header.
+ * Premium currency display with icons and compact formatting.
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePlayerStore } from '../store/playerStore';
-import { COLORS } from '../utils/constants';
+import { COLORS, RADII, SPACING } from '../utils/constants';
 import { formatCompact } from '../utils/formatters';
 
 interface CurrencyDisplayProps {
@@ -25,13 +25,14 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={[styles.currencyItem, compact && styles.compactItem]}>
-        <Text style={[styles.icon, compact && styles.compactIcon]}>{'\uD83E\uDE99'}</Text>
-        <Text style={[styles.value, compact && styles.compactValue]}>{formatCompact(coins)}</Text>
+      <View style={styles.currencyItem}>
+        <Text style={styles.icon}>🪙</Text>
+        <Text style={styles.value}>{formatCompact(coins)}</Text>
       </View>
-      <View style={[styles.currencyItem, compact && styles.compactItem]}>
-        <Text style={[styles.icon, compact && styles.compactIcon]}>{'\uD83D\uDC8E'}</Text>
-        <Text style={[styles.value, compact && styles.compactValue]}>{formatCompact(gems)}</Text>
+      <View style={styles.divider} />
+      <View style={styles.currencyItem}>
+        <Text style={styles.icon}>💎</Text>
+        <Text style={styles.value}>{formatCompact(gems)}</Text>
       </View>
     </View>
   );
@@ -40,34 +41,31 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    gap: 16,
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    gap: 8,
   },
   currencyItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    gap: 4,
-  },
-  compactItem: {
-    paddingVertical: 2,
-    paddingHorizontal: 8,
     gap: 3,
   },
   icon: {
     fontSize: 14,
   },
-  compactIcon: {
-    fontSize: 12,
-  },
   value: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '800',
     color: COLORS.accentGold,
   },
-  compactValue: {
-    fontSize: 12,
+  divider: {
+    width: 1,
+    height: 16,
+    backgroundColor: COLORS.surfaceBorder,
   },
 });

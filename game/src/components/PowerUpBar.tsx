@@ -1,12 +1,11 @@
 /**
- * Power-up bar shown during gameplay.
- * Displays available power-ups with inventory counts.
+ * Premium power-up bar with pulse animations and activation effects.
  */
 
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Animated, StyleSheet, Easing } from 'react-native';
 import { PowerUpType, POWER_UP_CONFIGS } from '../game/powerups/PowerUpManager';
-import { COLORS } from '../utils/constants';
+import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 
 interface PowerUpBarProps {
   inventory: Record<PowerUpType, number>;
@@ -14,6 +13,66 @@ interface PowerUpBarProps {
   onActivate: (type: PowerUpType) => void;
   disabled?: boolean;
 }
+
+const POWER_UP_ICONS: Record<PowerUpType, string> = {
+  bomb: '💥',
+  rowClear: '⚡',
+  colorClear: '🎨',
+};
+
+const PowerUpButton: React.FC<{
+  type: PowerUpType;
+  count: number;
+  isActive: boolean;
+  disabled: boolean;
+  onPress: () => void;
+}> = ({ type, count, isActive, disabled, onPress }) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isActive) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.08, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        ])
+      ).start();
+      Animated.timing(glowAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+    } else {
+      pulseAnim.stopAnimation();
+      pulseAnim.setValue(1);
+      Animated.timing(glowAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+    }
+  }, [isActive, pulseAnim, glowAnim]);
+
+  const config = POWER_UP_CONFIGS[type];
+
+  return (
+    <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+      <TouchableOpacity
+        style={[
+          styles.powerUpButton,
+          isActive && styles.activeButton,
+          (count === 0 || disabled) && styles.disabledButton,
+        ]}
+        onPress={onPress}
+        disabled={count === 0 || disabled}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.icon}>{POWER_UP_ICONS[type]}</Text>
+        <Text style={[styles.name, isActive && styles.activeName]}>
+          {config.name}
+        </Text>
+        {count > 0 && (
+          <View style={[styles.countBadge, isActive && styles.activeBadge]}>
+            <Text style={styles.countText}>{count}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 export const PowerUpBar: React.FC<PowerUpBarProps> = ({
   inventory,
@@ -25,35 +84,16 @@ export const PowerUpBar: React.FC<PowerUpBarProps> = ({
 
   return (
     <View style={styles.container}>
-      {powerUps.map((type) => {
-        const config = POWER_UP_CONFIGS[type];
-        const count = inventory[type] ?? 0;
-        const isActive = activePowerUp === type;
-
-        return (
-          <TouchableOpacity
-            key={type}
-            style={[
-              styles.powerUpButton,
-              isActive && styles.activeButton,
-              (count === 0 || disabled) && styles.disabledButton,
-            ]}
-            onPress={() => count > 0 && !disabled && onActivate(type)}
-            disabled={count === 0 || disabled}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.icon}>
-              {type === 'bomb' ? '\uD83D\uDCA3' : type === 'rowClear' ? '\u2194\uFE0F' : '\uD83C\uDFA8'}
-            </Text>
-            <Text style={[styles.name, isActive && styles.activeName]}>
-              {config.name}
-            </Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>{count}</Text>
-            </View>
-          </TouchableOpacity>
-        );
-      })}
+      {powerUps.map((type) => (
+        <PowerUpButton
+          key={type}
+          type={type}
+          count={inventory[type] ?? 0}
+          isActive={activePowerUp === type}
+          disabled={disabled}
+          onPress={() => onActivate(type)}
+        />
+      ))}
     </View>
   );
 };
@@ -63,53 +103,62 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
   },
   powerUpButton: {
     alignItems: 'center',
     backgroundColor: COLORS.surface,
-    borderRadius: 12,
+    borderRadius: RADII.md,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    minWidth: 70,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    paddingHorizontal: 14,
+    minWidth: 74,
+    ...SHADOWS.small,
   },
   activeButton: {
     borderColor: COLORS.accentGold,
     backgroundColor: `${COLORS.accentGold}15`,
+    shadowColor: COLORS.accentGold,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
   },
   disabledButton: {
-    opacity: 0.4,
+    opacity: 0.35,
   },
   icon: {
-    fontSize: 20,
-    marginBottom: 2,
+    fontSize: 22,
+    marginBottom: 3,
   },
   name: {
     fontSize: 10,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    letterSpacing: 0.5,
   },
   activeName: {
     color: COLORS.accentGold,
   },
   countBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -6,
+    right: -6,
     backgroundColor: COLORS.accent,
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    borderRadius: RADII.round,
+    minWidth: 20,
+    height: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 5,
+    ...SHADOWS.small,
+  },
+  activeBadge: {
+    backgroundColor: COLORS.accentGold,
   },
   countText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
     color: COLORS.textPrimary,
   },
 });

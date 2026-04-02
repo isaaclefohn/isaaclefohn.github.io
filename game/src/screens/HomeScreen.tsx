@@ -1,14 +1,14 @@
 /**
- * Home screen — main menu for Block Blitz.
+ * Premium home screen with animated title, rich stats, and polished layout.
  */
 
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, Animated, Easing } from 'react-native';
 import { usePlayerStore } from '../store/playerStore';
 import { Button } from '../components/common/Button';
 import { Tutorial } from '../components/Tutorial';
-import { COLORS } from '../utils/constants';
-import { formatScore, formatCompact } from '../utils/formatters';
+import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
+import { formatCompact } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -20,6 +20,40 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { highestLevel, coins, gems, totalScore } = usePlayerStore();
   const [showTutorial, setShowTutorial] = useState(highestLevel === 0);
 
+  // Entrance animations
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleTranslate = useRef(new Animated.Value(-30)).current;
+  const blastScale = useRef(new Animated.Value(0.5)).current;
+  const statsOpacity = useRef(new Animated.Value(0)).current;
+  const buttonsOpacity = useRef(new Animated.Value(0)).current;
+  const buttonsTranslate = useRef(new Animated.Value(40)).current;
+  // Subtle pulsing glow on BLAST text
+  const blastGlow = useRef(new Animated.Value(0.6)).current;
+
+  useEffect(() => {
+    // Staggered entrance
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(titleOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.spring(titleTranslate, { toValue: 0, useNativeDriver: true, tension: 60, friction: 8 }),
+      ]),
+      Animated.spring(blastScale, { toValue: 1, useNativeDriver: true, tension: 80, friction: 6 }),
+      Animated.timing(statsOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.parallel([
+        Animated.timing(buttonsOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.spring(buttonsTranslate, { toValue: 0, useNativeDriver: true, tension: 50, friction: 9 }),
+      ]),
+    ]).start();
+
+    // Pulse the BLAST glow
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(blastGlow, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(blastGlow, { toValue: 0.6, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
   const handleTutorialComplete = useCallback(() => {
     setShowTutorial(false);
   }, []);
@@ -27,97 +61,118 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Title */}
+        {/* Animated Title */}
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>COLOR BLOCK</Text>
-          <Text style={styles.titleAccent}>BLAST</Text>
+          <Animated.Text
+            style={[
+              styles.title,
+              { opacity: titleOpacity, transform: [{ translateY: titleTranslate }] },
+            ]}
+          >
+            COLOR BLOCK
+          </Animated.Text>
+          <Animated.Text
+            style={[
+              styles.titleAccent,
+              {
+                transform: [{ scale: blastScale }],
+                opacity: blastGlow,
+              },
+            ]}
+          >
+            BLAST
+          </Animated.Text>
         </View>
 
         {/* Stats bar */}
-        <View style={styles.statsBar}>
+        <Animated.View style={[styles.statsBar, { opacity: statsOpacity }]}>
           <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Coins</Text>
+            <Text style={styles.statIcon}>🪙</Text>
             <Text style={styles.statValue}>{formatCompact(coins)}</Text>
+            <Text style={styles.statLabel}>COINS</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Gems</Text>
+            <Text style={styles.statIcon}>💎</Text>
             <Text style={styles.statValue}>{formatCompact(gems)}</Text>
+            <Text style={styles.statLabel}>GEMS</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Score</Text>
+            <Text style={styles.statIcon}>⭐</Text>
             <Text style={styles.statValue}>{formatCompact(totalScore)}</Text>
+            <Text style={styles.statLabel}>SCORE</Text>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Main buttons */}
-        <View style={styles.buttonGroup}>
-          {highestLevel > 0 ? (
-            <Button
-              title={`Continue  Level ${highestLevel + 1}`}
-              onPress={() => navigation.navigate('Game', { level: highestLevel + 1 })}
-              variant="primary"
-              size="large"
-              style={styles.mainButton}
-            />
-          ) : (
-            <Button
-              title="Play"
-              onPress={() => navigation.navigate('Game', { level: 1 })}
-              variant="primary"
-              size="large"
-              style={styles.mainButton}
-            />
-          )}
-
+        <Animated.View
+          style={[
+            styles.buttonGroup,
+            { opacity: buttonsOpacity, transform: [{ translateY: buttonsTranslate }] },
+          ]}
+        >
           <Button
-            title="Daily Challenge"
-            onPress={() => navigation.navigate('DailyChallenge')}
-            variant="secondary"
-            size="medium"
-            style={styles.menuButton}
+            title={highestLevel > 0 ? `Level ${highestLevel + 1}` : 'Play'}
+            icon={highestLevel > 0 ? '▶' : '▶'}
+            onPress={() => navigation.navigate('Game', { level: highestLevel > 0 ? highestLevel + 1 : 1 })}
+            variant="primary"
+            size="large"
+            style={styles.mainButton}
           />
 
-          <Button
-            title="Level Select"
-            onPress={() => navigation.navigate('LevelSelect')}
-            variant="secondary"
-            size="medium"
-            style={styles.menuButton}
-          />
+          <View style={styles.secondaryRow}>
+            <Button
+              title="Daily"
+              icon="📅"
+              onPress={() => navigation.navigate('DailyChallenge')}
+              variant="secondary"
+              size="medium"
+              style={styles.halfButton}
+            />
+            <Button
+              title="Levels"
+              icon="🗺"
+              onPress={() => navigation.navigate('LevelSelect')}
+              variant="secondary"
+              size="medium"
+              style={styles.halfButton}
+            />
+          </View>
 
           <View style={styles.bottomRow}>
             <Button
               title="Shop"
+              icon="🛒"
               onPress={() => navigation.navigate('Shop')}
               variant="ghost"
-              size="medium"
+              size="small"
             />
             <Button
-              title="Rankings"
+              title="Ranks"
+              icon="🏆"
               onPress={() => navigation.navigate('Leaderboard')}
               variant="ghost"
-              size="medium"
+              size="small"
             />
             <Button
               title="Settings"
+              icon="⚙️"
               onPress={() => navigation.navigate('Settings')}
               variant="ghost"
-              size="medium"
+              size="small"
             />
           </View>
-        </View>
+        </Animated.View>
 
         {/* Level indicator */}
         {highestLevel > 0 && (
-          <Text style={styles.levelIndicator}>
+          <Animated.Text style={[styles.levelIndicator, { opacity: buttonsOpacity }]}>
             Highest Level: {highestLevel}
-          </Text>
+          </Animated.Text>
         )}
       </View>
 
-      {/* Tutorial overlay for first-time players */}
       {showTutorial && <Tutorial onComplete={handleTutorialComplete} />}
     </SafeAreaView>
   );
@@ -132,55 +187,67 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: SPACING.lg,
   },
   titleContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 52,
+    fontSize: 48,
     fontWeight: '900',
     color: COLORS.textPrimary,
-    letterSpacing: 8,
+    letterSpacing: 6,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   titleAccent: {
-    fontSize: 52,
+    fontSize: 56,
     fontWeight: '900',
     color: COLORS.accent,
-    letterSpacing: 8,
-    marginTop: -8,
+    letterSpacing: 10,
+    marginTop: -6,
+    textShadowColor: COLORS.accent,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
   },
   statsBar: {
     flexDirection: 'row',
     backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginBottom: 40,
+    borderRadius: RADII.lg,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    marginBottom: SPACING.xl,
     alignItems: 'center',
+    ...SHADOWS.small,
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
   },
-  statLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+  statIcon: {
+    fontSize: 18,
+    marginBottom: 2,
   },
   statValue: {
     fontSize: 18,
     fontWeight: '800',
     color: COLORS.accentGold,
-    marginTop: 2,
+  },
+  statLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    letterSpacing: 1.5,
+    marginTop: 1,
   },
   statDivider: {
     width: 1,
-    height: 30,
-    backgroundColor: COLORS.gridEmpty,
+    height: 36,
+    backgroundColor: COLORS.surfaceBorder,
   },
   buttonGroup: {
     width: '100%',
@@ -190,17 +257,23 @@ const styles = StyleSheet.create({
   mainButton: {
     width: '100%',
   },
-  menuButton: {
-    width: '80%',
+  secondaryRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  halfButton: {
+    flex: 1,
   },
   bottomRow: {
     flexDirection: 'row',
-    gap: 16,
-    marginTop: 4,
+    gap: 12,
+    marginTop: SPACING.xs,
   },
   levelIndicator: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: 24,
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginTop: SPACING.lg,
+    letterSpacing: 1,
   },
 });
