@@ -1,8 +1,9 @@
 /**
- * Leaderboard screen with tabs for level, weekly, and daily rankings.
+ * Leaderboard screen with tabs for weekly and daily rankings.
+ * Premium visual styling with animated entrances, podium cards, and rank badges.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,10 +12,11 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { Button } from '../components/common/Button';
 import { fetchLeaderboard, LeaderboardEntry } from '../services/leaderboard';
-import { COLORS } from '../utils/constants';
+import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -25,10 +27,62 @@ type LeaderboardScreenProps = {
 
 type LeaderboardTab = 'weekly' | 'daily';
 
+const PODIUM_BORDER_COLORS = [COLORS.accentGold, '#C0C0C0', '#CD7F32'];
+const PODIUM_BG_COLORS = [`${COLORS.accentGold}10`, 'rgba(192,192,192,0.06)', 'rgba(205,127,50,0.06)'];
+
+/** Animated wrapper for each leaderboard entry row */
+const AnimatedEntry: React.FC<{ index: number; children: React.ReactNode }> = ({ index, children }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(12)).current;
+
+  useEffect(() => {
+    const delay = Math.min(index * 60, 600);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 350,
+        delay,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 350,
+        delay,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, slideAnim, index]);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      {children}
+    </Animated.View>
+  );
+};
+
 export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState<LeaderboardTab>('weekly');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Header animation
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const headerSlide = useRef(new Animated.Value(-20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(headerOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(headerSlide, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [headerOpacity, headerSlide]);
 
   const loadLeaderboard = useCallback(async () => {
     setLoading(true);
@@ -50,23 +104,39 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
     const medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
 
     return (
-      <View style={[styles.entryRow, isTopThree && styles.topThreeRow]}>
-        <View style={styles.rankContainer}>
-          {isTopThree ? (
-            <Text style={styles.medal}>{medals[index]}</Text>
-          ) : (
-            <Text style={styles.rank}>{item.rank || index + 1}</Text>
-          )}
-        </View>
-        <View style={styles.nameContainer}>
-          <Text style={[styles.name, isTopThree && styles.topThreeName]} numberOfLines={1}>
-            {item.displayName || 'Player'}
+      <AnimatedEntry index={index}>
+        <View
+          style={[
+            styles.entryRow,
+            isTopThree && {
+              borderWidth: 1.5,
+              borderColor: PODIUM_BORDER_COLORS[index],
+              backgroundColor: PODIUM_BG_COLORS[index],
+              ...SHADOWS.medium,
+              paddingVertical: SPACING.md,
+            },
+            !isTopThree && styles.regularRow,
+          ]}
+        >
+          <View style={[styles.rankContainer, isTopThree && styles.podiumRankContainer]}>
+            {isTopThree ? (
+              <Text style={styles.podiumMedal}>{medals[index]}</Text>
+            ) : (
+              <View style={styles.rankBadge}>
+                <Text style={styles.rankBadgeText}>{item.rank || index + 1}</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.nameContainer}>
+            <Text style={[styles.name, isTopThree && styles.topThreeName]} numberOfLines={1}>
+              {item.displayName || 'Player'}
+            </Text>
+          </View>
+          <Text style={[styles.score, isTopThree && styles.topThreeScore]}>
+            {formatScore(item.score)}
           </Text>
         </View>
-        <Text style={[styles.score, isTopThree && styles.topThreeScore]}>
-          {formatScore(item.score)}
-        </Text>
-      </View>
+      </AnimatedEntry>
     );
   };
 
@@ -74,9 +144,13 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
     if (loading) return null;
     return (
       <View style={styles.emptyContainer}>
+        <Text style={styles.emptyTrophy}>{'\uD83C\uDFC6'}</Text>
         <Text style={styles.emptyTitle}>No entries yet</Text>
         <Text style={styles.emptySubtitle}>
-          Play levels to get on the leaderboard!
+          Be the first to claim the top spot!
+        </Text>
+        <Text style={styles.emptyHint}>
+          Play levels to earn your place on the leaderboard.
         </Text>
       </View>
     );
@@ -85,43 +159,57 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <Animated.View
+        style={[
+          styles.header,
+          { opacity: headerOpacity, transform: [{ translateY: headerSlide }] },
+        ]}
+      >
         <Button title="Back" onPress={() => navigation.goBack()} variant="ghost" size="small" />
-        <Text style={styles.headerTitle}>Leaderboard</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.headerTrophy}>{'\uD83C\uDFC6'}</Text>
+          <Text style={styles.headerTitle}>Leaderboard</Text>
+        </View>
         <View style={{ width: 60 }} />
-      </View>
+      </Animated.View>
 
-      {/* Tabs */}
-      <View style={styles.tabBar}>
-        {(['weekly', 'daily'] as LeaderboardTab[]).map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.activeTab]}
-            onPress={() => setActiveTab(tab)}
-          >
-            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-              {tab === 'weekly' ? 'This Week' : 'Today'}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Tabs — pill/capsule style */}
+      <View style={styles.tabBarOuter}>
+        <View style={styles.tabBar}>
+          {(['weekly', 'daily'] as LeaderboardTab[]).map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.tab, activeTab === tab && styles.activeTab]}
+              onPress={() => setActiveTab(tab)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                {tab === 'weekly' ? 'This Week' : 'Today'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {/* Loading */}
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.accent} />
+          <Text style={styles.loadingText}>Loading rankings...</Text>
         </View>
       )}
 
       {/* Entries */}
-      <FlatList
-        data={entries}
-        renderItem={renderEntry}
-        keyExtractor={(item, i) => `${item.userId}-${i}`}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmpty}
-        showsVerticalScrollIndicator={false}
-      />
+      {!loading && (
+        <FlatList
+          data={entries}
+          renderItem={renderEntry}
+          keyExtractor={(item, i) => `${item.userId}-${i}`}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={renderEmpty}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -144,29 +232,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.sm,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  headerTrophy: {
+    fontSize: 22,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
     color: COLORS.textPrimary,
+    letterSpacing: 0.3,
+  },
+
+  /* Tab bar — pill/capsule style matching ShopScreen */
+  tabBarOuter: {
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.md,
   },
   tabBar: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 8,
-    marginBottom: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.round,
+    padding: SPACING.xs,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    borderRadius: 10,
-    backgroundColor: COLORS.surface,
+    borderRadius: RADII.round,
   },
   activeTab: {
     backgroundColor: COLORS.accent,
+    ...SHADOWS.small,
   },
   tabText: {
     fontSize: 14,
@@ -175,43 +280,74 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: COLORS.textPrimary,
+    fontWeight: '700',
   },
+
+  /* Loading */
   loadingContainer: {
-    paddingVertical: 40,
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: SPACING.md,
   },
+  loadingText: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+    fontWeight: '500',
+  },
+
+  /* List */
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.lg,
   },
+
+  /* Entry rows */
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.surface,
-    borderRadius: 12,
+    borderRadius: RADII.md,
     padding: 14,
-    marginBottom: 6,
-  },
-  topThreeRow: {
+    marginBottom: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.accentGold,
-    backgroundColor: `${COLORS.accentGold}08`,
+    borderColor: COLORS.surfaceBorder,
+  },
+  regularRow: {
+    ...SHADOWS.small,
+  },
+  podiumRankContainer: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   rankContainer: {
     width: 36,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  rank: {
-    fontSize: 16,
+  podiumMedal: {
+    fontSize: 28,
+  },
+  rankBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: RADII.round,
+    backgroundColor: COLORS.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+  },
+  rankBadgeText: {
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.textSecondary,
   },
-  medal: {
-    fontSize: 22,
-  },
   nameContainer: {
     flex: 1,
-    marginHorizontal: 12,
+    marginHorizontal: SPACING.md,
   },
   name: {
     fontSize: 16,
@@ -220,6 +356,7 @@ const styles = StyleSheet.create({
   },
   topThreeName: {
     fontWeight: '700',
+    fontSize: 17,
   },
   score: {
     fontSize: 16,
@@ -230,19 +367,35 @@ const styles = StyleSheet.create({
   topThreeScore: {
     color: COLORS.accentGold,
     fontWeight: '800',
+    fontSize: 17,
   },
+
+  /* Empty state */
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 80,
+    paddingHorizontal: SPACING.xl,
+  },
+  emptyTrophy: {
+    fontSize: 64,
+    marginBottom: SPACING.lg,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
     color: COLORS.textPrimary,
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '600',
     color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: SPACING.xs,
+  },
+  emptyHint: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+    textAlign: 'center',
   },
 });

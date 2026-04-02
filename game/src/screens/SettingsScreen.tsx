@@ -1,13 +1,22 @@
 /**
  * Settings screen with sound, haptics, and visual toggles.
+ * Premium styled with animated entrance, profile avatar, and stats.
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Switch } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  Switch,
+  ScrollView,
+  Animated,
+} from 'react-native';
 import { useSettingsStore } from '../store/settingsStore';
 import { usePlayerStore } from '../store/playerStore';
 import { Button } from '../components/common/Button';
-import { COLORS } from '../utils/constants';
+import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -15,89 +24,176 @@ type SettingsScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 };
 
+const STAGGER_DELAY = 80;
+const ENTRANCE_DURATION = 400;
+
+function useStaggeredEntrance(count: number) {
+  const anims = useRef(
+    Array.from({ length: count }, () => new Animated.Value(0))
+  ).current;
+
+  useEffect(() => {
+    const animations = anims.map((anim, i) =>
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: ENTRANCE_DURATION,
+        delay: i * STAGGER_DELAY,
+        useNativeDriver: true,
+      })
+    );
+    Animated.stagger(STAGGER_DELAY, animations).start();
+  }, [anims]);
+
+  return anims;
+}
+
+function animatedStyle(anim: Animated.Value) {
+  return {
+    opacity: anim,
+    transform: [
+      {
+        translateY: anim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [18, 0],
+        }),
+      },
+    ],
+  };
+}
+
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
   const settings = useSettingsStore();
   const player = usePlayerStore();
 
+  // 6 animated sections: header, profile, audio, visual, stats, footer
+  const anims = useStaggeredEntrance(6);
+
+  const initials = (player.displayName || 'P').charAt(0).toUpperCase();
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      {/* Header */}
+      <Animated.View style={[styles.header, animatedStyle(anims[0])]}>
         <Button title="Back" onPress={() => navigation.goBack()} variant="ghost" size="small" />
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={{ width: 60 }} />
-      </View>
+      </Animated.View>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile section */}
+        <Animated.View style={[styles.sectionCard, animatedStyle(anims[1])]}>
+          <View style={styles.profileRow}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{player.displayName}</Text>
+              <Text style={styles.profileSub}>
+                Level {player.highestLevel} {' \u2022 '} {player.currentStreak} day streak
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+
         {/* Audio section */}
-        <Text style={styles.sectionTitle}>Audio</Text>
-        <View style={styles.section}>
-          <SettingRow
-            label="Sound Effects"
-            value={settings.soundEnabled}
-            onToggle={settings.toggleSound}
-          />
-          <SettingRow
-            label="Music"
-            value={settings.musicEnabled}
-            onToggle={settings.toggleMusic}
-          />
-          <SettingRow
-            label="Haptic Feedback"
-            value={settings.hapticsEnabled}
-            onToggle={settings.toggleHaptics}
-          />
-        </View>
+        <Animated.View style={animatedStyle(anims[2])}>
+          <Text style={styles.sectionTitle}>Audio</Text>
+          <View style={styles.sectionCard}>
+            <SettingRow
+              emoji={'\uD83D\uDD0A'}
+              label="Sound Effects"
+              value={settings.soundEnabled}
+              onToggle={settings.toggleSound}
+            />
+            <Divider />
+            <SettingRow
+              emoji={'\uD83C\uDFB5'}
+              label="Music"
+              value={settings.musicEnabled}
+              onToggle={settings.toggleMusic}
+            />
+            <Divider />
+            <SettingRow
+              emoji={'\uD83D\uDCF3'}
+              label="Haptic Feedback"
+              value={settings.hapticsEnabled}
+              onToggle={settings.toggleHaptics}
+              last
+            />
+          </View>
+        </Animated.View>
 
         {/* Visual section */}
-        <Text style={styles.sectionTitle}>Visual</Text>
-        <View style={styles.section}>
-          <SettingRow
-            label="Grid Lines"
-            value={settings.showGridLines}
-            onToggle={settings.toggleGridLines}
-          />
-          <SettingRow
-            label="Ghost Preview"
-            value={settings.showGhostPreview}
-            onToggle={settings.toggleGhostPreview}
-          />
-        </View>
+        <Animated.View style={animatedStyle(anims[3])}>
+          <Text style={styles.sectionTitle}>Visual</Text>
+          <View style={styles.sectionCard}>
+            <SettingRow
+              emoji={'\uD83D\uDCD0'}
+              label="Grid Lines"
+              value={settings.showGridLines}
+              onToggle={settings.toggleGridLines}
+            />
+            <Divider />
+            <SettingRow
+              emoji={'\uD83D\uDC7B'}
+              label="Ghost Preview"
+              value={settings.showGhostPreview}
+              onToggle={settings.toggleGhostPreview}
+              last
+            />
+          </View>
+        </Animated.View>
 
-        {/* Player info */}
-        <Text style={styles.sectionTitle}>Profile</Text>
-        <View style={styles.section}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Name</Text>
-            <Text style={styles.infoValue}>{player.displayName}</Text>
+        {/* Stats row */}
+        <Animated.View style={animatedStyle(anims[4])}>
+          <Text style={styles.sectionTitle}>Stats</Text>
+          <View style={styles.sectionCard}>
+            <View style={styles.statsRow}>
+              <StatItem label="Total Score" value={formatNumber(player.totalScore)} />
+              <StatDivider />
+              <StatItem label="Lines" value={formatNumber(player.totalLinesCleared)} />
+              <StatDivider />
+              <StatItem label="Level" value={String(player.highestLevel)} />
+              <StatDivider />
+              <StatItem label="Best Streak" value={`${player.longestStreak}d`} />
+            </View>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Highest Level</Text>
-            <Text style={styles.infoValue}>{player.highestLevel}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Current Streak</Text>
-            <Text style={styles.infoValue}>{player.currentStreak} days</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Longest Streak</Text>
-            <Text style={styles.infoValue}>{player.longestStreak} days</Text>
-          </View>
-        </View>
+        </Animated.View>
 
-        {/* Version */}
-        <Text style={styles.version}>Color Block Blast v1.0.0</Text>
-      </View>
+        {/* About footer */}
+        <Animated.View style={[styles.footer, animatedStyle(anims[5])]}>
+          <Text style={styles.footerIcon}>{'\uD83C\uDFAE'}</Text>
+          <Text style={styles.footerAppName}>Color Block Blast</Text>
+          <Text style={styles.footerVersion}>Version 1.0.0</Text>
+          <Text style={styles.footerCopy}>Made with care</Text>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
+// --- Sub-components ---
+
+const Divider: React.FC = () => <View style={styles.divider} />;
+
+const StatDivider: React.FC = () => <View style={styles.statDivider} />;
+
 const SettingRow: React.FC<{
+  emoji: string;
   label: string;
   value: boolean;
   onToggle: () => void;
-}> = ({ label, value, onToggle }) => (
+  last?: boolean;
+}> = ({ emoji, label, value, onToggle }) => (
   <View style={styles.settingRow}>
-    <Text style={styles.settingLabel}>{label}</Text>
+    <View style={styles.settingLabelRow}>
+      <Text style={styles.settingEmoji}>{emoji}</Text>
+      <Text style={styles.settingLabel}>{label}</Text>
+    </View>
     <Switch
       value={value}
       onValueChange={onToggle}
@@ -106,6 +202,21 @@ const SettingRow: React.FC<{
     />
   </View>
 );
+
+const StatItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <View style={styles.statItem}>
+    <Text style={styles.statValue}>{value}</Text>
+    <Text style={styles.statLabel}>{label}</Text>
+  </View>
+);
+
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
+
+// --- Styles ---
 
 const styles = StyleSheet.create({
   container: {
@@ -116,54 +227,113 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.sm,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: COLORS.textPrimary,
+    letterSpacing: 0.5,
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
-    flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.xl,
   },
+
+  // Profile
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+  },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: RADII.round,
+    backgroundColor: COLORS.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...SHADOWS.medium,
+  },
+  avatarText: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+  },
+  profileInfo: {
+    marginLeft: SPACING.md,
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  profileSub: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+
+  // Sections
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
     color: COLORS.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    marginTop: 24,
-    marginBottom: 8,
-    paddingLeft: 4,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.sm,
+    paddingLeft: SPACING.xs,
   },
-  section: {
+  sectionCard: {
     backgroundColor: COLORS.surface,
-    borderRadius: 16,
+    borderRadius: RADII.lg,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
     overflow: 'hidden',
+    ...SHADOWS.small,
   },
+
+  // Setting rows
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gridEmpty,
+    paddingHorizontal: SPACING.md,
+  },
+  settingLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingEmoji: {
+    fontSize: 18,
+    marginRight: SPACING.sm + 2,
   },
   settingLabel: {
     fontSize: 16,
     color: COLORS.textPrimary,
   },
+
+  // Dividers
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.surfaceBorder,
+    marginHorizontal: SPACING.md,
+  },
+
+  // Info rows
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gridEmpty,
+    paddingHorizontal: SPACING.md,
   },
   infoLabel: {
     fontSize: 16,
@@ -174,10 +344,62 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.accentGold,
   },
-  version: {
-    textAlign: 'center',
+
+  // Stats
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.accentGold,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600',
     color: COLORS.textSecondary,
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: COLORS.surfaceBorder,
+  },
+
+  // Footer
+  footer: {
+    alignItems: 'center',
+    marginTop: SPACING.xl,
+    paddingBottom: SPACING.md,
+  },
+  footerIcon: {
+    fontSize: 28,
+    marginBottom: SPACING.xs,
+  },
+  footerAppName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    letterSpacing: 0.5,
+  },
+  footerVersion: {
     fontSize: 12,
-    marginTop: 32,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  footerCopy: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    marginTop: SPACING.xs,
+    fontStyle: 'italic',
   },
 });
