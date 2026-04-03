@@ -1,6 +1,7 @@
 /**
  * Main game board component.
  * Composes the Skia board renderer with gesture handling for piece placement.
+ * Supports both tap-to-place and drag-and-drop piece placement.
  */
 
 import React, { useCallback, useRef } from 'react';
@@ -18,7 +19,7 @@ interface GameBoardProps {
   selectedPiece: Piece | null;
   ghostCells: { row: number; col: number; colorIndex: number }[];
   onCellTap: (row: number, col: number) => void;
-  onBoardLayout: (x: number, y: number) => void;
+  onBoardLayout: (x: number, y: number, width: number, height: number) => void;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -34,10 +35,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const totalSize = gridSize * (CELL_SIZE + CELL_GAP) + CELL_GAP;
 
-  const handleLayout = useCallback((event: LayoutChangeEvent) => {
-    const { x, y } = event.nativeEvent.layout;
-    boardRef.current?.measureInWindow((px, py) => {
-      onBoardLayout(px, py);
+  const handleLayout = useCallback((_event: LayoutChangeEvent) => {
+    boardRef.current?.measureInWindow((px, py, width, height) => {
+      onBoardLayout(px, py, width, height);
     });
   }, [onBoardLayout]);
 

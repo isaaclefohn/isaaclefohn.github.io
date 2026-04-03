@@ -1,27 +1,52 @@
 /**
- * Premium piece tray with glow selection and animated slots.
+ * Premium piece tray with glow selection, animated slots, and drag-to-place support.
  */
 
-import React, { useRef, useEffect } from 'react';
-import { View, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import React, { useRef, useEffect, useCallback } from 'react';
+import {
+  View,
+  TouchableOpacity,
+  Animated,
+  PanResponder,
+  StyleSheet,
+  GestureResponderEvent,
+  PanResponderGestureState,
+} from 'react-native';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { Piece } from '../game/engine/Piece';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
+
+export interface DragEvent {
+  pieceIndex: number;
+  /** Absolute screen position */
+  x: number;
+  y: number;
+}
 
 interface PieceTrayProps {
   pieces: (Piece | null)[];
   selectedIndex: number | null;
   onSelectPiece: (index: number) => void;
+  onDragStart?: (event: DragEvent) => void;
+  onDragMove?: (event: DragEvent) => void;
+  onDragEnd?: (event: DragEvent) => void;
 }
+
+const DRAG_THRESHOLD = 8; // px before we consider it a drag vs tap
 
 const PieceSlot: React.FC<{
   piece: Piece | null;
   isSelected: boolean;
   onPress: () => void;
   index: number;
-}> = ({ piece, isSelected, onPress, index }) => {
+  onDragStart?: (event: DragEvent) => void;
+  onDragMove?: (event: DragEvent) => void;
+  onDragEnd?: (event: DragEvent) => void;
+}> = ({ piece, isSelected, onPress, index, onDragStart, onDragMove, onDragEnd }) => {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const glowOpacity = useRef(new Animated.Value(0)).current;
+  const isDraggingRef = useRef(false);
+  const startPosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     // Entrance bounce
@@ -42,17 +67,84 @@ const PieceSlot: React.FC<{
     }).start();
   }, [isSelected, glowOpacity]);
 
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => !!piece,
+      onMoveShouldSetPanResponder: (_evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+        if (!piece) return false;
+        // Only capture the move if the finger has moved beyond threshold
+        return (
+          Math.abs(gestureState.dx) > DRAG_THRESHOLD ||
+          Math.abs(gestureState.dy) > DRAG_THRESHOLD
+        );
+      },
+      onPanResponderGrant: (evt: GestureResponderEvent) => {
+        isDraggingRef.current = false;
+        startPosRef.current = {
+          x: evt.nativeEvent.pageX,
+          y: evt.nativeEvent.pageY,
+        };
+      },
+      onPanResponderMove: (evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+        if (!piece) return;
+        const movedEnough =
+          Math.abs(gestureState.dx) > DRAG_THRESHOLD ||
+          Math.abs(gestureState.dy) > DRAG_THRESHOLD;
+
+        if (!isDraggingRef.current && movedEnough) {
+          isDraggingRef.current = true;
+          onDragStart?.({
+            pieceIndex: index,
+            x: evt.nativeEvent.pageX,
+            y: evt.nativeEvent.pageY,
+          });
+        }
+
+        if (isDraggingRef.current) {
+          onDragMove?.({
+            pieceIndex: index,
+            x: evt.nativeEvent.pageX,
+            y: evt.nativeEvent.pageY,
+          });
+        }
+      },
+      onPanResponderRelease: (evt: GestureResponderEvent) => {
+        if (isDraggingRef.current) {
+          onDragEnd?.({
+            pieceIndex: index,
+            x: evt.nativeEvent.pageX,
+            y: evt.nativeEvent.pageY,
+          });
+          isDraggingRef.current = false;
+        } else {
+          // It was a tap, not a drag
+          if (piece) {
+            onPress();
+          }
+        }
+      },
+      onPanResponderTerminate: (evt: GestureResponderEvent) => {
+        if (isDraggingRef.current) {
+          onDragEnd?.({
+            pieceIndex: index,
+            x: evt.nativeEvent.pageX,
+            y: evt.nativeEvent.pageY,
+          });
+          isDraggingRef.current = false;
+        }
+      },
+    })
+  ).current;
+
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-      <TouchableOpacity
+      <View
+        {...panResponder.panHandlers}
         style={[
           styles.pieceSlot,
           isSelected && styles.selectedSlot,
           !piece && styles.emptySlot,
         ]}
-        onPress={piece ? onPress : undefined}
-        disabled={!piece}
-        activeOpacity={0.7}
       >
         {/* Selection glow */}
         {isSelected && (
@@ -74,7 +166,7 @@ const PieceSlot: React.FC<{
             <View style={styles.checkmark} />
           </View>
         )}
-      </TouchableOpacity>
+      </View>
     </Animated.View>
   );
 };
@@ -83,6 +175,9 @@ export const PieceTray: React.FC<PieceTrayProps> = ({
   pieces,
   selectedIndex,
   onSelectPiece,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }) => {
   return (
     <View style={styles.container}>
@@ -93,6 +188,9 @@ export const PieceTray: React.FC<PieceTrayProps> = ({
           isSelected={selectedIndex === index}
           onPress={() => onSelectPiece(index)}
           index={index}
+          onDragStart={onDragStart}
+          onDragMove={onDragMove}
+          onDragEnd={onDragEnd}
         />
       ))}
     </View>
