@@ -20,6 +20,7 @@ import { Button } from '../components/common/Button';
 import { PRODUCTS, getCoinProducts, getGemProducts, getBundleProducts, getPremiumProducts, Product } from '../services/purchases';
 import { POWER_UP_CONFIGS, PowerUpType } from '../game/powerups/PowerUpManager';
 import { THEMES, BLOCK_SKINS, GameTheme, BlockSkin } from '../game/rendering/ThemeManager';
+import { GameIcon } from '../components/GameIcon';
 import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -36,10 +37,10 @@ const TAB_LABELS: Record<ShopTab, string> = {
   cosmetics: 'Themes',
 };
 
-const TAB_ICONS: Record<ShopTab, string> = {
-  currency: '\uD83E\uDE99',
-  powerups: '\u26A1',
-  cosmetics: '\uD83C\uDFA8',
+const TAB_ICON_NAMES: Record<ShopTab, 'coin' | 'lightning' | 'palette'> = {
+  currency: 'coin',
+  powerups: 'lightning',
+  cosmetics: 'palette',
 };
 
 // ---------------------------------------------------------------------------
@@ -78,7 +79,7 @@ const AnimatedTab: React.FC<{
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        <Text style={styles.tabIcon}>{TAB_ICONS[tab]}</Text>
+        <GameIcon name={TAB_ICON_NAMES[tab]} size={14} />
         <Text style={[styles.tabText, active && styles.activeTabText]}>
           {TAB_LABELS[tab]}
         </Text>
@@ -138,17 +139,16 @@ const ProductCard: React.FC<{
 
       <View style={styles.itemInfo}>
         <View style={[styles.iconContainer, isPremium && styles.premiumIconContainer]}>
-          <Text style={styles.itemIcon}>
-            {product.reward.type === 'coins'
-              ? '\uD83E\uDE99'
-              : product.reward.type === 'gems'
-                ? '\uD83D\uDC8E'
-                : product.reward.type === 'bundle'
-                  ? '\uD83C\uDF81'
-                  : product.reward.type === 'vip'
-                    ? '\uD83D\uDC51'
-                    : '\u2728'}
-          </Text>
+          <GameIcon
+            name={
+              product.reward.type === 'coins' ? 'coin'
+              : product.reward.type === 'gems' ? 'gem'
+              : product.reward.type === 'bundle' ? 'gift'
+              : product.reward.type === 'vip' ? 'crown'
+              : 'sparkle'
+            }
+            size={26}
+          />
         </View>
         <View style={styles.itemTextBlock}>
           <Text style={[styles.itemName, isPremium && styles.premiumItemName]}>
@@ -348,13 +348,10 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                 <View key={type} style={styles.shopItem}>
                   <View style={styles.itemInfo}>
                     <View style={styles.iconContainer}>
-                      <Text style={styles.itemIcon}>
-                        {type === 'bomb'
-                          ? '\uD83D\uDCA3'
-                          : type === 'rowClear'
-                            ? '\u2194\uFE0F'
-                            : '\uD83C\uDFA8'}
-                      </Text>
+                      <GameIcon
+                        name={type === 'bomb' ? 'bomb' : type === 'rowClear' ? 'lightning' : 'palette'}
+                        size={26}
+                      />
                     </View>
                     <View style={styles.itemTextBlock}>
                       <Text style={styles.itemName}>{config.name}</Text>
@@ -367,7 +364,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                     </View>
                   </View>
                   <Button
-                    title={`\uD83E\uDE99 ${config.coinCost}`}
+                    title={`${config.coinCost} coins`}
                     onPress={() => handleBuyPowerUp(type)}
                     variant="primary"
                     size="small"
@@ -398,13 +395,13 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                         ))}
                       </View>
                       <View style={styles.itemTextBlock}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={{ fontSize: 16 }}>{theme.emoji}</Text>
-                          <Text style={styles.itemName}>{theme.name}</Text>
+                        <Text style={styles.itemName}>{theme.name}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          {theme.price > 0 && <GameIcon name="gem" size={12} />}
+                          <Text style={styles.itemDesc}>
+                            {theme.price === 0 ? 'Free' : `${theme.price} gems`}
+                          </Text>
                         </View>
-                        <Text style={styles.itemDesc}>
-                          {theme.price === 0 ? 'Free' : `\uD83D\uDC8E ${theme.price} gems`}
-                        </Text>
                         {isEquipped && (
                           <Text style={styles.equippedLabel}>Currently equipped</Text>
                         )}
@@ -416,7 +413,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                           ? '\u2714 Equipped'
                           : theme.price === 0
                             ? 'Equip'
-                            : `\uD83D\uDC8E ${theme.price}`
+                            : `${theme.price} gems`
                       }
                       onPress={() => handleBuyTheme(theme)}
                       variant={isEquipped ? 'ghost' : 'primary'}
@@ -441,13 +438,13 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                   <View key={skin.id} style={[styles.shopItem, isEquipped && styles.equippedItem]}>
                     <View style={styles.itemInfo}>
                       <View style={styles.iconContainer}>
-                        <Text style={styles.itemIcon}>{skin.emoji}</Text>
+                        <GameIcon name="sparkle" size={26} />
                       </View>
                       <View style={styles.itemTextBlock}>
                         <Text style={styles.itemName}>{skin.name}</Text>
                         <Text style={styles.itemDesc}>
                           {skin.style.charAt(0).toUpperCase() + skin.style.slice(1)} style
-                          {skin.price === 0 ? ' \u2022 Free' : ` \u2022 \uD83D\uDC8E ${skin.price} gems`}
+                          {skin.price === 0 ? ' \u2022 Free' : ` \u2022 ${skin.price} gems`}
                         </Text>
                         {isEquipped && (
                           <Text style={styles.equippedLabel}>Currently equipped</Text>
@@ -460,7 +457,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                           ? '\u2714 Equipped'
                           : skin.price === 0
                             ? 'Equip'
-                            : `\uD83D\uDC8E ${skin.price}`
+                            : `${skin.price} gems`
                       }
                       onPress={() => {
                         if (skin.price === 0 || isEquipped) {
@@ -555,9 +552,6 @@ const styles = StyleSheet.create({
   activeTab: {
     backgroundColor: COLORS.accent,
     ...SHADOWS.small,
-  },
-  tabIcon: {
-    fontSize: 14,
   },
   tabText: {
     fontSize: 13,
@@ -662,9 +656,6 @@ const styles = StyleSheet.create({
   },
   premiumIconContainer: {
     backgroundColor: COLORS.accent + '20',
-  },
-  itemIcon: {
-    fontSize: 26,
   },
   itemTextBlock: {
     flex: 1,

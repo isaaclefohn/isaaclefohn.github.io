@@ -1,43 +1,45 @@
 /**
  * Tutorial overlay for first-time players.
  * Shows a series of instructional steps explaining gameplay mechanics.
+ * Uses custom GameIcon instead of emojis.
  */
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS } from '../utils/constants';
+import { GameIcon, IconName } from './GameIcon';
+import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
 
 interface TutorialStep {
   title: string;
   description: string;
-  emoji: string;
+  icon: IconName;
 }
 
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
     title: 'Welcome to Color Block Blast!',
     description: 'Place blocks on the grid to fill complete rows or columns. Cleared lines score points!',
-    emoji: '\uD83C\uDFAE',
+    icon: 'gamepad',
   },
   {
     title: 'Select & Place',
     description: 'Tap a piece then tap the board, or drag a piece directly onto the board. You get 3 pieces per round.',
-    emoji: '\uD83D\uDC46',
+    icon: 'pointer',
   },
   {
     title: 'Clear Lines',
     description: 'Fill an entire row or column to clear it and earn bonus points. Chain clears for combo multipliers!',
-    emoji: '\u2728',
+    icon: 'sparkle',
   },
   {
     title: 'Power-Ups',
     description: 'Use bombs, row clears, and color clears to get out of tight spots. Buy them in the shop!',
-    emoji: '\uD83D\uDCA3',
+    icon: 'bomb',
   },
   {
     title: 'Reach the Target',
     description: 'Hit the score target to complete each level and earn stars. Get 3 stars for the best rewards!',
-    emoji: '\u2B50',
+    icon: 'star',
   },
 ];
 
@@ -65,7 +67,9 @@ export const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   return (
     <View style={styles.overlay}>
       <View style={styles.card}>
-        <Text style={styles.emoji}>{step.emoji}</Text>
+        <View style={styles.iconContainer}>
+          <GameIcon name={step.icon} size={40} />
+        </View>
         <Text style={styles.title}>{step.title}</Text>
         <Text style={styles.description}>{step.description}</Text>
 
@@ -100,16 +104,26 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: COLORS.surface,
-    borderRadius: 20,
+    borderRadius: RADII.xl,
     padding: 32,
     marginHorizontal: 32,
     alignItems: 'center',
     maxWidth: 340,
     width: '100%',
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+    ...SHADOWS.large,
   },
-  emoji: {
-    fontSize: 48,
+  iconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: COLORS.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
   },
   title: {
     fontSize: 22,
@@ -149,9 +163,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accent,
     paddingVertical: 14,
     paddingHorizontal: 48,
-    borderRadius: 12,
+    borderRadius: RADII.md,
     width: '100%',
     alignItems: 'center',
+    ...SHADOWS.small,
   },
   nextButtonText: {
     fontSize: 16,

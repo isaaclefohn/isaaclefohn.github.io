@@ -1,10 +1,12 @@
 /**
  * Premium power-up bar with pulse animations and activation effects.
+ * Uses custom GameIcon instead of emojis.
  */
 
 import React, { useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Animated, StyleSheet, Easing } from 'react-native';
 import { PowerUpType, POWER_UP_CONFIGS } from '../game/powerups/PowerUpManager';
+import { GameIcon, IconName } from './GameIcon';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 
 interface PowerUpBarProps {
@@ -14,10 +16,10 @@ interface PowerUpBarProps {
   disabled?: boolean;
 }
 
-const POWER_UP_ICONS: Record<PowerUpType, string> = {
-  bomb: '💥',
-  rowClear: '⚡',
-  colorClear: '🎨',
+const POWER_UP_ICON_NAMES: Record<PowerUpType, IconName> = {
+  bomb: 'bomb',
+  rowClear: 'lightning',
+  colorClear: 'palette',
 };
 
 const PowerUpButton: React.FC<{
@@ -60,7 +62,7 @@ const PowerUpButton: React.FC<{
         disabled={count === 0 || disabled}
         activeOpacity={0.7}
       >
-        <Text style={styles.icon}>{POWER_UP_ICONS[type]}</Text>
+        <GameIcon name={POWER_UP_ICON_NAMES[type]} size={22} />
         <Text style={[styles.name, isActive && styles.activeName]}>
           {config.name}
         </Text>
@@ -115,6 +117,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     minWidth: 74,
+    gap: 3,
     ...SHADOWS.small,
   },
   activeButton: {
@@ -126,10 +129,6 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.35,
-  },
-  icon: {
-    fontSize: 22,
-    marginBottom: 3,
   },
   name: {
     fontSize: 10,

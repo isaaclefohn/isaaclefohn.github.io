@@ -15,6 +15,7 @@ import {
   Animated,
 } from 'react-native';
 import { Button } from '../components/common/Button';
+import { GameIcon, IconName } from '../components/GameIcon';
 import { fetchLeaderboard, LeaderboardEntry } from '../services/leaderboard';
 import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
@@ -29,6 +30,7 @@ type LeaderboardTab = 'weekly' | 'daily';
 
 const PODIUM_BORDER_COLORS = [COLORS.accentGold, '#C0C0C0', '#CD7F32'];
 const PODIUM_BG_COLORS = [`${COLORS.accentGold}10`, 'rgba(192,192,192,0.06)', 'rgba(205,127,50,0.06)'];
+const MEDAL_ICONS: IconName[] = ['medal-gold', 'medal-silver', 'medal-bronze'];
 
 /** Animated wrapper for each leaderboard entry row */
 const AnimatedEntry: React.FC<{ index: number; children: React.ReactNode }> = ({ index, children }) => {
@@ -101,7 +103,6 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
 
   const renderEntry = ({ item, index }: { item: LeaderboardEntry; index: number }) => {
     const isTopThree = index < 3;
-    const medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
 
     return (
       <AnimatedEntry index={index}>
@@ -120,7 +121,7 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
         >
           <View style={[styles.rankContainer, isTopThree && styles.podiumRankContainer]}>
             {isTopThree ? (
-              <Text style={styles.podiumMedal}>{medals[index]}</Text>
+              <GameIcon name={MEDAL_ICONS[index]} size={28} />
             ) : (
               <View style={styles.rankBadge}>
                 <Text style={styles.rankBadgeText}>{item.rank || index + 1}</Text>
@@ -144,7 +145,7 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
     if (loading) return null;
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTrophy}>{'\uD83C\uDFC6'}</Text>
+        <GameIcon name="trophy" size={64} />
         <Text style={styles.emptyTitle}>No entries yet</Text>
         <Text style={styles.emptySubtitle}>
           Be the first to claim the top spot!
@@ -167,13 +168,13 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
       >
         <Button title="Back" onPress={() => navigation.goBack()} variant="ghost" size="small" />
         <View style={styles.headerTitleRow}>
-          <Text style={styles.headerTrophy}>{'\uD83C\uDFC6'}</Text>
+          <GameIcon name="trophy" size={22} />
           <Text style={styles.headerTitle}>Leaderboard</Text>
         </View>
         <View style={{ width: 60 }} />
       </Animated.View>
 
-      {/* Tabs — pill/capsule style */}
+      {/* Tabs -- pill/capsule style */}
       <View style={styles.tabBarOuter}>
         <View style={styles.tabBar}>
           {(['weekly', 'daily'] as LeaderboardTab[]).map((tab) => (
@@ -240,9 +241,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.sm,
   },
-  headerTrophy: {
-    fontSize: 22,
-  },
   headerTitle: {
     fontSize: 22,
     fontWeight: '800',
@@ -250,7 +248,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  /* Tab bar — pill/capsule style matching ShopScreen */
+  /* Tab bar -- pill/capsule style matching ShopScreen */
   tabBarOuter: {
     paddingHorizontal: SPACING.md,
     marginBottom: SPACING.md,
@@ -327,9 +325,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  podiumMedal: {
-    fontSize: 28,
-  },
   rankBadge: {
     width: 28,
     height: 28,
@@ -375,23 +370,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 80,
     paddingHorizontal: SPACING.xl,
-  },
-  emptyTrophy: {
-    fontSize: 64,
-    marginBottom: SPACING.lg,
+    gap: SPACING.sm,
   },
   emptyTitle: {
     fontSize: 22,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
+    marginTop: SPACING.md,
   },
   emptySubtitle: {
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.textSecondary,
     textAlign: 'center',
-    marginBottom: SPACING.xs,
   },
   emptyHint: {
     fontSize: 14,

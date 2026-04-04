@@ -1,10 +1,11 @@
 /**
- * Premium currency display with icons and compact formatting.
+ * Premium currency display with custom icons and compact formatting.
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePlayerStore } from '../store/playerStore';
+import { GameIcon } from './GameIcon';
 import { COLORS, RADII, SPACING } from '../utils/constants';
 import { formatCompact } from '../utils/formatters';
 
@@ -26,13 +27,13 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.currencyItem}>
-        <Text style={styles.icon}>🪙</Text>
+        <GameIcon name="coin" size={14} />
         <Text style={styles.value}>{formatCompact(coins)}</Text>
       </View>
       <View style={styles.divider} />
       <View style={styles.currencyItem}>
-        <Text style={styles.icon}>💎</Text>
-        <Text style={styles.value}>{formatCompact(gems)}</Text>
+        <GameIcon name="gem" size={14} />
+        <Text style={[styles.value, styles.gemValue]}>{formatCompact(gems)}</Text>
       </View>
     </View>
   );
@@ -53,15 +54,15 @@ const styles = StyleSheet.create({
   currencyItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-  },
-  icon: {
-    fontSize: 14,
+    gap: 4,
   },
   value: {
     fontSize: 13,
     fontWeight: '800',
     color: COLORS.accentGold,
+  },
+  gemValue: {
+    color: '#C084FC',
   },
   divider: {
     width: 1,

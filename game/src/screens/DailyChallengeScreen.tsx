@@ -9,6 +9,7 @@ import { View, Text, StyleSheet, SafeAreaView, Animated } from 'react-native';
 import { usePlayerStore } from '../store/playerStore';
 import { Button } from '../components/common/Button';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
+import { GameIcon } from '../components/GameIcon';
 import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import { formatTime } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -284,7 +285,7 @@ export const DailyChallengeScreen: React.FC<DailyChallengeScreenProps> = ({ navi
           <View style={styles.streakRow}>
             <View style={styles.streakBadge}>
               <View style={styles.streakNumberRow}>
-                <Text style={styles.streakEmoji}>🔥</Text>
+                <GameIcon name="fire" size={24} />
                 <Text style={styles.streakNumber}>{currentStreak}</Text>
               </View>
               <Text style={styles.streakLabel}>days</Text>
@@ -292,7 +293,7 @@ export const DailyChallengeScreen: React.FC<DailyChallengeScreenProps> = ({ navi
             <View style={styles.streakDivider} />
             <View style={styles.streakBadge}>
               <View style={styles.streakNumberRow}>
-                <Text style={styles.streakEmoji}>🔥</Text>
+                <GameIcon name="fire" size={24} />
                 <Text style={styles.streakNumber}>{longestStreak}</Text>
               </View>
               <Text style={styles.streakLabel}>best</Text>
@@ -516,9 +517,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.xs,
-  },
-  streakEmoji: {
-    fontSize: 24,
   },
   streakNumber: {
     fontSize: 36,

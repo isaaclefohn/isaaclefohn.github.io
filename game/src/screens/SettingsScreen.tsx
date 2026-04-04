@@ -14,6 +14,7 @@ import {
   Animated,
 } from 'react-native';
 import { Tutorial } from '../components/Tutorial';
+import { GameIcon, IconName } from '../components/GameIcon';
 import { useSettingsStore } from '../store/settingsStore';
 import { usePlayerStore } from '../store/playerStore';
 import { Button } from '../components/common/Button';
@@ -106,21 +107,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           <Text style={styles.sectionTitle}>Audio</Text>
           <View style={styles.sectionCard}>
             <SettingRow
-              emoji={'\uD83D\uDD0A'}
+              icon="sound"
               label="Sound Effects"
               value={settings.soundEnabled}
               onToggle={settings.toggleSound}
             />
             <Divider />
             <SettingRow
-              emoji={'\uD83C\uDFB5'}
+              icon="music"
               label="Music"
               value={settings.musicEnabled}
               onToggle={settings.toggleMusic}
             />
             <Divider />
             <SettingRow
-              emoji={'\uD83D\uDCF3'}
+              icon="haptic"
               label="Haptic Feedback"
               value={settings.hapticsEnabled}
               onToggle={settings.toggleHaptics}
@@ -134,14 +135,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           <Text style={styles.sectionTitle}>Visual</Text>
           <View style={styles.sectionCard}>
             <SettingRow
-              emoji={'\uD83D\uDCD0'}
+              icon="grid"
               label="Grid Lines"
               value={settings.showGridLines}
               onToggle={settings.toggleGridLines}
             />
             <Divider />
             <SettingRow
-              emoji={'\uD83D\uDC7B'}
+              icon="ghost"
               label="Ghost Preview"
               value={settings.showGhostPreview}
               onToggle={settings.toggleGhostPreview}
@@ -156,7 +157,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           <View style={styles.sectionCard}>
             <Button
               title="How to Play"
-              icon="📖"
               onPress={() => setShowTutorial(true)}
               variant="ghost"
               size="medium"
@@ -182,7 +182,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
 
         {/* About footer */}
         <Animated.View style={[styles.footer, animatedStyle(anims[6])]}>
-          <Text style={styles.footerIcon}>{'\uD83C\uDFAE'}</Text>
+          <GameIcon name="gamepad" size={32} />
           <Text style={styles.footerAppName}>Color Block Blast</Text>
           <Text style={styles.footerVersion}>Version 1.0.0</Text>
           <Text style={styles.footerCopy}>Made with care</Text>
@@ -201,15 +201,17 @@ const Divider: React.FC = () => <View style={styles.divider} />;
 const StatDivider: React.FC = () => <View style={styles.statDivider} />;
 
 const SettingRow: React.FC<{
-  emoji: string;
+  icon: IconName;
   label: string;
   value: boolean;
   onToggle: () => void;
   last?: boolean;
-}> = ({ emoji, label, value, onToggle }) => (
+}> = ({ icon, label, value, onToggle }) => (
   <View style={styles.settingRow}>
     <View style={styles.settingLabelRow}>
-      <Text style={styles.settingEmoji}>{emoji}</Text>
+      <View style={styles.settingIconWrap}>
+        <GameIcon name={icon} size={18} />
+      </View>
       <Text style={styles.settingLabel}>{label}</Text>
     </View>
     <Switch
@@ -329,9 +331,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  settingEmoji: {
-    fontSize: 18,
-    marginRight: SPACING.sm + 2,
+  settingIconWrap: {
+    width: 28,
+    alignItems: 'center',
+    marginRight: SPACING.sm,
   },
   settingLabel: {
     fontSize: 16,
@@ -343,24 +346,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: COLORS.surfaceBorder,
     marginHorizontal: SPACING.md,
-  },
-
-  // Info rows
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: SPACING.md,
-  },
-  infoLabel: {
-    fontSize: 16,
-    color: COLORS.textPrimary,
-  },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.accentGold,
   },
 
   // Stats
@@ -398,26 +383,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: SPACING.xl,
     paddingBottom: SPACING.md,
-  },
-  footerIcon: {
-    fontSize: 28,
-    marginBottom: SPACING.xs,
+    gap: 4,
   },
   footerAppName: {
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.textSecondary,
     letterSpacing: 0.5,
+    marginTop: SPACING.xs,
   },
   footerVersion: {
     fontSize: 12,
     color: COLORS.textMuted,
-    marginTop: 2,
   },
   footerCopy: {
     fontSize: 11,
     color: COLORS.textMuted,
-    marginTop: SPACING.xs,
     fontStyle: 'italic',
   },
 });

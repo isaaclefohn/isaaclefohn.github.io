@@ -1,6 +1,7 @@
 /**
  * Premium home screen with animated title, rich stats, and polished layout.
  * All buttons visible, labeled with icons, sensibly aligned.
+ * Inspired by Block Blast / Candy Crush / Royal Kingdom but unique.
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -9,6 +10,7 @@ import { usePlayerStore } from '../store/playerStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { Button } from '../components/common/Button';
 import { Tutorial } from '../components/Tutorial';
+import { GameIcon } from '../components/GameIcon';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatCompact } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -33,6 +35,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const buttonsOpacity = useRef(new Animated.Value(0)).current;
   const buttonsTranslate = useRef(new Animated.Value(40)).current;
   const blastGlow = useRef(new Animated.Value(0.6)).current;
+  const decorPulse = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
     Animated.sequence([
@@ -54,6 +57,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         Animated.timing(blastGlow, { toValue: 0.6, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ])
     ).start();
+
+    // Decorative background pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(decorPulse, { toValue: 0.5, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(decorPulse, { toValue: 0.3, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
   }, []);
 
   const handleTutorialComplete = useCallback(() => {
@@ -63,6 +74,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Decorative background orbs */}
+      <Animated.View style={[styles.decorOrb, styles.decorOrb1, { opacity: decorPulse }]} />
+      <Animated.View style={[styles.decorOrb, styles.decorOrb2, { opacity: decorPulse }]} />
+
       <View style={styles.content}>
         {/* Animated Title */}
         <View style={styles.titleContainer}>
@@ -74,32 +89,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           >
             COLOR BLOCK
           </Animated.Text>
-          <Animated.Text
-            style={[
-              styles.titleAccent,
-              { transform: [{ scale: blastScale }], opacity: blastGlow },
-            ]}
-          >
-            BLAST
-          </Animated.Text>
+          <Animated.View style={[styles.blastRow, { transform: [{ scale: blastScale }], opacity: blastGlow }]}>
+            <View style={styles.titleDeco} />
+            <Text style={styles.titleAccent}>BLAST</Text>
+            <View style={styles.titleDeco} />
+          </Animated.View>
         </View>
 
         {/* Stats bar */}
         <Animated.View style={[styles.statsBar, { opacity: statsOpacity }]}>
           <View style={styles.statItem}>
-            <Text style={styles.statIcon}>🪙</Text>
+            <GameIcon name="coin" size={18} />
             <Text style={styles.statValue}>{formatCompact(coins)}</Text>
             <Text style={styles.statLabel}>COINS</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statIcon}>💎</Text>
+            <GameIcon name="gem" size={18} />
             <Text style={styles.statValue}>{formatCompact(gems)}</Text>
             <Text style={styles.statLabel}>GEMS</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statIcon}>⭐</Text>
+            <GameIcon name="star" size={18} />
             <Text style={styles.statValue}>{formatCompact(totalScore)}</Text>
             <Text style={styles.statLabel}>SCORE</Text>
           </View>
@@ -107,7 +119,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statIcon}>🔥</Text>
+                <GameIcon name="fire" size={18} />
                 <Text style={styles.statValue}>{currentStreak}</Text>
                 <Text style={styles.statLabel}>STREAK</Text>
               </View>
@@ -123,28 +135,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           ]}
         >
           {/* Primary play button - full width, large */}
-          <Button
-            title={highestLevel > 0 ? `Continue  \u2022  Level ${highestLevel + 1}` : 'Play'}
-            icon="▶"
-            onPress={() => navigation.navigate('Game', { level: highestLevel > 0 ? highestLevel + 1 : 1 })}
-            variant="primary"
-            size="large"
-            style={styles.mainButton}
-          />
+          <View style={styles.playButtonWrap}>
+            <Button
+              title={highestLevel > 0 ? `Continue  \u2022  Level ${highestLevel + 1}` : 'Play'}
+              onPress={() => navigation.navigate('Game', { level: highestLevel > 0 ? highestLevel + 1 : 1 })}
+              variant="primary"
+              size="large"
+              style={styles.mainButton}
+            />
+            {/* Glow ring around play button */}
+            <View style={styles.playGlow} />
+          </View>
 
           {/* Secondary row - Daily Challenge + Level Select */}
           <View style={styles.secondaryRow}>
             <Button
-              title="Daily Challenge"
-              icon="📅"
+              title="Daily"
               onPress={() => navigation.navigate('DailyChallenge')}
               variant="secondary"
               size="medium"
               style={styles.halfButton}
             />
             <Button
-              title="Select Level"
-              icon="🗺"
+              title="Levels"
               onPress={() => navigation.navigate('LevelSelect')}
               variant="secondary"
               size="medium"
@@ -157,7 +170,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <View style={styles.bottomButtonWrapper}>
               <Button
                 title="Shop"
-                icon="🛒"
                 onPress={() => navigation.navigate('Shop')}
                 variant="ghost"
                 size="small"
@@ -167,7 +179,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <View style={styles.bottomButtonWrapper}>
               <Button
                 title="Rankings"
-                icon="🏆"
                 onPress={() => navigation.navigate('Leaderboard')}
                 variant="ghost"
                 size="small"
@@ -177,7 +188,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <View style={styles.bottomButtonWrapper}>
               <Button
                 title="Settings"
-                icon="⚙️"
                 onPress={() => navigation.navigate('Settings')}
                 variant="ghost"
                 size="small"
@@ -189,9 +199,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
         {/* Level indicator */}
         {highestLevel > 0 && (
-          <Animated.Text style={[styles.levelIndicator, { opacity: buttonsOpacity }]}>
-            Highest Level: {highestLevel}
-          </Animated.Text>
+          <Animated.View style={[styles.levelIndicatorRow, { opacity: buttonsOpacity }]}>
+            <View style={styles.levelBadge}>
+              <Text style={styles.levelBadgeText}>LVL {highestLevel}</Text>
+            </View>
+          </Animated.View>
         )}
       </View>
 
@@ -211,6 +223,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: SPACING.lg,
   },
+  // Decorative background elements
+  decorOrb: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  decorOrb1: {
+    width: 200,
+    height: 200,
+    backgroundColor: COLORS.accent,
+    top: -60,
+    right: -50,
+    opacity: 0.06,
+  },
+  decorOrb2: {
+    width: 160,
+    height: 160,
+    backgroundColor: COLORS.accentGold,
+    bottom: 40,
+    left: -40,
+    opacity: 0.04,
+  },
   titleContainer: {
     alignItems: 'center',
     marginBottom: SPACING.xl,
@@ -224,15 +257,26 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
+  blastRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   titleAccent: {
     fontSize: SCREEN_WIDTH < 375 ? 46 : 56,
     fontWeight: '900',
     color: COLORS.accent,
     letterSpacing: 10,
-    marginTop: -6,
     textShadowColor: COLORS.accent,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
+  },
+  titleDeco: {
+    width: 28,
+    height: 3,
+    backgroundColor: COLORS.accent,
+    borderRadius: 2,
+    opacity: 0.6,
   },
   statsBar: {
     flexDirection: 'row',
@@ -245,15 +289,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     alignItems: 'center',
     width: '100%',
-    ...SHADOWS.small,
+    ...SHADOWS.medium,
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
-  },
-  statIcon: {
-    fontSize: 16,
-    marginBottom: 2,
+    gap: 2,
   },
   statValue: {
     fontSize: 16,
@@ -265,7 +306,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.textMuted,
     letterSpacing: 1.2,
-    marginTop: 1,
   },
   statDivider: {
     width: 1,
@@ -277,8 +317,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.sm,
   },
+  playButtonWrap: {
+    width: '100%',
+    position: 'relative',
+  },
   mainButton: {
     width: '100%',
+  },
+  playGlow: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    borderRadius: RADII.lg + 2,
+    borderWidth: 1.5,
+    borderColor: `${COLORS.accent}40`,
+    zIndex: -1,
   },
   secondaryRow: {
     flexDirection: 'row',
@@ -300,10 +355,22 @@ const styles = StyleSheet.create({
   bottomButton: {
     width: '100%',
   },
-  levelIndicator: {
-    fontSize: 12,
-    color: COLORS.textMuted,
+  levelIndicatorRow: {
     marginTop: SPACING.lg,
-    letterSpacing: 1,
+    alignItems: 'center',
+  },
+  levelBadge: {
+    backgroundColor: COLORS.surfaceLight,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderRadius: RADII.round,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+  },
+  levelBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.textSecondary,
+    letterSpacing: 1.5,
   },
 });

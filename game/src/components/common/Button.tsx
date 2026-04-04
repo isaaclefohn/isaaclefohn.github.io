@@ -1,9 +1,9 @@
 /**
- * Premium button component with press animation, shadows, and variants.
+ * Premium button component with press animation, inner highlight, shadows, and variants.
  */
 
 import React, { useRef, useCallback } from 'react';
-import { Animated, Text, StyleSheet, ViewStyle, TextStyle, Pressable } from 'react-native';
+import { View, Animated, Text, StyleSheet, ViewStyle, TextStyle, Pressable } from 'react-native';
 import { COLORS, SHADOWS, RADII } from '../../utils/constants';
 
 interface ButtonProps {
@@ -64,6 +64,10 @@ export const Button: React.FC<ButtonProps> = ({
         onPressOut={handlePressOut}
         disabled={disabled}
       >
+        {/* Inner highlight for depth on primary buttons */}
+        {variant === 'primary' && (
+          <View style={[styles.innerHighlight, sizeRadii[size]]} />
+        )}
         {icon && <Text style={[styles.icon, sizeIconStyles[size]]}>{icon}</Text>}
         <Text
           style={[
@@ -83,11 +87,13 @@ export const Button: React.FC<ButtonProps> = ({
 const variantStyles: Record<string, ViewStyle> = {
   primary: {
     backgroundColor: COLORS.accent,
+    borderBottomWidth: 3,
+    borderBottomColor: COLORS.accentDark,
   },
   secondary: {
     backgroundColor: COLORS.surface,
     borderWidth: 1.5,
-    borderColor: COLORS.accent,
+    borderColor: COLORS.surfaceBorder,
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -100,9 +106,15 @@ const sizeStyles: Record<string, ViewStyle> = {
   large: { paddingVertical: 18, paddingHorizontal: 40, borderRadius: RADII.lg },
 };
 
+const sizeRadii: Record<string, ViewStyle> = {
+  small: { borderTopLeftRadius: RADII.sm - 1, borderTopRightRadius: RADII.sm - 1 },
+  medium: { borderTopLeftRadius: RADII.md - 1, borderTopRightRadius: RADII.md - 1 },
+  large: { borderTopLeftRadius: RADII.lg - 1, borderTopRightRadius: RADII.lg - 1 },
+};
+
 const variantTextStyles: Record<string, TextStyle> = {
   primary: { color: COLORS.textPrimary },
-  secondary: { color: COLORS.accent },
+  secondary: { color: COLORS.textSecondary },
   ghost: { color: COLORS.textSecondary },
 };
 
@@ -123,6 +135,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   disabled: {
     opacity: 0.4,
@@ -132,4 +145,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   icon: {},
+  innerHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '45%',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
 });

@@ -4,6 +4,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { View, Text, Animated, StyleSheet, Easing } from 'react-native';
+import { GameIcon } from './GameIcon';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 
@@ -56,12 +57,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         </View>
         <View style={styles.starsContainer}>
           {[1, 2, 3].map((star) => (
-            <Text
-              key={star}
-              style={[styles.star, star <= stars && styles.starActive]}
-            >
-              {star <= stars ? '\u2605' : '\u2606'}
-            </Text>
+            <GameIcon key={star} name={star <= stars ? 'star' : 'star-outline'} size={20} />
           ))}
         </View>
       </View>
@@ -124,16 +120,6 @@ const styles = StyleSheet.create({
   starsContainer: {
     flexDirection: 'row',
     gap: 2,
-  },
-  star: {
-    fontSize: 20,
-    color: COLORS.textMuted,
-  },
-  starActive: {
-    color: COLORS.accentGold,
-    textShadowColor: COLORS.accentGold,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
   },
   scoreText: {
     fontSize: 38,

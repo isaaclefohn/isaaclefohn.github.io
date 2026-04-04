@@ -17,6 +17,7 @@ import { usePlayerStore } from '../store/playerStore';
 import { getTotalLevels, isBossLevel } from '../game/levels/LevelGenerator';
 import { Button } from '../components/common/Button';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
+import { GameIcon } from '../components/GameIcon';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -74,18 +75,15 @@ const LevelCard: React.FC<{
         {item.isBoss && item.unlocked && (
           <View style={styles.bossGlow} />
         )}
-        <Text style={[styles.levelNumber, !item.unlocked && styles.levelNumberLocked]}>
-          {item.unlocked ? item.level : '\uD83D\uDD12'}
-        </Text>
+        {item.unlocked ? (
+          <Text style={styles.levelNumber}>{item.level}</Text>
+        ) : (
+          <GameIcon name="lock" size={16} />
+        )}
         {item.unlocked && (
           <View style={styles.starsRow}>
             {[1, 2, 3].map((s) => (
-              <Text
-                key={s}
-                style={[styles.star, s <= item.stars && styles.starActive]}
-              >
-                {s <= item.stars ? '\u2605' : '\u2606'}
-              </Text>
+              <GameIcon key={s} name={s <= item.stars ? 'star' : 'star-outline'} size={11} />
             ))}
           </View>
         )}
@@ -151,9 +149,12 @@ export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${Math.min((totalStars / maxStars) * 100, 100)}%` }]} />
         </View>
-        <Text style={styles.progressText}>
-          {'\u2605'} {totalStars}/{maxStars}
-        </Text>
+        <View style={styles.progressTextRow}>
+          <GameIcon name="star" size={12} />
+          <Text style={styles.progressText}>
+            {totalStars}/{maxStars}
+          </Text>
+        </View>
       </View>
 
       <FlatList
@@ -212,6 +213,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accentGold,
     borderRadius: RADII.round,
   },
+  progressTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   progressText: {
     fontSize: 12,
     fontWeight: '700',
@@ -264,23 +270,10 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.textPrimary,
   },
-  levelNumberLocked: {
-    fontSize: 16,
-  },
   starsRow: {
     flexDirection: 'row',
     marginTop: 2,
     gap: 1,
-  },
-  star: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-  },
-  starActive: {
-    color: COLORS.accentGold,
-    textShadowColor: COLORS.accentGold,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 4,
   },
   bossTag: {
     position: 'absolute',

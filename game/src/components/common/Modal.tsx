@@ -1,5 +1,5 @@
 /**
- * Premium modal with slide-up animation and glowing border.
+ * Premium modal with slide-up animation, glowing accent line, and layered depth.
  */
 
 import React, { useRef, useEffect } from 'react';
@@ -82,6 +82,9 @@ export const Modal: React.FC<ModalProps> = ({
             >
               {/* Glow accent line at top */}
               <View style={styles.accentLine} />
+              {/* Corner accents for premium feel */}
+              <View style={[styles.cornerAccent, styles.cornerTopLeft]} />
+              <View style={[styles.cornerAccent, styles.cornerTopRight]} />
               {children}
             </Animated.View>
           </TouchableWithoutFeedback>
@@ -119,5 +122,29 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accent,
     borderBottomLeftRadius: 3,
     borderBottomRightRadius: 3,
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+  },
+  cornerAccent: {
+    position: 'absolute',
+    width: 16,
+    height: 16,
+    borderColor: `${COLORS.accent}25`,
+  },
+  cornerTopLeft: {
+    top: 8,
+    left: 8,
+    borderLeftWidth: 2,
+    borderTopWidth: 2,
+    borderTopLeftRadius: 4,
+  },
+  cornerTopRight: {
+    top: 8,
+    right: 8,
+    borderRightWidth: 2,
+    borderTopWidth: 2,
+    borderTopRightRadius: 4,
   },
 });

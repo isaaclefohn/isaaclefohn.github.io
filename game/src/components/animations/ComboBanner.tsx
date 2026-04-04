@@ -1,10 +1,11 @@
 /**
  * Animated combo banner that slides in on consecutive line clears.
+ * Enhanced with glow border and layered styling.
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Animated, Text, StyleSheet } from 'react-native';
-import { COLORS, ANIM } from '../../utils/constants';
+import { View, Animated, Text, StyleSheet } from 'react-native';
+import { COLORS, ANIM, RADII, SHADOWS } from '../../utils/constants';
 
 interface ComboBannerProps {
   combo: number;
@@ -72,6 +73,8 @@ export const ComboBanner: React.FC<ComboBannerProps> = ({ combo, visible }) => {
       ]}
       pointerEvents="none"
     >
+      {/* Inner highlight */}
+      <View style={styles.highlight} />
       <Text style={styles.comboCount}>{combo}x COMBO</Text>
       <Text style={styles.comboLabel}>{label}</Text>
     </Animated.View>
@@ -85,21 +88,42 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     backgroundColor: `${COLORS.accent}E0`,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 16,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: RADII.lg,
+    borderWidth: 1,
+    borderColor: `${COLORS.accentLight}60`,
     zIndex: 60,
+    overflow: 'hidden',
+    ...SHADOWS.glow(COLORS.accent),
+  },
+  highlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderTopLeftRadius: RADII.lg,
+    borderTopRightRadius: RADII.lg,
   },
   comboCount: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '900',
     color: COLORS.textPrimary,
-    letterSpacing: 2,
+    letterSpacing: 3,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   comboLabel: {
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.accentGold,
     marginTop: -2,
+    letterSpacing: 2,
+    textShadowColor: COLORS.accentGold,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
 });

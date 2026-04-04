@@ -10,22 +10,19 @@ import { usePlayerStore } from '../store/playerStore';
 import { GameBoard } from '../components/GameBoard';
 import { PieceTray, DragEvent } from '../components/PieceTray';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
-import { getPieceCells } from '../game/engine/Piece';
+import { Piece, getPieceCells } from '../game/engine/Piece';
 import { canPlace } from '../game/engine/Board';
 import { ScoreDisplay } from '../components/ScoreDisplay';
 import { PowerUpBar } from '../components/PowerUpBar';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
+import { GameIcon } from '../components/GameIcon';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
 import { ScorePopup } from '../components/animations/ScorePopup';
 import { ComboBanner } from '../components/animations/ComboBanner';
 import { Confetti } from '../components/animations/Confetti';
-import { Piece, getPieceCells } from '../game/engine/Piece';
-import { canPlace } from '../game/engine/Board';
-import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { PowerUpType } from '../game/powerups/PowerUpManager';
 import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
-import type { DragEvent } from '../components/PieceTray';
 import { formatScore } from '../utils/formatters';
 import { calculateCoinReward } from '../game/engine/Scoring';
 import { canShowRewarded, onLevelCompleted, showRewardedAd, showInterstitialAd, AD_REWARDS } from '../services/ads';
@@ -36,6 +33,18 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 type GameScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Game'>;
   route: RouteProp<RootStackParamList, 'Game'>;
+};
+
+const POWER_UP_LABELS: Record<PowerUpType, string> = {
+  bomb: 'Bomb',
+  rowClear: 'Row Clear',
+  colorClear: 'Color Clear',
+};
+
+const POWER_UP_ICON_NAMES: Record<PowerUpType, 'bomb' | 'lightning' | 'palette'> = {
+  bomb: 'bomb',
+  rowClear: 'lightning',
+  colorClear: 'palette',
 };
 
 export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => {
@@ -127,14 +136,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       setShowScorePopup(true);
 
       if (event.perfectClear) {
-        // Perfect clear — maximum celebration!
         playSound('combo');
         setShowComboBanner(true);
         setShowConfetti(true);
         shakeBoard(3);
         setTimeout(() => setShowConfetti(false), 2500);
       } else if (event.linesCleared >= 3) {
-        // Triple+ line clear — big celebration
         playSound('combo');
         setShowComboBanner(true);
         shakeBoard(2);
@@ -192,11 +199,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     boardOriginRef.current = { x, y, width, height };
   }, []);
 
-  // Convert absolute screen position to board row/col, centering the piece on the finger
   const screenToBoard = useCallback((screenX: number, screenY: number, piece: Piece) => {
     const { x: bx, y: by } = boardOriginRef.current;
     const cellTotal = CELL_SIZE + CELL_GAP;
-    // Offset the touch point so the center of the piece is under the finger
     const cells = getPieceCells(piece);
     const midRow = cells.length > 0 ? cells[Math.floor(cells.length / 2)].row : 0;
     const midCol = cells.length > 0 ? cells[Math.floor(cells.length / 2)].col : 0;
@@ -208,7 +213,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     return { row, col };
   }, []);
 
-  // Compute ghost cells for a piece at a given screen position
   const computeDragGhost = useCallback((pieceIndex: number, screenX: number, screenY: number) => {
     if (!gameState) return;
     const piece = gameState.availablePieces[pieceIndex];
@@ -308,9 +312,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
 
       {/* Header */}
       <View style={styles.header}>
-        <Button title="‹" onPress={handleHome} variant="ghost" size="small" />
+        <Button title={'\u2039'} onPress={handleHome} variant="ghost" size="small" />
         <CurrencyDisplay coins={coins} gems={gems} compact />
-        <Button title="⏸" onPress={handlePause} variant="ghost" size="small" />
+        <Button title={'\u23F8'} onPress={handlePause} variant="ghost" size="small" />
       </View>
 
       {/* Score display */}
@@ -323,11 +327,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       />
 
       {/* Power-up targeting hint */}
-      {isPowerUpMode && (
+      {isPowerUpMode && activePowerUp && (
         <View style={styles.powerUpHint}>
-          <Text style={styles.powerUpHintText}>
-            Tap the board to use {activePowerUp === 'bomb' ? '💥 Bomb' : activePowerUp === 'rowClear' ? '⚡ Row Clear' : '🎨 Color Clear'}
-          </Text>
+          <View style={styles.powerUpHintRow}>
+            <GameIcon name={POWER_UP_ICON_NAMES[activePowerUp]} size={16} />
+            <Text style={styles.powerUpHintText}>
+              Tap the board to use {POWER_UP_LABELS[activePowerUp]}
+            </Text>
+          </View>
         </View>
       )}
 
@@ -387,30 +394,30 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           <Text style={styles.pauseStatText}>Score: {formatScore(gameState.score)}</Text>
         </View>
         <View style={styles.modalButtons}>
-          <Button title="Resume" icon="▶" onPress={handleResume} variant="primary" size="medium" />
-          <Button title="Restart" icon="🔄" onPress={handleRetry} variant="secondary" size="medium" />
+          <Button title="Resume" onPress={handleResume} variant="primary" size="medium" />
+          <Button title="Restart" onPress={handleRetry} variant="secondary" size="medium" />
           <Button title="Quit" onPress={handleHome} variant="ghost" size="small" />
         </View>
       </Modal>
 
       {/* Win Modal */}
       <Modal visible={showWinModal} onClose={() => {}} dismissable={false}>
-        <Text style={styles.modalEmoji}>🎉</Text>
+        <View style={styles.modalIconWrap}>
+          <GameIcon name="sparkle" size={48} color={COLORS.accentGold} />
+        </View>
         <Text style={styles.modalTitle}>Level Complete!</Text>
         <View style={styles.modalStars}>
           {[1, 2, 3].map((s) => (
-            <Text key={s} style={[styles.modalStar, s <= stars && styles.modalStarActive]}>
-              {s <= stars ? '\u2605' : '\u2606'}
-            </Text>
+            <GameIcon key={s} name={s <= stars ? 'star' : 'star-outline'} size={40} />
           ))}
         </View>
         <Text style={styles.modalScore}>{formatScore(gameState.score)}</Text>
         <View style={styles.rewardRow}>
           <Text style={styles.rewardText}>+{calculateCoinReward(stars)}</Text>
-          <Text style={styles.rewardIcon}>🪙</Text>
+          <GameIcon name="coin" size={18} />
         </View>
         <View style={styles.modalButtons}>
-          <Button title="Next Level" icon="▶" onPress={handleNextLevel} variant="primary" size="medium" />
+          <Button title="Next Level" onPress={handleNextLevel} variant="primary" size="medium" />
           <Button title="Retry" onPress={handleRetry} variant="secondary" size="small" />
           <Button title="Home" onPress={handleHome} variant="ghost" size="small" />
         </View>
@@ -418,18 +425,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
 
       {/* Lose Modal */}
       <Modal visible={showLoseModal} onClose={() => {}} dismissable={false}>
-        <Text style={styles.modalEmoji}>😔</Text>
+        <View style={styles.modalIconWrap}>
+          <GameIcon name="target" size={48} color={COLORS.textMuted} />
+        </View>
         <Text style={styles.modalTitle}>No More Moves</Text>
         <Text style={styles.modalScore}>{formatScore(gameState.score)}</Text>
         <Text style={styles.modalTarget}>
           Target: {formatScore(levelConfig.objective.target)}
         </Text>
         <View style={styles.modalButtons}>
-          <Button title="Try Again" icon="🔄" onPress={handleRetry} variant="primary" size="medium" />
+          <Button title="Try Again" onPress={handleRetry} variant="primary" size="medium" />
           {canShowRewarded() && (
             <Button
               title={`Watch Ad +${AD_REWARDS.coins.amount}`}
-              icon="🎬"
               onPress={handleWatchAd}
               variant="secondary"
               size="medium"
@@ -492,6 +500,11 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.md,
     borderRadius: RADII.sm,
   },
+  powerUpHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   powerUpHintText: {
     fontSize: 13,
     fontWeight: '700',
@@ -506,8 +519,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textSecondary,
   },
-  modalEmoji: {
-    fontSize: 48,
+  modalIconWrap: {
     marginBottom: 8,
   },
   modalTitle: {
@@ -522,16 +534,6 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  modalStar: {
-    fontSize: 40,
-    color: COLORS.textMuted,
-  },
-  modalStarActive: {
-    color: COLORS.accentGold,
-    textShadowColor: COLORS.accentGold,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
-  },
   modalScore: {
     fontSize: 36,
     fontWeight: '900',
@@ -542,16 +544,13 @@ const styles = StyleSheet.create({
   rewardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
     marginBottom: 20,
   },
   rewardText: {
     fontSize: 18,
     fontWeight: '800',
     color: COLORS.accentGold,
-  },
-  rewardIcon: {
-    fontSize: 18,
   },
   modalTarget: {
     fontSize: 14,

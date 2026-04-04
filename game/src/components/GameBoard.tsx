@@ -64,6 +64,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <View ref={boardRef} onLayout={handleLayout} style={styles.container}>
+      {/* Outer glow frame */}
+      <View style={[styles.boardGlow, { width: totalSize + 8, height: totalSize + 8 }]} />
       <GestureDetector gesture={tapGesture}>
         <View style={[styles.board, { width: totalSize, height: totalSize }]}>
           <BoardRenderer
@@ -82,6 +84,16 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  boardGlow: {
+    position: 'absolute',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: `${COLORS.accent}20`,
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
   },
   board: {
     borderRadius: 12,
