@@ -264,10 +264,10 @@ export const DailyChallengeScreen: React.FC<DailyChallengeScreenProps> = ({ navi
           onPress={handlePlay}
           variant="primary"
           size="large"
-          style={[
-            styles.playButton,
-            !hasPlayedToday && styles.playButtonGlow,
-          ]}
+          style={{
+            ...styles.playButton,
+            ...(!hasPlayedToday ? styles.playButtonGlow : {}),
+          }}
           disabled={hasPlayedToday}
         />
 

@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    width: '100%',
   },
   disabled: {
     opacity: 0.4,
