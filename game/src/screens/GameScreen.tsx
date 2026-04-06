@@ -11,7 +11,7 @@ import { GameBoard } from '../components/GameBoard';
 import { PieceTray, DragEvent } from '../components/PieceTray';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { Piece, getPieceCells, getPieceSize } from '../game/engine/Piece';
-import { canPlace } from '../game/engine/Board';
+import { canPlace, findBestPlacement } from '../game/engine/Board';
 import { ScoreDisplay } from '../components/ScoreDisplay';
 import { PowerUpBar } from '../components/PowerUpBar';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
@@ -91,6 +91,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [milestoneMsg, setMilestoneMsg] = useState('');
   const [showMilestone, setShowMilestone] = useState(false);
   const milestoneShownRef = useRef(false);
+  const [hintCells, setHintCells] = useState<{ row: number; col: number; colorIndex: number }[]>([]);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastActionRef = useRef(Date.now());
   const [clearedRows, setClearedRows] = useState<number[]>([]);
   const [clearedCols, setClearedCols] = useState<number[]>([]);
 
@@ -181,6 +184,42 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       }
     }
   }, [gameState?.lastScoreEvent, playSound, shakeBoard]);
+
+  // Idle hint system — show best placement after 8s of inactivity
+  const resetIdleTimer = useCallback(() => {
+    lastActionRef.current = Date.now();
+    setHintCells([]);
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    if (!gameState || gameState.status !== 'playing') return;
+
+    idleTimerRef.current = setTimeout(() => {
+      const state = gameState;
+      if (!state || state.status !== 'playing') return;
+
+      // Find the first available piece and its best placement
+      for (let i = 0; i < state.availablePieces.length; i++) {
+        const piece = state.availablePieces[i];
+        if (!piece) continue;
+        const best = findBestPlacement(state.grid, piece);
+        if (best) {
+          const cells = getPieceCells(piece);
+          setHintCells(
+            cells.map(c => ({
+              row: best.row + c.row,
+              col: best.col + c.col,
+              colorIndex: piece.colorIndex,
+            }))
+          );
+          break;
+        }
+      }
+    }, 8000);
+  }, [gameState]);
+
+  useEffect(() => {
+    resetIdleTimer();
+    return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current); };
+  }, [gameState?.score, gameState?.availablePieces, resetIdleTimer]);
 
   // Check for personal best proximity
   useEffect(() => {
@@ -430,7 +469,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           grid={gameState.grid}
           gridSize={gameState.gridSize}
           selectedPiece={isPowerUpMode ? null : selectedPiece}
-          ghostCells={ghostCells}
+          ghostCells={ghostCells.length > 0 ? ghostCells : hintCells}
           onCellTap={handleCellTap}
           onBoardLayout={handleBoardLayout}
           placedCells={gameState.lastPlacedCells}

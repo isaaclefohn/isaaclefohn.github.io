@@ -281,3 +281,51 @@ export function getNearClearLines(grid: Grid): { rows: number[]; cols: number[] 
 
   return { rows, cols };
 }
+
+/** Find the best placement for a piece on the grid.
+ *  Scores by: lines cleared > cells adjacent to filled > lower row (prefer bottom).
+ *  Returns null if no placement exists. */
+export function findBestPlacement(
+  grid: Grid,
+  piece: Piece
+): { row: number; col: number } | null {
+  const size = grid.length;
+  let bestPos: { row: number; col: number } | null = null;
+  let bestScore = -1;
+
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (!canPlace(grid, piece, r, c)) continue;
+
+      // Simulate placement
+      const placed = placePiece(grid, piece, r, c);
+      const { rows, cols } = findFullLines(placed);
+      const linesCleared = rows.length + cols.length;
+
+      // Count adjacency to existing blocks
+      const cells = getPieceCells(piece);
+      let adjacency = 0;
+      for (const cell of cells) {
+        const pr = r + cell.row;
+        const pc = c + cell.col;
+        const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+        for (const [dr, dc] of dirs) {
+          const nr = pr + dr;
+          const nc = pc + dc;
+          if (nr >= 0 && nr < size && nc >= 0 && nc < size && grid[nr][nc] !== 0) {
+            adjacency++;
+          }
+        }
+      }
+
+      // Score: lines cleared (most important), then adjacency, then prefer lower placement
+      const score = linesCleared * 10000 + adjacency * 100 + r;
+      if (score > bestScore) {
+        bestScore = score;
+        bestPos = { row: r, col: c };
+      }
+    }
+  }
+
+  return bestPos;
+}
