@@ -48,7 +48,7 @@ export const Button: React.FC<ButtonProps> = ({
   }, [scaleAnim]);
 
   return (
-    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
       <Pressable
         style={[
           styles.base,
@@ -57,7 +57,6 @@ export const Button: React.FC<ButtonProps> = ({
           variant === 'primary' && SHADOWS.medium,
           variant === 'secondary' && SHADOWS.small,
           disabled && styles.disabled,
-          style,
         ]}
         onPress={onPress}
         onPressIn={handlePressIn}
