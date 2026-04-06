@@ -22,6 +22,7 @@ import { ScorePopup } from '../components/animations/ScorePopup';
 import { ComboBanner } from '../components/animations/ComboBanner';
 import { Confetti } from '../components/animations/Confetti';
 import { PowerUpType } from '../game/powerups/PowerUpManager';
+import { MilestoneBanner } from '../components/animations/MilestoneBanner';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ClearFlash } from '../components/animations/ClearFlash';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
@@ -66,10 +67,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     pauseGame,
     resumeGame,
     resetLevel,
+    undoLastMove,
+    canUndo,
   } = useGameEngine();
 
   const { playSound } = useSound();
-  const { powerUps, usePowerUp, coins, gems, addCoins } = usePlayerStore();
+  const { powerUps, usePowerUp, coins, gems, addCoins, levelHighScores } = usePlayerStore();
 
   const [showWinModal, setShowWinModal] = useState(false);
   const [showLoseModal, setShowLoseModal] = useState(false);
@@ -85,6 +88,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [showClearFlash, setShowClearFlash] = useState(false);
   const [clearFlashColor, setClearFlashColor] = useState<string>(COLORS.accent);
   const [placedCells, setPlacedCells] = useState<{ row: number; col: number }[]>([]);
+  const [milestoneMsg, setMilestoneMsg] = useState('');
+  const [showMilestone, setShowMilestone] = useState(false);
+  const milestoneShownRef = useRef(false);
   const [clearedRows, setClearedRows] = useState<number[]>([]);
   const [clearedCols, setClearedCols] = useState<number[]>([]);
 
@@ -175,6 +181,23 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       }
     }
   }, [gameState?.lastScoreEvent, playSound, shakeBoard]);
+
+  // Check for personal best proximity
+  useEffect(() => {
+    if (!gameState || !levelConfig || milestoneShownRef.current) return;
+    const highScore = levelHighScores[levelConfig.levelNumber] ?? 0;
+    if (highScore > 0 && gameState.score >= highScore && gameState.status === 'playing') {
+      milestoneShownRef.current = true;
+      setMilestoneMsg('New personal best!');
+      setShowMilestone(true);
+      setTimeout(() => setShowMilestone(false), 3500);
+    } else if (highScore > 200 && gameState.score >= highScore - 200 && gameState.score < highScore && !milestoneShownRef.current) {
+      milestoneShownRef.current = true;
+      setMilestoneMsg(`${highScore - gameState.score} points from your best!`);
+      setShowMilestone(true);
+      setTimeout(() => setShowMilestone(false), 3500);
+    }
+  }, [gameState?.score]);
 
   const handleSelectPiece = useCallback((index: number) => {
     setActivePowerUp(null);
@@ -423,6 +446,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           onComplete={() => setShowScorePopup(false)}
         />
         <ComboBanner combo={lastCombo} visible={showComboBanner} />
+        <MilestoneBanner message={milestoneMsg} visible={showMilestone} />
       </Animated.View>
 
       {/* Power-up bar */}
@@ -444,6 +468,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           onDragEnd={handleDragEnd}
         />
         <View style={styles.trayActions}>
+          <Button
+            title="Undo"
+            onPress={() => {
+              if (undoLastMove()) {
+                setGhostCells([]);
+                playSound('select');
+              }
+            }}
+            variant="ghost"
+            size="small"
+            disabled={!canUndo() || gameState.status !== 'playing'}
+          />
           <Button
             title={gameState.swapsUsed === 0 ? 'Swap' : 'Swap'}
             onPress={() => {

@@ -25,6 +25,10 @@ interface GameStore {
   levelConfig: LevelConfig | null;
   rng: SeededRandom | null;
   selectedPieceIndex: number | null;
+  /** Snapshot of state before last placement (for undo) */
+  undoSnapshot: GameState | null;
+  /** Whether undo has been used this level */
+  undoUsed: boolean;
 
   // Actions
   startLevel: (config: LevelConfig) => void;
@@ -36,6 +40,9 @@ interface GameStore {
   pauseGame: () => void;
   resumeGame: () => void;
   resetLevel: () => void;
+  /** Undo the last placement (one free per level) */
+  undoLastMove: () => boolean;
+  canUndo: () => boolean;
 
   // Derived getters
   getAvailablePieces: () => (Piece | null)[];
@@ -51,11 +58,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   levelConfig: null,
   rng: null,
   selectedPieceIndex: null,
+  undoSnapshot: null,
+  undoUsed: false,
 
   startLevel: (config: LevelConfig) => {
     const rng = new SeededRandom(config.seed);
     const gameState = initGame(config);
-    set({ gameState, levelConfig: config, rng, selectedPieceIndex: null });
+    set({ gameState, levelConfig: config, rng, selectedPieceIndex: null, undoSnapshot: null, undoUsed: false });
   },
 
   selectPiece: (index: number | null) => {
@@ -68,6 +77,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (gameState.status !== 'playing') return false;
 
     try {
+      // Snapshot current state for undo
+      const snapshot = { ...gameState, grid: gameState.grid.map(r => [...r]), availablePieces: [...gameState.availablePieces] };
       const newState = processTurn(
         gameState,
         pieceIndex,
@@ -76,7 +87,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         rng,
         levelConfig.piecePool
       );
-      set({ gameState: newState, selectedPieceIndex: null });
+      set({ gameState: newState, selectedPieceIndex: null, undoSnapshot: snapshot });
       return true;
     } catch {
       return false;
@@ -188,6 +199,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (levelConfig) {
       get().startLevel(levelConfig);
     }
+  },
+
+  undoLastMove: (): boolean => {
+    const { undoSnapshot, undoUsed } = get();
+    if (!undoSnapshot || undoUsed) return false;
+    set({ gameState: undoSnapshot, undoSnapshot: null, undoUsed: true, selectedPieceIndex: null });
+    return true;
+  },
+
+  canUndo: () => {
+    const { undoSnapshot, undoUsed } = get();
+    return undoSnapshot !== null && !undoUsed;
   },
 
   getAvailablePieces: () => get().gameState?.availablePieces ?? [],

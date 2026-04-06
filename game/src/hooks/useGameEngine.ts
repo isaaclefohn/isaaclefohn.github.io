@@ -24,6 +24,8 @@ export function useGameEngine() {
     resumeGame,
     resetLevel,
     getStars,
+    undoLastMove,
+    canUndo,
   } = useGameStore();
 
   const { completeLevel, addCoins, updateStreak, checkAchievements, recordGamePlayed } = usePlayerStore();
@@ -79,5 +81,7 @@ export function useGameEngine() {
     pauseGame,
     resumeGame,
     resetLevel,
+    undoLastMove,
+    canUndo,
   };
 }
