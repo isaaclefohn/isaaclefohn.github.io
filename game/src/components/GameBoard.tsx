@@ -3,12 +3,12 @@
  * Composes the board renderer with gesture handling, plus animated effects overlay.
  */
 
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { View, StyleSheet, LayoutChangeEvent } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { BoardRenderer } from '../game/rendering/BoardRenderer';
 import { BoardEffects } from './BoardEffects';
-import { Grid, canPlace, countFilledCells } from '../game/engine/Board';
+import { Grid, canPlace, countFilledCells, getNearClearLines } from '../game/engine/Board';
 import { Piece, getPieceCells } from '../game/engine/Piece';
 import { CELL_SIZE, CELL_GAP, COLORS } from '../utils/constants';
 import { useSettingsStore } from '../store/settingsStore';
@@ -51,6 +51,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const totalCells = gridSize * gridSize;
   const filledCells = countFilledCells(grid);
   const fillRatio = filledCells / totalCells;
+
+  // Find near-clear lines
+  const nearClear = useMemo(() => getNearClearLines(grid), [grid]);
 
   const handleLayout = useCallback((_event: LayoutChangeEvent) => {
     boardRef.current?.measureInWindow((px, py, width, height) => {
@@ -99,6 +102,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             clearedCols={clearedCols}
             fillRatio={fillRatio}
             combo={combo}
+            nearClearRows={nearClear.rows}
+            nearClearCols={nearClear.cols}
           />
         </View>
       </GestureDetector>

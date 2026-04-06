@@ -28,6 +28,9 @@ interface BoardEffectsProps {
   clearedCols: number[];
   /** Board fill ratio (0-1) for danger state */
   fillRatio: number;
+  /** Rows/cols one cell from clearing */
+  nearClearRows?: number[];
+  nearClearCols?: number[];
   /** Current combo level for edge glow */
   combo: number;
 }
@@ -294,6 +297,67 @@ const ComboGlow: React.FC<{ combo: number; gridSize: number }> = ({ combo, gridS
   );
 };
 
+/** Subtle pulsing highlight on rows/cols one cell from clearing */
+const NearClearHint: React.FC<{ rows: number[]; cols: number[]; gridSize: number }> = ({ rows, cols, gridSize }) => {
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (rows.length === 0 && cols.length === 0) {
+      pulse.setValue(0);
+      return;
+    }
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [rows.length, cols.length, pulse]);
+
+  if (rows.length === 0 && cols.length === 0) return null;
+
+  const cellTotal = CELL_SIZE + CELL_GAP;
+  const totalSize = gridSize * cellTotal + CELL_GAP;
+  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.05, 0.2] });
+
+  return (
+    <>
+      {rows.map((r) => (
+        <Animated.View
+          key={`nr-${r}`}
+          style={{
+            position: 'absolute',
+            top: CELL_GAP + r * cellTotal - 1,
+            left: CELL_GAP,
+            width: totalSize - CELL_GAP * 2,
+            height: CELL_SIZE + 2,
+            borderRadius: CELL_RADIUS,
+            backgroundColor: COLORS.accentGold,
+            opacity,
+          }}
+        />
+      ))}
+      {cols.map((c) => (
+        <Animated.View
+          key={`nc-${c}`}
+          style={{
+            position: 'absolute',
+            left: CELL_GAP + c * cellTotal - 1,
+            top: CELL_GAP,
+            height: totalSize - CELL_GAP * 2,
+            width: CELL_SIZE + 2,
+            borderRadius: CELL_RADIUS,
+            backgroundColor: COLORS.accentGold,
+            opacity,
+          }}
+        />
+      ))}
+    </>
+  );
+};
+
 export const BoardEffects: React.FC<BoardEffectsProps> = ({
   gridSize,
   placedCells,
@@ -301,6 +365,8 @@ export const BoardEffects: React.FC<BoardEffectsProps> = ({
   clearedCols,
   fillRatio,
   combo,
+  nearClearRows = [],
+  nearClearCols = [],
 }) => {
   const { reducedMotion } = useSettingsStore();
   const totalSize = gridSize * (CELL_SIZE + CELL_GAP) + CELL_GAP;
@@ -309,6 +375,7 @@ export const BoardEffects: React.FC<BoardEffectsProps> = ({
 
   return (
     <View style={[styles.container, { width: totalSize, height: totalSize }]} pointerEvents="none">
+      <NearClearHint rows={nearClearRows} cols={nearClearCols} gridSize={gridSize} />
       <PlacementSquish cells={placedCells} />
       <ClearSweep rows={clearedRows} cols={clearedCols} gridSize={gridSize} />
       <DangerBorder fillRatio={fillRatio} gridSize={gridSize} />

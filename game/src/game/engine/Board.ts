@@ -256,3 +256,28 @@ export function getEmptyCells(grid: Grid): { row: number; col: number }[] {
   }
   return empty;
 }
+
+/** Find rows and columns that are one cell away from being full */
+export function getNearClearLines(grid: Grid): { rows: number[]; cols: number[] } {
+  const size = grid.length;
+  const rows: number[] = [];
+  const cols: number[] = [];
+
+  for (let r = 0; r < size; r++) {
+    let empty = 0;
+    for (let c = 0; c < size; c++) {
+      if (grid[r][c] === 0) empty++;
+    }
+    if (empty === 1) rows.push(r);
+  }
+
+  for (let c = 0; c < size; c++) {
+    let empty = 0;
+    for (let r = 0; r < size; r++) {
+      if (grid[r][c] === 0) empty++;
+    }
+    if (empty === 1) cols.push(c);
+  }
+
+  return { rows, cols };
+}
