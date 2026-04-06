@@ -4,7 +4,7 @@
  */
 
 import { Grid, createGrid, executePlacement } from './Board';
-import { Piece, PieceType, createPiece, PIECE_POOLS } from './Piece';
+import { Piece, PieceType, createPiece, getPieceCells, PIECE_POOLS } from './Piece';
 import { ScoreEvent, scorePlacement, scoreClear, calculateStars } from './Scoring';
 import { isGameOver } from './GameOver';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -30,6 +30,12 @@ export interface GameState {
   objective: LevelObjective;
   starThresholds: [number, number, number];
   lastScoreEvent: ScoreEvent | null;
+  /** Rows cleared in the last turn (for sweep animation) */
+  lastClearedRows: number[];
+  /** Columns cleared in the last turn (for sweep animation) */
+  lastClearedCols: number[];
+  /** Cells placed in the last turn (for squish animation) */
+  lastPlacedCells: { row: number; col: number }[];
 }
 
 export interface LevelConfig {
@@ -60,6 +66,9 @@ export function initGame(config: LevelConfig): GameState {
     objective: config.objective,
     starThresholds: config.starThresholds,
     lastScoreEvent: null,
+    lastClearedRows: [],
+    lastClearedCols: [],
+    lastPlacedCells: [],
   };
 }
 
@@ -89,6 +98,10 @@ export function processTurn(
 ): GameState {
   const piece = state.availablePieces[pieceIndex];
   if (!piece) throw new Error(`No piece at index ${pieceIndex}`);
+
+  // Compute placed cell positions for animation
+  const pieceCells = getPieceCells(piece);
+  const placedCellPositions = pieceCells.map(c => ({ row: row + c.row, col: col + c.col }));
 
   // Execute the placement
   const result = executePlacement(state.grid, piece, row, col);
@@ -132,6 +145,9 @@ export function processTurn(
       availablePieces: newSet,
       status: won ? 'won' : gameOver ? 'lost' : 'playing',
       lastScoreEvent: scoreEvent,
+      lastClearedRows: result.clearedRows,
+      lastClearedCols: result.clearedCols,
+      lastPlacedCells: placedCellPositions,
     };
   }
 
@@ -149,6 +165,9 @@ export function processTurn(
     availablePieces: newAvailable,
     status: won ? 'won' : gameOver ? 'lost' : 'playing',
     lastScoreEvent: scoreEvent,
+    lastClearedRows: result.clearedRows,
+    lastClearedCols: result.clearedCols,
+    lastPlacedCells: placedCellPositions,
   };
 }
 

@@ -4,6 +4,7 @@
 
 import React, { useRef, useCallback } from 'react';
 import { View, Animated, Text, StyleSheet, ViewStyle, TextStyle, Pressable } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { COLORS, SHADOWS, RADII } from '../../utils/constants';
 
 interface ButtonProps {
@@ -58,7 +59,10 @@ export const Button: React.FC<ButtonProps> = ({
           variant === 'secondary' && SHADOWS.small,
           disabled && styles.disabled,
         ]}
-        onPress={onPress}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+          onPress();
+        }}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={disabled}

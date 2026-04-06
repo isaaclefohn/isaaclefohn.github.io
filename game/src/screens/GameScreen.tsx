@@ -81,6 +81,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [ghostCells, setGhostCells] = useState<{ row: number; col: number; colorIndex: number }[]>([]);
   const [showClearFlash, setShowClearFlash] = useState(false);
   const [clearFlashColor, setClearFlashColor] = useState<string>(COLORS.accent);
+  const [placedCells, setPlacedCells] = useState<{ row: number; col: number }[]>([]);
+  const [clearedRows, setClearedRows] = useState<number[]>([]);
+  const [clearedCols, setClearedCols] = useState<number[]>([]);
 
   // Drag-and-drop state
   const [draggedPieceIndex, setDraggedPieceIndex] = useState<number | null>(null);
@@ -380,6 +383,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           ghostCells={ghostCells}
           onCellTap={handleCellTap}
           onBoardLayout={handleBoardLayout}
+          placedCells={gameState.lastPlacedCells}
+          clearedRows={gameState.lastClearedRows}
+          clearedCols={gameState.lastClearedCols}
+          combo={gameState.combo}
         />
 
         <ScorePopup

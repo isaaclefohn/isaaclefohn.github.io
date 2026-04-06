@@ -1,14 +1,14 @@
 /**
  * Main game board component.
- * Composes the Skia board renderer with gesture handling for piece placement.
- * Supports both tap-to-place and drag-and-drop piece placement.
+ * Composes the board renderer with gesture handling, plus animated effects overlay.
  */
 
 import React, { useCallback, useRef } from 'react';
 import { View, StyleSheet, LayoutChangeEvent } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { BoardRenderer } from '../game/rendering/BoardRenderer';
-import { Grid, canPlace } from '../game/engine/Board';
+import { BoardEffects } from './BoardEffects';
+import { Grid, canPlace, countFilledCells } from '../game/engine/Board';
 import { Piece, getPieceCells } from '../game/engine/Piece';
 import { CELL_SIZE, CELL_GAP, COLORS } from '../utils/constants';
 import { useSettingsStore } from '../store/settingsStore';
@@ -20,6 +20,14 @@ interface GameBoardProps {
   ghostCells: { row: number; col: number; colorIndex: number }[];
   onCellTap: (row: number, col: number) => void;
   onBoardLayout: (x: number, y: number, width: number, height: number) => void;
+  /** Cells placed this turn (for squish effect) */
+  placedCells?: { row: number; col: number }[];
+  /** Rows cleared this turn (for sweep effect) */
+  clearedRows?: number[];
+  /** Columns cleared this turn (for sweep effect) */
+  clearedCols?: number[];
+  /** Current combo level */
+  combo?: number;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -29,11 +37,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   ghostCells,
   onCellTap,
   onBoardLayout,
+  placedCells = [],
+  clearedRows = [],
+  clearedCols = [],
+  combo = 0,
 }) => {
   const boardRef = useRef<View>(null);
   const { showGridLines } = useSettingsStore();
 
   const totalSize = gridSize * (CELL_SIZE + CELL_GAP) + CELL_GAP;
+
+  // Calculate fill ratio for danger state
+  const totalCells = gridSize * gridSize;
+  const filledCells = countFilledCells(grid);
+  const fillRatio = filledCells / totalCells;
 
   const handleLayout = useCallback((_event: LayoutChangeEvent) => {
     boardRef.current?.measureInWindow((px, py, width, height) => {
@@ -73,6 +90,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             gridSize={gridSize}
             ghostCells={ghostCells}
             showGridLines={showGridLines}
+          />
+          {/* Animated effects overlay */}
+          <BoardEffects
+            gridSize={gridSize}
+            placedCells={placedCells}
+            clearedRows={clearedRows}
+            clearedCols={clearedCols}
+            fillRatio={fillRatio}
+            combo={combo}
           />
         </View>
       </GestureDetector>
