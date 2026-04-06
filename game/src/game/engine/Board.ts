@@ -131,9 +131,33 @@ export function clearLines(grid: Grid, rows: number[], cols: number[]): ClearRes
   };
 }
 
+/** Apply gravity — drop all blocks downward to fill empty gaps */
+export function applyGravity(grid: Grid): Grid {
+  const size = grid.length;
+  const newGrid = cloneGrid(grid);
+
+  // Process each column independently
+  for (let c = 0; c < size; c++) {
+    // Collect all non-zero values from bottom to top
+    let writeRow = size - 1;
+    for (let r = size - 1; r >= 0; r--) {
+      if (newGrid[r][c] !== 0) {
+        if (writeRow !== r) {
+          newGrid[writeRow][c] = newGrid[r][c];
+          newGrid[r][c] = 0;
+        }
+        writeRow--;
+      }
+    }
+  }
+
+  return newGrid;
+}
+
 /**
  * Perform a full placement turn: place piece, find and clear lines.
- * Returns the resulting grid, lines cleared, and cells cleared.
+ * Now includes gravity cascades — after clearing, blocks fall down
+ * and may trigger additional clears in a chain reaction.
  */
 export interface PlacementResult {
   grid: Grid;
@@ -142,6 +166,8 @@ export interface PlacementResult {
   clearedRows: number[];
   clearedCols: number[];
   perfectClear: boolean;
+  /** Number of cascade chain reactions (0 = no cascades) */
+  cascadeCount: number;
 }
 
 export function executePlacement(
@@ -151,29 +177,59 @@ export function executePlacement(
   col: number
 ): PlacementResult {
   const afterPlace = placePiece(grid, piece, row, col);
-  const { rows, cols } = findFullLines(afterPlace);
 
-  if (rows.length === 0 && cols.length === 0) {
+  let currentGrid = afterPlace;
+  let totalLinesCleared = 0;
+  let totalCellsCleared = 0;
+  let allClearedRows: number[] = [];
+  let allClearedCols: number[] = [];
+  let cascadeCount = 0;
+
+  // Clear + gravity cascade loop
+  while (true) {
+    const { rows, cols } = findFullLines(currentGrid);
+    if (rows.length === 0 && cols.length === 0) break;
+
+    const result = clearLines(currentGrid, rows, cols);
+    totalLinesCleared += rows.length + cols.length;
+    totalCellsCleared += result.cellsCleared;
+    allClearedRows = [...allClearedRows, ...rows];
+    allClearedCols = [...allClearedCols, ...cols];
+
+    // Apply gravity after clearing
+    currentGrid = applyGravity(result.newGrid);
+
+    if (cascadeCount > 0) {
+      // This was a cascade (not the first clear)
+    }
+    cascadeCount++;
+  }
+
+  // cascadeCount is total clear rounds; cascades = rounds - 1
+  const actualCascades = Math.max(0, cascadeCount - 1);
+
+  if (totalLinesCleared === 0) {
     return {
-      grid: afterPlace,
+      grid: currentGrid,
       linesCleared: 0,
       cellsCleared: 0,
       clearedRows: [],
       clearedCols: [],
       perfectClear: false,
+      cascadeCount: 0,
     };
   }
 
-  const result = clearLines(afterPlace, rows, cols);
-  const isPerfectClear = countFilledCells(result.newGrid) === 0;
+  const isPerfectClear = countFilledCells(currentGrid) === 0;
 
   return {
-    grid: result.newGrid,
-    linesCleared: rows.length + cols.length,
-    cellsCleared: result.cellsCleared,
-    clearedRows: rows,
-    clearedCols: cols,
+    grid: currentGrid,
+    linesCleared: totalLinesCleared,
+    cellsCleared: totalCellsCleared,
+    clearedRows: allClearedRows,
+    clearedCols: allClearedCols,
     perfectClear: isPerfectClear,
+    cascadeCount: actualCascades,
   };
 }
 

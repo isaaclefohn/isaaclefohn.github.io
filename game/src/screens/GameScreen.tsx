@@ -60,6 +60,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     loadLevel,
     selectPiece,
     placePiece,
+    rotatePiece,
+    swapPieces,
     applyPowerUp,
     pauseGame,
     resumeGame,
@@ -176,14 +178,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const handleSelectPiece = useCallback((index: number) => {
     setActivePowerUp(null);
     if (selectedPieceIndex === index) {
-      selectPiece(null);
+      // Tap again to rotate the selected piece
+      rotatePiece(index);
       setGhostCells([]);
+      playSound('select');
     } else {
       selectPiece(index);
       setGhostCells([]);
+      playSound('select');
     }
-    playSound('select');
-  }, [selectedPieceIndex, selectPiece, playSound]);
+  }, [selectedPieceIndex, selectPiece, rotatePiece, playSound]);
 
   const handleCellTap = useCallback((row: number, col: number) => {
     if (!gameState) return;
@@ -219,14 +223,28 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const screenToBoard = useCallback((screenX: number, screenY: number, piece: Piece) => {
     const { x: bx, y: by } = boardOriginRef.current;
     const cellTotal = CELL_SIZE + CELL_GAP;
-    const cells = getPieceCells(piece);
-    const midRow = cells.length > 0 ? cells[Math.floor(cells.length / 2)].row : 0;
-    const midCol = cells.length > 0 ? cells[Math.floor(cells.length / 2)].col : 0;
+    const { width: pw, height: ph } = getPieceSize(piece);
 
-    const localX = screenX - bx - CELL_GAP;
-    const localY = screenY - by - CELL_GAP;
-    const col = Math.floor(localX / cellTotal) - midCol;
-    const row = Math.floor(localY / cellTotal) - midRow;
+    // The drag overlay renders centered on screenX, above screenY
+    // Match the overlay positioning: centered horizontally, placed above finger
+    const trayCellSize = 28;
+    const trayGap = 3;
+    const overlayH = ph * (trayCellSize + trayGap) + trayGap;
+
+    // Center of the visual overlay piece in screen coords
+    const pieceCenterX = screenX;
+    const pieceCenterY = screenY - overlayH / 2 - 20;
+
+    // Map the piece center to board coordinates
+    const localX = pieceCenterX - bx - CELL_GAP;
+    const localY = pieceCenterY - by - CELL_GAP;
+
+    // Use bounding box center for consistent offset (not middle of cells array)
+    const midCol = (pw - 1) / 2;
+    const midRow = (ph - 1) / 2;
+
+    const col = Math.round(localX / cellTotal - midCol);
+    const row = Math.round(localY / cellTotal - midRow);
     return { row, col };
   }, []);
 
@@ -406,15 +424,33 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         disabled={gameState.status !== 'playing'}
       />
 
-      {/* Piece tray */}
-      <PieceTray
-        pieces={gameState.availablePieces}
-        selectedIndex={isPowerUpMode ? null : selectedPieceIndex}
-        onSelectPiece={handleSelectPiece}
-        onDragStart={handleDragStart}
-        onDragMove={handleDragMove}
-        onDragEnd={handleDragEnd}
-      />
+      {/* Piece tray with swap button */}
+      <View style={styles.trayRow}>
+        <PieceTray
+          pieces={gameState.availablePieces}
+          selectedIndex={isPowerUpMode ? null : selectedPieceIndex}
+          onSelectPiece={handleSelectPiece}
+          onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
+          onDragEnd={handleDragEnd}
+        />
+        <View style={styles.trayActions}>
+          <Button
+            title={gameState.swapsUsed === 0 ? 'Swap' : 'Swap'}
+            onPress={() => {
+              swapPieces();
+              setGhostCells([]);
+              playSound('select');
+            }}
+            variant="ghost"
+            size="small"
+            disabled={gameState.status !== 'playing'}
+          />
+          {selectedPieceIndex !== null && (
+            <Text style={styles.rotateHint}>Tap piece to rotate</Text>
+          )}
+        </View>
+      </View>
 
       {/* Pause Menu */}
       <Modal visible={showPauseMenu} onClose={handleResume} dismissable>
@@ -599,6 +635,22 @@ const styles = StyleSheet.create({
     gap: 10,
     width: '100%',
     alignItems: 'center',
+  },
+  trayRow: {
+    width: '100%',
+  },
+  trayActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+    paddingBottom: SPACING.xs,
+  },
+  rotateHint: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   dragOverlay: {
     ...StyleSheet.absoluteFillObject,

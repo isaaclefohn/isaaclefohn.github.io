@@ -10,9 +10,10 @@ import {
   LevelConfig,
   initGame,
   processTurn,
+  generatePieceSet,
   getCurrentStars,
 } from '../game/engine/GameLoop';
-import { Piece } from '../game/engine/Piece';
+import { Piece, rotatePiece } from '../game/engine/Piece';
 import { SeededRandom } from '../utils/seededRandom';
 import { ScoreEvent, scorePlacement } from '../game/engine/Scoring';
 import { PowerUpType, applyBomb, applyRowClear, applyColorClear } from '../game/powerups/PowerUpManager';
@@ -29,6 +30,8 @@ interface GameStore {
   startLevel: (config: LevelConfig) => void;
   selectPiece: (index: number | null) => void;
   placePiece: (pieceIndex: number, row: number, col: number) => boolean;
+  rotatePiece: (pieceIndex: number) => boolean;
+  swapPieces: () => boolean;
   applyPowerUp: (type: PowerUpType, row: number, col: number, colorIndex?: number) => { cellsCleared: number } | null;
   pauseGame: () => void;
   resumeGame: () => void;
@@ -78,6 +81,50 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch {
       return false;
     }
+  },
+
+  rotatePiece: (pieceIndex: number): boolean => {
+    const { gameState } = get();
+    if (!gameState || gameState.status !== 'playing') return false;
+
+    const piece = gameState.availablePieces[pieceIndex];
+    if (!piece) return false;
+
+    const rotated = rotatePiece(piece);
+    const newAvailable = [...gameState.availablePieces];
+    newAvailable[pieceIndex] = rotated;
+
+    set({
+      gameState: {
+        ...gameState,
+        availablePieces: newAvailable,
+      },
+    });
+    return true;
+  },
+
+  swapPieces: (): boolean => {
+    const { gameState, rng, levelConfig } = get();
+    if (!gameState || !rng || !levelConfig) return false;
+    if (gameState.status !== 'playing') return false;
+
+    // First swap is free, subsequent swaps cost 25 coins
+    const FREE_SWAPS = 1;
+    const SWAP_COST = 25;
+    const needsCoins = gameState.swapsUsed >= FREE_SWAPS;
+
+    // Generate fresh pieces
+    const newPieces = generatePieceSet(rng, levelConfig.piecePool);
+
+    set({
+      gameState: {
+        ...gameState,
+        availablePieces: newPieces,
+        swapsUsed: gameState.swapsUsed + 1,
+      },
+      selectedPieceIndex: null,
+    });
+    return true;
   },
 
   applyPowerUp: (type: PowerUpType, row: number, col: number, colorIndex?: number) => {

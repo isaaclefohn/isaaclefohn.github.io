@@ -124,6 +124,35 @@ export function createPiece(type: PieceType, colorIndex: number): Piece {
   };
 }
 
+/** Rotate a piece 90 degrees clockwise. Returns a new Piece. */
+export function rotatePiece(piece: Piece): Piece {
+  const rows = piece.shape.length;
+  const cols = piece.shape[0].length;
+  // Transpose + reverse each row = 90° clockwise
+  const rotated: boolean[][] = [];
+  for (let c = 0; c < cols; c++) {
+    const newRow: boolean[] = [];
+    for (let r = rows - 1; r >= 0; r--) {
+      newRow.push(piece.shape[r][c]);
+    }
+    rotated.push(newRow);
+  }
+
+  let cellCount = 0;
+  for (const row of rotated) {
+    for (const cell of row) {
+      if (cell) cellCount++;
+    }
+  }
+
+  return {
+    id: piece.id,
+    shape: rotated,
+    colorIndex: piece.colorIndex,
+    cellCount,
+  };
+}
+
 /** Get the width and height of a piece shape */
 export function getPieceSize(piece: Piece): { width: number; height: number } {
   return {

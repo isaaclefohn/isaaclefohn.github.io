@@ -36,6 +36,8 @@ export interface GameState {
   lastClearedCols: number[];
   /** Cells placed in the last turn (for squish animation) */
   lastPlacedCells: { row: number; col: number }[];
+  /** Number of piece swaps used this game */
+  swapsUsed: number;
 }
 
 export interface LevelConfig {
@@ -69,6 +71,7 @@ export function initGame(config: LevelConfig): GameState {
     lastClearedRows: [],
     lastClearedCols: [],
     lastPlacedCells: [],
+    swapsUsed: 0,
   };
 }
 
