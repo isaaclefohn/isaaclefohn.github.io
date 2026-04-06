@@ -93,10 +93,12 @@ const variantStyles: Record<string, ViewStyle> = {
   secondary: {
     backgroundColor: COLORS.surface,
     borderWidth: 1.5,
-    borderColor: COLORS.surfaceBorder,
+    borderColor: COLORS.accent,
   },
   ghost: {
-    backgroundColor: 'transparent',
+    backgroundColor: COLORS.surfaceLight,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
   },
 };
 
@@ -114,8 +116,8 @@ const sizeRadii: Record<string, ViewStyle> = {
 
 const variantTextStyles: Record<string, TextStyle> = {
   primary: { color: COLORS.textPrimary },
-  secondary: { color: COLORS.textSecondary },
-  ghost: { color: COLORS.textSecondary },
+  secondary: { color: COLORS.accentLight },
+  ghost: { color: COLORS.textPrimary },
 };
 
 const sizeTextStyles: Record<string, TextStyle> = {

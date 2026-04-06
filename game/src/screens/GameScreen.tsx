@@ -10,7 +10,7 @@ import { usePlayerStore } from '../store/playerStore';
 import { GameBoard } from '../components/GameBoard';
 import { PieceTray, DragEvent } from '../components/PieceTray';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
-import { Piece, getPieceCells } from '../game/engine/Piece';
+import { Piece, getPieceCells, getPieceSize } from '../game/engine/Piece';
 import { canPlace } from '../game/engine/Board';
 import { ScoreDisplay } from '../components/ScoreDisplay';
 import { PowerUpBar } from '../components/PowerUpBar';
@@ -22,6 +22,9 @@ import { ScorePopup } from '../components/animations/ScorePopup';
 import { ComboBanner } from '../components/animations/ComboBanner';
 import { Confetti } from '../components/animations/Confetti';
 import { PowerUpType } from '../game/powerups/PowerUpManager';
+import { FloatingParticles } from '../components/animations/FloatingParticles';
+import { ClearFlash } from '../components/animations/ClearFlash';
+import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 import { calculateCoinReward } from '../game/engine/Scoring';
@@ -76,6 +79,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [lastPoints, setLastPoints] = useState(0);
   const [lastCombo, setLastCombo] = useState(0);
   const [ghostCells, setGhostCells] = useState<{ row: number; col: number; colorIndex: number }[]>([]);
+  const [showClearFlash, setShowClearFlash] = useState(false);
+  const [clearFlashColor, setClearFlashColor] = useState<string>(COLORS.accent);
 
   // Drag-and-drop state
   const [draggedPieceIndex, setDraggedPieceIndex] = useState<number | null>(null);
@@ -139,16 +144,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         playSound('combo');
         setShowComboBanner(true);
         setShowConfetti(true);
+        setClearFlashColor(COLORS.accentGold);
+        setShowClearFlash(true);
         shakeBoard(3);
         setTimeout(() => setShowConfetti(false), 2500);
+        setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.linesCleared >= 3) {
         playSound('combo');
         setShowComboBanner(true);
+        setClearFlashColor(COLORS.accent);
+        setShowClearFlash(true);
         shakeBoard(2);
+        setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.combo > 1) {
         playSound('combo');
         setShowComboBanner(true);
+        setClearFlashColor(COLORS.accent);
+        setShowClearFlash(true);
         shakeBoard(Math.min(event.combo * 0.5, 2.5));
+        setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.breakdown.clearBonus > 0) {
         playSound('clear');
         shakeBoard(0.5);
@@ -307,6 +321,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Screen vignette for depth */}
+      <ScreenVignette />
+
+      {/* Ambient particles */}
+      <FloatingParticles count={8} />
+
+      {/* Clear flash overlay */}
+      <ClearFlash visible={showClearFlash} color={clearFlashColor} />
+
       {/* Confetti overlay */}
       <Confetti visible={showConfetti} />
 
@@ -447,23 +470,31 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         </View>
       </Modal>
       {/* Drag overlay — floating piece following the finger */}
-      {draggedPieceIndex !== null && dragPosition && gameState.availablePieces[draggedPieceIndex] && (
-        <View style={styles.dragOverlay} pointerEvents="none">
-          <View
-            style={{
-              position: 'absolute',
-              left: dragPosition.x - 40,
-              top: dragPosition.y - 60,
-            }}
-          >
-            <PieceRenderer
-              piece={gameState.availablePieces[draggedPieceIndex]}
-              selected
-              disabled={false}
-            />
+      {draggedPieceIndex !== null && dragPosition && gameState.availablePieces[draggedPieceIndex] && (() => {
+        const dragPiece = gameState.availablePieces[draggedPieceIndex];
+        const { width: pw, height: ph } = getPieceSize(dragPiece);
+        const trayCellSize = 28;
+        const trayGap = 3;
+        const pieceW = pw * (trayCellSize + trayGap) + trayGap;
+        const pieceH = ph * (trayCellSize + trayGap) + trayGap;
+        return (
+          <View style={styles.dragOverlay} pointerEvents="none">
+            <View
+              style={{
+                position: 'absolute',
+                left: dragPosition.x - pieceW / 2,
+                top: dragPosition.y - pieceH - 20,
+              }}
+            >
+              <PieceRenderer
+                piece={dragPiece}
+                selected
+                disabled={false}
+              />
+            </View>
           </View>
-        </View>
-      )}
+        );
+      })()}
     </SafeAreaView>
   );
 };

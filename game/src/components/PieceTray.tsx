@@ -1,19 +1,21 @@
 /**
- * Premium piece tray with glow selection, animated slots, and drag-to-place support.
+ * Premium piece tray with glow selection, idle shimmer, animated slots, and drag-to-place.
+ * Pieces have a gentle breathing pulse when idle, and a shimmer sweep on selection.
  */
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import {
   View,
-  TouchableOpacity,
   Animated,
   PanResponder,
   StyleSheet,
   GestureResponderEvent,
   PanResponderGestureState,
+  Easing,
 } from 'react-native';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { Piece } from '../game/engine/Piece';
+import { GameIcon } from './GameIcon';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 
 export interface DragEvent {
@@ -32,7 +34,7 @@ interface PieceTrayProps {
   onDragEnd?: (event: DragEvent) => void;
 }
 
-const DRAG_THRESHOLD = 8; // px before we consider it a drag vs tap
+const DRAG_THRESHOLD = 8;
 
 const PieceSlot: React.FC<{
   piece: Piece | null;
@@ -43,36 +45,75 @@ const PieceSlot: React.FC<{
   onDragMove?: (event: DragEvent) => void;
   onDragEnd?: (event: DragEvent) => void;
 }> = ({ piece, isSelected, onPress, index, onDragStart, onDragMove, onDragEnd }) => {
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const scaleAnim = useRef(new Animated.Value(0.3)).current;
   const glowOpacity = useRef(new Animated.Value(0)).current;
+  const idlePulse = useRef(new Animated.Value(1)).current;
+  const shimmerX = useRef(new Animated.Value(-1)).current;
   const isDraggingRef = useRef(false);
   const startPosRef = useRef({ x: 0, y: 0 });
 
+  // Entrance bounce with stagger
   useEffect(() => {
-    // Entrance bounce
+    scaleAnim.setValue(0.3);
     Animated.spring(scaleAnim, {
       toValue: 1,
       useNativeDriver: true,
-      tension: 60,
-      friction: 7,
-      delay: index * 80,
+      tension: 50,
+      friction: 6,
+      delay: index * 120,
     }).start();
-  }, []);
+  }, [piece]);
 
+  // Idle breathing pulse for available pieces
+  useEffect(() => {
+    if (!piece) return;
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(idlePulse, {
+          toValue: 1.03,
+          duration: 1500 + index * 200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(idlePulse, {
+          toValue: 1,
+          duration: 1500 + index * 200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [piece, index]);
+
+  // Selection glow and shimmer
   useEffect(() => {
     Animated.timing(glowOpacity, {
       toValue: isSelected ? 1 : 0,
-      duration: 150,
+      duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [isSelected, glowOpacity]);
+
+    if (isSelected) {
+      // Shimmer sweep across the piece
+      shimmerX.setValue(-1);
+      Animated.loop(
+        Animated.timing(shimmerX, {
+          toValue: 2,
+          duration: 2000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ).start();
+    }
+  }, [isSelected, glowOpacity, shimmerX]);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => !!piece,
       onMoveShouldSetPanResponder: (_evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
         if (!piece) return false;
-        // Only capture the move if the finger has moved beyond threshold
         return (
           Math.abs(gestureState.dx) > DRAG_THRESHOLD ||
           Math.abs(gestureState.dy) > DRAG_THRESHOLD
@@ -117,7 +158,6 @@ const PieceSlot: React.FC<{
           });
           isDraggingRef.current = false;
         } else {
-          // It was a tap, not a drag
           if (piece) {
             onPress();
           }
@@ -137,7 +177,7 @@ const PieceSlot: React.FC<{
   ).current;
 
   return (
-    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+    <Animated.View style={{ transform: [{ scale: Animated.multiply(scaleAnim, idlePulse) }] }}>
       <View
         {...panResponder.panHandlers}
         style={[
@@ -146,12 +186,30 @@ const PieceSlot: React.FC<{
           !piece && styles.emptySlot,
         ]}
       >
-        {/* Selection glow */}
+        {/* Selection glow border */}
         {isSelected && (
           <Animated.View
             style={[
               styles.selectionGlow,
               { opacity: glowOpacity },
+            ]}
+          />
+        )}
+        {/* Shimmer overlay when selected */}
+        {isSelected && piece && (
+          <Animated.View
+            style={[
+              styles.shimmer,
+              {
+                transform: [
+                  {
+                    translateX: shimmerX.interpolate({
+                      inputRange: [-1, 2],
+                      outputRange: [-100, 100],
+                    }),
+                  },
+                ],
+              },
             ]}
           />
         )}
@@ -163,7 +221,7 @@ const PieceSlot: React.FC<{
           />
         ) : (
           <View style={styles.placedIndicator}>
-            <View style={styles.checkmark} />
+            <GameIcon name="check" size={16} color={COLORS.success} />
           </View>
         )}
       </View>
@@ -181,30 +239,40 @@ export const PieceTray: React.FC<PieceTrayProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      {pieces.map((piece, index) => (
-        <PieceSlot
-          key={index}
-          piece={piece}
-          isSelected={selectedIndex === index}
-          onPress={() => onSelectPiece(index)}
-          index={index}
-          onDragStart={onDragStart}
-          onDragMove={onDragMove}
-          onDragEnd={onDragEnd}
-        />
-      ))}
+      <View style={styles.trayInner}>
+        {pieces.map((piece, index) => (
+          <PieceSlot
+            key={index}
+            piece={piece}
+            isSelected={selectedIndex === index}
+            onPress={() => onSelectPiece(index)}
+            index={index}
+            onDragStart={onDragStart}
+            onDragMove={onDragMove}
+            onDragEnd={onDragEnd}
+          />
+        ))}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+  },
+  trayInner: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 14,
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.sm,
+    backgroundColor: `${COLORS.surface}80`,
+    borderRadius: RADII.lg,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
   },
   pieceSlot: {
     minWidth: 84,
@@ -216,6 +284,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLORS.surfaceBorder,
     padding: 10,
+    overflow: 'hidden',
     ...SHADOWS.small,
   },
   selectedSlot: {
@@ -223,35 +292,40 @@ const styles = StyleSheet.create({
     backgroundColor: `${COLORS.accentGold}10`,
     shadowColor: COLORS.accentGold,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
+    shadowOpacity: 0.5,
+    shadowRadius: 14,
   },
   selectionGlow: {
     position: 'absolute',
-    top: -1,
-    left: -1,
-    right: -1,
-    bottom: -1,
-    borderRadius: RADII.md,
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    borderRadius: RADII.md + 1,
     borderWidth: 2,
     borderColor: COLORS.accentGold,
   },
+  shimmer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 40,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    transform: [{ skewX: '-15deg' }],
+    zIndex: 10,
+  },
   emptySlot: {
     opacity: 0.35,
+    backgroundColor: COLORS.gridEmpty,
   },
   placedIndicator: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.surfaceLight,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: `${COLORS.success}15`,
+    borderWidth: 1,
+    borderColor: `${COLORS.success}30`,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  checkmark: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: COLORS.success,
-    opacity: 0.6,
   },
 });

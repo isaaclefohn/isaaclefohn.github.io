@@ -1,7 +1,6 @@
 /**
- * Premium home screen with animated title, rich stats, and polished layout.
- * All buttons visible, labeled with icons, sensibly aligned.
- * Inspired by Block Blast / Candy Crush / Royal Kingdom but unique.
+ * Premium home screen with animated title blocks, rich stats, pulsing play button,
+ * and polished layout. Unique visual identity with floating decorative blocks.
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -11,6 +10,8 @@ import { useSettingsStore } from '../store/settingsStore';
 import { Button } from '../components/common/Button';
 import { Tutorial } from '../components/Tutorial';
 import { GameIcon } from '../components/GameIcon';
+import { FloatingParticles } from '../components/animations/FloatingParticles';
+import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatCompact } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,6 +22,17 @@ type HomeScreenProps = {
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Decorative mini-blocks that float behind the title
+const TITLE_BLOCKS = [
+  { color: COLORS.blocks[0], size: 18, top: -10, left: 20, delay: 0 },
+  { color: COLORS.blocks[1], size: 14, top: 15, right: 30, delay: 200 },
+  { color: COLORS.blocks[2], size: 20, top: 50, left: -5, delay: 400 },
+  { color: COLORS.blocks[4], size: 16, top: -5, right: -10, delay: 100 },
+  { color: COLORS.blocks[5], size: 12, top: 60, right: 15, delay: 300 },
+  { color: COLORS.blocks[3], size: 15, top: 35, left: 45, delay: 500 },
+  { color: COLORS.blocks[6], size: 13, top: 70, left: 30, delay: 250 },
+];
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { highestLevel, coins, gems, totalScore, currentStreak } = usePlayerStore();
@@ -36,8 +48,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const buttonsTranslate = useRef(new Animated.Value(40)).current;
   const blastGlow = useRef(new Animated.Value(0.6)).current;
   const decorPulse = useRef(new Animated.Value(0.3)).current;
+  const playGlowPulse = useRef(new Animated.Value(0.3)).current;
+
+  // Title block animations
+  const blockAnims = useRef(TITLE_BLOCKS.map(() => ({
+    scale: new Animated.Value(0),
+    rotate: new Animated.Value(0),
+    opacity: new Animated.Value(0),
+  }))).current;
 
   useEffect(() => {
+    // Main entrance sequence
     Animated.sequence([
       Animated.parallel([
         Animated.timing(titleOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
@@ -51,10 +72,49 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       ]),
     ]).start();
 
+    // Animated title blocks pop in with stagger
+    blockAnims.forEach((anim, i) => {
+      Animated.sequence([
+        Animated.delay(300 + TITLE_BLOCKS[i].delay),
+        Animated.parallel([
+          Animated.spring(anim.scale, {
+            toValue: 1,
+            tension: 100,
+            friction: 6,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.opacity, {
+            toValue: 0.7,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+
+      // Gentle continuous rotation
+      Animated.loop(
+        Animated.timing(anim.rotate, {
+          toValue: 1,
+          duration: 8000 + i * 2000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ).start();
+    });
+
+    // BLAST glow pulse
     Animated.loop(
       Animated.sequence([
         Animated.timing(blastGlow, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         Animated.timing(blastGlow, { toValue: 0.6, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Play button glow pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(playGlowPulse, { toValue: 0.7, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(playGlowPulse, { toValue: 0.3, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ])
     ).start();
 
@@ -74,13 +134,49 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Screen vignette */}
+      <ScreenVignette />
+
+      {/* Ambient floating particles */}
+      <FloatingParticles count={15} />
+
       {/* Decorative background orbs */}
       <Animated.View style={[styles.decorOrb, styles.decorOrb1, { opacity: decorPulse }]} />
       <Animated.View style={[styles.decorOrb, styles.decorOrb2, { opacity: decorPulse }]} />
+      <Animated.View style={[styles.decorOrb, styles.decorOrb3, { opacity: decorPulse }]} />
 
       <View style={styles.content}>
-        {/* Animated Title */}
+        {/* Animated Title with floating blocks */}
         <View style={styles.titleContainer}>
+          {/* Floating decorative blocks behind title */}
+          {TITLE_BLOCKS.map((block, i) => (
+            <Animated.View
+              key={i}
+              style={[
+                styles.titleBlock,
+                {
+                  width: block.size,
+                  height: block.size,
+                  backgroundColor: block.color,
+                  borderRadius: block.size * 0.2,
+                  top: block.top,
+                  ...(block.left !== undefined ? { left: block.left } : {}),
+                  ...(block.right !== undefined ? { right: block.right } : {}),
+                  opacity: blockAnims[i].opacity,
+                  transform: [
+                    { scale: blockAnims[i].scale },
+                    {
+                      rotate: blockAnims[i].rotate.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '360deg'],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            />
+          ))}
+
           <Animated.Text
             style={[
               styles.title,
@@ -94,24 +190,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <Text style={styles.titleAccent}>BLAST</Text>
             <View style={styles.titleDeco} />
           </Animated.View>
+          {/* Subtitle tagline */}
+          <Animated.Text style={[styles.tagline, { opacity: statsOpacity }]}>
+            Puzzle your way to the top
+          </Animated.Text>
         </View>
 
         {/* Stats bar */}
         <Animated.View style={[styles.statsBar, { opacity: statsOpacity }]}>
           <View style={styles.statItem}>
-            <GameIcon name="coin" size={18} />
+            <GameIcon name="coin" size={20} />
             <Text style={styles.statValue}>{formatCompact(coins)}</Text>
             <Text style={styles.statLabel}>COINS</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <GameIcon name="gem" size={18} />
+            <GameIcon name="gem" size={20} />
             <Text style={styles.statValue}>{formatCompact(gems)}</Text>
             <Text style={styles.statLabel}>GEMS</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <GameIcon name="star" size={18} />
+            <GameIcon name="star" size={20} />
             <Text style={styles.statValue}>{formatCompact(totalScore)}</Text>
             <Text style={styles.statLabel}>SCORE</Text>
           </View>
@@ -119,7 +219,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <GameIcon name="fire" size={18} />
+                <GameIcon name="fire" size={20} />
                 <Text style={styles.statValue}>{currentStreak}</Text>
                 <Text style={styles.statLabel}>STREAK</Text>
               </View>
@@ -134,7 +234,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             { opacity: buttonsOpacity, transform: [{ translateY: buttonsTranslate }] },
           ]}
         >
-          {/* Primary play button - full width, large */}
+          {/* Primary play button - full width, large, with pulsing glow */}
           <View style={styles.playButtonWrap}>
             <Button
               title={highestLevel > 0 ? `Continue  \u2022  Level ${highestLevel + 1}` : 'Play'}
@@ -143,21 +243,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               size="large"
               style={styles.mainButton}
             />
-            {/* Glow ring around play button */}
-            <View style={styles.playGlow} />
+            {/* Animated glow ring */}
+            <Animated.View style={[styles.playGlow, { opacity: playGlowPulse }]} />
+            <Animated.View style={[styles.playGlowOuter, { opacity: Animated.multiply(playGlowPulse, 0.5) }]} />
           </View>
 
           {/* Secondary row - Daily Challenge + Level Select */}
           <View style={styles.secondaryRow}>
             <Button
-              title="Daily"
+              title="Daily Challenge"
               onPress={() => navigation.navigate('DailyChallenge')}
               variant="secondary"
               size="medium"
               style={styles.halfButton}
             />
             <Button
-              title="Levels"
+              title="Select Level"
               onPress={() => navigation.navigate('LevelSelect')}
               variant="secondary"
               size="medium"
@@ -165,7 +266,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             />
           </View>
 
-          {/* Bottom row - Shop, Leaderboard, Settings - evenly spaced */}
+          {/* Bottom row - Shop, Leaderboard, Settings */}
           <View style={styles.bottomRow}>
             <View style={styles.bottomButtonWrapper}>
               <Button
@@ -201,7 +302,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         {highestLevel > 0 && (
           <Animated.View style={[styles.levelIndicatorRow, { opacity: buttonsOpacity }]}>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelBadgeText}>LVL {highestLevel}</Text>
+              <GameIcon name="crown" size={12} color={COLORS.accentGold} />
+              <Text style={styles.levelBadgeText}>LEVEL {highestLevel}</Text>
             </View>
           </Animated.View>
         )}
@@ -229,63 +331,88 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   decorOrb1: {
-    width: 200,
-    height: 200,
+    width: 220,
+    height: 220,
     backgroundColor: COLORS.accent,
-    top: -60,
-    right: -50,
+    top: -70,
+    right: -60,
     opacity: 0.06,
   },
   decorOrb2: {
-    width: 160,
-    height: 160,
+    width: 180,
+    height: 180,
     backgroundColor: COLORS.accentGold,
-    bottom: 40,
-    left: -40,
+    bottom: 30,
+    left: -50,
     opacity: 0.04,
+  },
+  decorOrb3: {
+    width: 120,
+    height: 120,
+    backgroundColor: COLORS.blocks[2],
+    top: '40%',
+    right: -30,
+    opacity: 0.03,
   },
   titleContainer: {
     alignItems: 'center',
     marginBottom: SPACING.xl,
+    position: 'relative',
+    paddingHorizontal: 20,
+  },
+  titleBlock: {
+    position: 'absolute',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   title: {
     fontSize: SCREEN_WIDTH < 375 ? 38 : 48,
     fontWeight: '900',
     color: COLORS.textPrimary,
     letterSpacing: 6,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 10,
   },
   blastRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
+    marginTop: -4,
   },
   titleAccent: {
-    fontSize: SCREEN_WIDTH < 375 ? 46 : 56,
+    fontSize: SCREEN_WIDTH < 375 ? 46 : 58,
     fontWeight: '900',
     color: COLORS.accent,
-    letterSpacing: 10,
+    letterSpacing: 12,
     textShadowColor: COLORS.accent,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
+    textShadowRadius: 24,
   },
   titleDeco: {
-    width: 28,
+    width: 32,
     height: 3,
     backgroundColor: COLORS.accent,
     borderRadius: 2,
     opacity: 0.6,
   },
+  tagline: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.textMuted,
+    letterSpacing: 2,
+    marginTop: 8,
+  },
   statsBar: {
     flexDirection: 'row',
-    backgroundColor: COLORS.surface,
+    backgroundColor: `${COLORS.surface}E0`,
     borderRadius: RADII.lg,
     borderWidth: 1,
     borderColor: COLORS.surfaceBorder,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     marginBottom: SPACING.xl,
     alignItems: 'center',
     width: '100%',
@@ -294,22 +421,22 @@ const styles = StyleSheet.create({
   statItem: {
     alignItems: 'center',
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
   statValue: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '800',
     color: COLORS.accentGold,
   },
   statLabel: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '700',
     color: COLORS.textMuted,
-    letterSpacing: 1.2,
+    letterSpacing: 1.5,
   },
   statDivider: {
     width: 1,
-    height: 32,
+    height: 36,
     backgroundColor: COLORS.surfaceBorder,
   },
   buttonGroup: {
@@ -326,14 +453,25 @@ const styles = StyleSheet.create({
   },
   playGlow: {
     position: 'absolute',
-    top: -2,
-    left: -2,
-    right: -2,
-    bottom: -2,
-    borderRadius: RADII.lg + 2,
-    borderWidth: 1.5,
-    borderColor: `${COLORS.accent}40`,
+    top: -3,
+    left: -3,
+    right: -3,
+    bottom: -3,
+    borderRadius: RADII.lg + 3,
+    borderWidth: 2,
+    borderColor: COLORS.accent,
     zIndex: -1,
+  },
+  playGlowOuter: {
+    position: 'absolute',
+    top: -7,
+    left: -7,
+    right: -7,
+    bottom: -7,
+    borderRadius: RADII.lg + 7,
+    borderWidth: 1,
+    borderColor: `${COLORS.accent}40`,
+    zIndex: -2,
   },
   secondaryRow: {
     flexDirection: 'row',
@@ -360,17 +498,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   levelBadge: {
-    backgroundColor: COLORS.surfaceLight,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: `${COLORS.accentGold}12`,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
     borderRadius: RADII.round,
     borderWidth: 1,
-    borderColor: COLORS.surfaceBorder,
+    borderColor: `${COLORS.accentGold}30`,
   },
   levelBadgeText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
-    color: COLORS.textSecondary,
+    color: COLORS.accentGold,
     letterSpacing: 1.5,
   },
 });

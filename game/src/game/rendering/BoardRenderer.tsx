@@ -1,6 +1,7 @@
 /**
  * Premium board renderer with 3D block effects, inner glow, and depth.
  * Uses standard React Native Views (Expo Go compatible).
+ * Enhanced ghost cells with solid preview and glow effect.
  */
 
 import React, { useMemo } from 'react';
@@ -42,6 +43,8 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
         Array.from({ length: gridSize }, (_, col) => {
           const cellValue = grid[row][col];
           const ghostColor = ghostLookup.get(`${row},${col}`);
+          const x = CELL_GAP + col * (CELL_SIZE + CELL_GAP);
+          const y = CELL_GAP + row * (CELL_SIZE + CELL_GAP);
 
           if (cellValue !== 0) {
             const colorIdx = cellValue - 1;
@@ -55,8 +58,8 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
                 style={[
                   styles.cell,
                   {
-                    left: CELL_GAP + col * (CELL_SIZE + CELL_GAP),
-                    top: CELL_GAP + row * (CELL_SIZE + CELL_GAP),
+                    left: x,
+                    top: y,
                     backgroundColor: baseColor,
                     borderTopColor: lightColor,
                     borderLeftColor: lightColor,
@@ -83,21 +86,32 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
 
           if (ghostColor !== undefined) {
             const ghostBase = BLOCK_COLORS[ghostColor - 1] || BLOCK_COLORS[0];
+            const ghostLight = BLOCK_LIGHT[ghostColor - 1] || BLOCK_LIGHT[0];
             return (
               <View
                 key={`${row}-${col}`}
                 style={[
                   styles.cell,
-                  styles.ghostCell,
                   {
-                    left: CELL_GAP + col * (CELL_SIZE + CELL_GAP),
-                    top: CELL_GAP + row * (CELL_SIZE + CELL_GAP),
-                    backgroundColor: `${ghostBase}25`,
-                    borderColor: `${ghostBase}50`,
-                    borderWidth: 1.5,
+                    left: x,
+                    top: y,
+                    backgroundColor: `${ghostBase}35`,
+                    borderWidth: 2,
+                    borderColor: `${ghostBase}70`,
+                    borderTopColor: `${ghostLight}50`,
+                    borderLeftColor: `${ghostLight}50`,
+                    borderBottomColor: `${ghostBase}50`,
+                    borderRightColor: `${ghostBase}50`,
+                    shadowColor: ghostBase,
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.4,
+                    shadowRadius: 6,
                   },
                 ]}
-              />
+              >
+                {/* Ghost highlight */}
+                <View style={[styles.ghostHighlight, { backgroundColor: `${ghostLight}20` }]} />
+              </View>
             );
           }
 
@@ -109,8 +123,8 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
                 styles.cell,
                 styles.emptyCell,
                 {
-                  left: CELL_GAP + col * (CELL_SIZE + CELL_GAP),
-                  top: CELL_GAP + row * (CELL_SIZE + CELL_GAP),
+                  left: x,
+                  top: y,
                   backgroundColor: showGridLines ? COLORS.gridEmpty : COLORS.surface,
                 },
               ]}
@@ -136,9 +150,6 @@ const styles = StyleSheet.create({
     borderRadius: CELL_RADIUS,
     overflow: 'hidden',
   },
-  ghostCell: {
-    borderStyle: 'dashed' as any,
-  },
   emptyCell: {
     borderWidth: 0.5,
     borderColor: COLORS.gridLine,
@@ -161,5 +172,16 @@ const styles = StyleSheet.create({
     width: CELL_SIZE * 0.6,
     height: CELL_SIZE * 0.6,
     borderRadius: CELL_SIZE * 0.3,
+  },
+  ghostHighlight: {
+    position: 'absolute',
+    top: 1,
+    left: 2,
+    right: 2,
+    height: CELL_SIZE * 0.4,
+    borderTopLeftRadius: CELL_RADIUS - 2,
+    borderTopRightRadius: CELL_RADIUS - 2,
+    borderBottomLeftRadius: CELL_SIZE * 0.5,
+    borderBottomRightRadius: CELL_SIZE * 0.5,
   },
 });
