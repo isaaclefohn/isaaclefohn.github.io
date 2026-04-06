@@ -180,6 +180,9 @@ const PieceSlot: React.FC<{
     <Animated.View style={{ transform: [{ scale: Animated.multiply(scaleAnim, idlePulse) }] }}>
       <View
         {...panResponder.panHandlers}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={piece ? `Piece ${index + 1}${isSelected ? ', selected' : ''}. Tap to select, drag to place.` : `Piece ${index + 1}, already placed`}
         style={[
           styles.pieceSlot,
           isSelected && styles.selectedSlot,

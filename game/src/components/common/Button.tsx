@@ -51,6 +51,10 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
       <Pressable
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityState={{ disabled }}
         style={[
           styles.base,
           variantStyles[variant],

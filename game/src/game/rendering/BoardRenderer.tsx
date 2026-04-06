@@ -13,6 +13,8 @@ import { usePlayerStore } from '../../store/playerStore';
 import { getTheme } from './ThemeManager';
 import { COLORS, CELL_SIZE, CELL_GAP, CELL_RADIUS } from '../../utils/constants';
 
+const COLOR_NAMES = ['Red', 'Teal', 'Blue', 'Green', 'Yellow', 'Purple', 'Orange'];
+
 interface BoardRendererProps {
   grid: Grid;
   gridSize: number;
@@ -61,6 +63,8 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
             return (
               <View
                 key={`${row}-${col}`}
+                accessible
+                accessibilityLabel={`${COLOR_NAMES[colorIdx] || 'Block'} block at row ${row + 1}, column ${col + 1}`}
                 style={[
                   styles.cell,
                   {
@@ -128,6 +132,8 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
           return (
             <View
               key={`${row}-${col}`}
+              accessible
+              accessibilityLabel={`Empty cell at row ${row + 1}, column ${col + 1}`}
               style={[
                 styles.cell,
                 styles.emptyCell,

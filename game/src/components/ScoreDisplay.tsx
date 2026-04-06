@@ -74,7 +74,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   const starThresholds = [0.33, 0.66, 1.0];
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessible accessibilityLabel={`Level ${level}, Score ${formatScore(score)} of ${formatScore(objective.target)}, ${stars} stars${combo > 1 ? `, ${combo}x combo` : ''}`} accessibilityRole="summary">
       {/* Level badge and stars row */}
       <View style={styles.levelRow}>
         <View style={styles.levelBadge}>
