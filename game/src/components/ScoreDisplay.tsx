@@ -78,7 +78,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       {/* Level badge and stars row */}
       <View style={styles.levelRow}>
         <View style={styles.levelBadge}>
-          <Text style={styles.levelText}>LEVEL {level}</Text>
+          <Text style={styles.levelText}>{level === 0 ? 'ZEN MODE' : `LEVEL ${level}`}</Text>
         </View>
         <Animated.View style={[styles.starsContainer, { transform: [{ scale: starBounce }] }]}>
           {[1, 2, 3].map((star) => (

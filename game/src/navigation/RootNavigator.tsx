@@ -15,7 +15,7 @@ import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 
 export type RootStackParamList = {
   Home: undefined;
-  Game: { level: number };
+  Game: { level: number; endless?: boolean };
   LevelSelect: undefined;
   Settings: undefined;
   Shop: undefined;

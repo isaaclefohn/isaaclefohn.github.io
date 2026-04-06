@@ -5,6 +5,7 @@
  */
 
 import { LevelConfig } from '../engine/GameLoop';
+import { PIECE_POOLS } from '../engine/Piece';
 import { generateLevelConfig } from './DifficultyScaler';
 import { BOSS_LEVELS } from './LevelTemplates';
 
@@ -32,6 +33,19 @@ export function getLevelRange(start: number, end: number): LevelConfig[] {
 /** Check if a level is a boss level */
 export function isBossLevel(levelNumber: number): boolean {
   return levelNumber % 25 === 0 && levelNumber > 0;
+}
+
+/** Get an endless/zen mode config (no score target, play until stuck) */
+export function getEndlessConfig(): LevelConfig {
+  const seed = Date.now();
+  return {
+    levelNumber: 0,
+    gridSize: 8,
+    objective: { type: 'score' as const, target: 999999999 },
+    starThresholds: [1000, 3000, 6000] as [number, number, number],
+    piecePool: [...PIECE_POOLS.medium, ...PIECE_POOLS.hard],
+    seed,
+  };
 }
 
 /** Get the total number of available levels */

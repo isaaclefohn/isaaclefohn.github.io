@@ -52,13 +52,15 @@ const POWER_UP_ICON_NAMES: Record<PowerUpType, 'bomb' | 'lightning' | 'palette'>
 };
 
 export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => {
-  const { level } = route.params;
+  const { level, endless } = route.params;
+  const isEndless = endless === true;
   const {
     gameState,
     levelConfig,
     selectedPieceIndex,
     stars,
     loadLevel,
+    loadEndless,
     selectPiece,
     placePiece,
     rotatePiece,
@@ -108,8 +110,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
 
   // Load level on mount
   useEffect(() => {
-    loadLevel(level);
-  }, [level, loadLevel]);
+    if (isEndless) {
+      loadEndless();
+    } else {
+      loadLevel(level);
+    }
+  }, [level, isEndless, loadLevel, loadEndless]);
 
   // Board shake helper
   const shakeBoard = useCallback((intensity: number = 1) => {
@@ -445,8 +451,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       <ScoreDisplay
         score={gameState.score}
         combo={gameState.combo}
-        objective={gameState.objective}
-        level={gameState.level}
+        objective={isEndless ? { type: 'score', target: gameState.score + 1000 } : gameState.objective}
+        level={isEndless ? 0 : gameState.level}
         stars={stars}
       />
 
@@ -596,16 +602,24 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       {/* Lose Modal */}
       <Modal visible={showLoseModal} onClose={() => {}} dismissable={false}>
         <View style={styles.modalIconWrap}>
-          <GameIcon name="target" size={48} color={COLORS.textMuted} />
+          <GameIcon name={isEndless ? 'sparkle' : 'target'} size={48} color={isEndless ? COLORS.accentGold : COLORS.textMuted} />
         </View>
-        <Text style={styles.modalTitle}>No More Moves</Text>
+        <Text style={styles.modalTitle}>{isEndless ? 'Game Over!' : 'No More Moves'}</Text>
         <Text style={styles.modalScore}>{formatScore(gameState.score)}</Text>
-        <Text style={styles.modalTarget}>
-          Target: {formatScore(levelConfig.objective.target)}
-        </Text>
+        {isEndless ? (
+          <View style={styles.endlessStats}>
+            <Text style={styles.endlessStatText}>Pieces placed: {gameState.piecesPlaced}</Text>
+            <Text style={styles.endlessStatText}>Lines cleared: {gameState.linesCleared}</Text>
+            <Text style={styles.endlessStatText}>Best combo: {gameState.combo}x</Text>
+          </View>
+        ) : (
+          <Text style={styles.modalTarget}>
+            Target: {formatScore(levelConfig.objective.target)}
+          </Text>
+        )}
         <View style={styles.modalButtons}>
-          <Button title="Try Again" onPress={handleRetry} variant="primary" size="medium" />
-          {canShowRewarded() && (
+          <Button title={isEndless ? 'Play Again' : 'Try Again'} onPress={handleRetry} variant="primary" size="medium" />
+          {!isEndless && canShowRewarded() && (
             <Button
               title={`Watch Ad +${AD_REWARDS.coins.amount}`}
               onPress={handleWatchAd}
@@ -613,7 +627,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
               size="medium"
             />
           )}
-          <Button title="Home" onPress={handleHome} variant="ghost" size="small" />
+          <View style={styles.shareRow}>
+            <Button title="Share" onPress={handleShare} variant="ghost" size="small" />
+            <Button title="Home" onPress={handleHome} variant="ghost" size="small" />
+          </View>
         </View>
       </Modal>
       {/* Drag overlay — floating piece following the finger */}
@@ -734,6 +751,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textMuted,
     marginBottom: 20,
+  },
+  endlessStats: {
+    marginBottom: 20,
+    gap: 4,
+    alignItems: 'center',
+  },
+  endlessStatText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    fontWeight: '600',
   },
   modalButtons: {
     gap: 10,

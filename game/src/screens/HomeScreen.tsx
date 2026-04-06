@@ -279,21 +279,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <Animated.View style={[styles.playGlowOuter, { opacity: Animated.multiply(playGlowPulse, 0.5) }]} />
           </View>
 
-          {/* Secondary row - Daily Challenge + Level Select */}
+          {/* Secondary row - Daily Challenge + Level Select + Zen */}
           <View style={styles.secondaryRow}>
             <Button
-              title="Daily Challenge"
+              title="Daily"
               onPress={() => navigation.navigate('DailyChallenge')}
               variant="secondary"
               size="medium"
-              style={styles.halfButton}
+              style={styles.thirdButton}
             />
             <Button
-              title="Select Level"
+              title="Levels"
               onPress={() => navigation.navigate('LevelSelect')}
               variant="secondary"
               size="medium"
-              style={styles.halfButton}
+              style={styles.thirdButton}
+            />
+            <Button
+              title="Zen"
+              onPress={() => navigation.navigate('Game', { level: 0, endless: true })}
+              variant="secondary"
+              size="medium"
+              style={styles.thirdButton}
             />
           </View>
 
@@ -537,6 +544,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   halfButton: {
+    flex: 1,
+  },
+  thirdButton: {
     flex: 1,
   },
   bottomRow: {

@@ -6,7 +6,7 @@
 import { useCallback, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
-import { getLevel } from '../game/levels/LevelGenerator';
+import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
 import { calculateCoinReward } from '../game/engine/Scoring';
 
 export function useGameEngine() {
@@ -33,6 +33,13 @@ export function useGameEngine() {
   // Start a level by number
   const loadLevel = useCallback((levelNumber: number) => {
     const config = getLevel(levelNumber);
+    startLevel(config);
+    updateStreak();
+  }, [startLevel, updateStreak]);
+
+  // Start endless/zen mode
+  const loadEndless = useCallback(() => {
+    const config = getEndlessConfig();
     startLevel(config);
     updateStreak();
   }, [startLevel, updateStreak]);
@@ -73,6 +80,7 @@ export function useGameEngine() {
 
     // Actions
     loadLevel,
+    loadEndless,
     selectPiece,
     placePiece,
     rotatePiece,
