@@ -5,6 +5,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Animated, Share } from 'react-native';
 import { useGameEngine } from '../hooks/useGameEngine';
+import { useBoardTension } from '../hooks/useBoardTension';
 import { useSound } from '../hooks/useSound';
 import { usePlayerStore } from '../store/playerStore';
 import { GameBoard } from '../components/GameBoard';
@@ -109,6 +110,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [draggedPieceIndex, setDraggedPieceIndex] = useState<number | null>(null);
   const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
   const boardOriginRef = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 0, height: 0 });
+
+  // Board tension — intensifies visuals as board fills
+  const { tension, level: tensionLevel } = useBoardTension(gameState?.grid);
 
   // Board shake animation
   const boardShakeX = useRef(new Animated.Value(0)).current;
@@ -436,6 +440,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     <SafeAreaView style={styles.container}>
       {/* Screen vignette for depth */}
       <ScreenVignette />
+
+      {/* Tension vignette — red glow when board is filling up */}
+      {tension > 0.3 && (
+        <View
+          style={[
+            styles.tensionVignette,
+            { opacity: Math.min((tension - 0.3) * 0.6, 0.3) },
+          ]}
+          pointerEvents="none"
+        />
+      )}
 
       {/* Ambient particles */}
       <FloatingParticles count={8} />
@@ -814,6 +829,14 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     fontWeight: '600',
     letterSpacing: 0.5,
+  },
+  tensionVignette: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 8,
+    borderColor: COLORS.accent,
+    borderRadius: 0,
+    zIndex: 1,
+    elevation: 1,
   },
   rescueCard: {
     backgroundColor: `${COLORS.accentGold}12`,

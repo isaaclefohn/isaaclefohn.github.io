@@ -1,5 +1,5 @@
 /**
- * Level selection screen with animated grid, premium cards, and smooth entrance.
+ * Level selection screen with themed world sections, animated grid, and premium cards.
  */
 
 import React, { useMemo, useRef, useEffect } from 'react';
@@ -8,13 +8,13 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  FlatList,
+  SectionList,
   TouchableOpacity,
   Animated,
-  Easing,
 } from 'react-native';
 import { usePlayerStore } from '../store/playerStore';
 import { getTotalLevels, isBossLevel } from '../game/levels/LevelGenerator';
+import { WORLDS, getWorldForLevel, isWorldUnlocked, World } from '../game/levels/Worlds';
 import { Button } from '../components/common/Button';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
 import { GameIcon } from '../components/GameIcon';
@@ -33,69 +33,99 @@ interface LevelItem {
   isBoss: boolean;
 }
 
+interface WorldSection {
+  world: World;
+  worldUnlocked: boolean;
+  starsEarned: number;
+  starsTotal: number;
+  data: LevelItem[][];  // Rows of 5
+}
+
 const LevelCard: React.FC<{
   item: LevelItem;
+  worldColor: string;
   onPress: () => void;
-}> = ({ item, onPress }) => {
-  const scaleAnim = useRef(new Animated.Value(0.7)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const delay = (item.level % 5) * 50;
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 7,
-        delay,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 200,
-        delay,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
+}> = ({ item, worldColor, onPress }) => {
   return (
-    <Animated.View style={{ transform: [{ scale: scaleAnim }], opacity: opacityAnim }}>
-      <TouchableOpacity
-        style={[
-          styles.levelCard,
-          item.unlocked && styles.levelUnlocked,
-          item.isBoss && item.unlocked && styles.levelBoss,
-          !item.unlocked && styles.levelLocked,
-        ]}
-        onPress={item.unlocked ? onPress : undefined}
-        disabled={!item.unlocked}
-        activeOpacity={0.7}
-      >
-        {item.isBoss && item.unlocked && (
-          <View style={styles.bossGlow} />
-        )}
-        {item.unlocked ? (
-          <Text style={styles.levelNumber}>{item.level}</Text>
-        ) : (
-          <GameIcon name="lock" size={16} />
-        )}
-        {item.unlocked && (
-          <View style={styles.starsRow}>
-            {[1, 2, 3].map((s) => (
-              <GameIcon key={s} name={s <= item.stars ? 'star' : 'star-outline'} size={11} />
-            ))}
-          </View>
-        )}
-        {item.isBoss && item.unlocked && (
-          <View style={styles.bossTag}>
-            <Text style={styles.bossLabel}>BOSS</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    </Animated.View>
+    <TouchableOpacity
+      style={[
+        styles.levelCard,
+        item.unlocked && styles.levelUnlocked,
+        item.isBoss && item.unlocked && [styles.levelBoss, { borderColor: worldColor }],
+        !item.unlocked && styles.levelLocked,
+      ]}
+      onPress={item.unlocked ? onPress : undefined}
+      disabled={!item.unlocked}
+      activeOpacity={0.7}
+    >
+      {item.isBoss && item.unlocked && (
+        <View style={[styles.bossGlow, { borderColor: `${worldColor}40` }]} />
+      )}
+      {item.unlocked ? (
+        <Text style={styles.levelNumber}>{item.level}</Text>
+      ) : (
+        <GameIcon name="lock" size={16} />
+      )}
+      {item.unlocked && (
+        <View style={styles.starsRow}>
+          {[1, 2, 3].map((s) => (
+            <GameIcon key={s} name={s <= item.stars ? 'star' : 'star-outline'} size={11} />
+          ))}
+        </View>
+      )}
+      {item.isBoss && item.unlocked && (
+        <View style={[styles.bossTag, { backgroundColor: worldColor }]}>
+          <Text style={styles.bossLabel}>BOSS</Text>
+        </View>
+      )}
+    </TouchableOpacity>
   );
 };
+
+const LevelRow: React.FC<{
+  items: LevelItem[];
+  worldColor: string;
+  onLevelPress: (level: number) => void;
+}> = ({ items, worldColor, onLevelPress }) => (
+  <View style={styles.gridRow}>
+    {items.map((item) => (
+      <LevelCard
+        key={item.level}
+        item={item}
+        worldColor={worldColor}
+        onPress={() => onLevelPress(item.level)}
+      />
+    ))}
+    {/* Pad empty slots if row has fewer than 5 */}
+    {Array.from({ length: 5 - items.length }).map((_, i) => (
+      <View key={`empty-${i}`} style={styles.levelCardEmpty} />
+    ))}
+  </View>
+);
+
+const WorldHeader: React.FC<{ world: World; unlocked: boolean; starsEarned: number; starsTotal: number }> = ({
+  world, unlocked, starsEarned, starsTotal,
+}) => (
+  <View style={[styles.worldHeader, { borderLeftColor: world.color }]}>
+    <View style={styles.worldHeaderLeft}>
+      <View style={[styles.worldIcon, { backgroundColor: `${world.color}20` }]}>
+        <GameIcon name={world.icon as any} size={18} color={world.color} />
+      </View>
+      <View>
+        <Text style={[styles.worldName, !unlocked && styles.worldNameLocked]}>
+          {unlocked ? world.name : '???'}
+        </Text>
+        <Text style={styles.worldSubtitle}>{world.subtitle}</Text>
+      </View>
+    </View>
+    <View style={styles.worldStars}>
+      <GameIcon name="star" size={12} color={world.color} />
+      <Text style={[styles.worldStarsText, { color: world.color }]}>
+        {starsEarned}/{starsTotal}
+      </Text>
+    </View>
+  </View>
+);
 
 export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation }) => {
   const { highestLevel, levelStars, coins, gems } = usePlayerStore();
@@ -112,34 +142,49 @@ export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation
     ]).start();
   }, []);
 
-  const levels = useMemo<LevelItem[]>(() => {
-    const items: LevelItem[] = [];
-    for (let i = 1; i <= totalLevels; i++) {
-      items.push({
-        level: i,
-        stars: levelStars[i] ?? 0,
-        unlocked: i <= highestLevel + 1,
-        isBoss: isBossLevel(i),
-      });
-    }
-    return items;
+  const sections = useMemo<WorldSection[]>(() => {
+    return WORLDS.map((world) => {
+      const levels: LevelItem[] = [];
+      let starsEarned = 0;
+      for (let i = world.levelStart; i <= Math.min(world.levelEnd, totalLevels); i++) {
+        const stars = levelStars[i] ?? 0;
+        starsEarned += stars;
+        levels.push({
+          level: i,
+          stars,
+          unlocked: i <= highestLevel + 1,
+          isBoss: isBossLevel(i),
+        });
+      }
+
+      // Chunk into rows of 5
+      const rows: LevelItem[][] = [];
+      for (let i = 0; i < levels.length; i += 5) {
+        rows.push(levels.slice(i, i + 5));
+      }
+
+      return {
+        world,
+        worldUnlocked: isWorldUnlocked(world, highestLevel),
+        starsEarned,
+        starsTotal: (world.levelEnd - world.levelStart + 1) * 3,
+        data: rows,
+      };
+    });
   }, [highestLevel, levelStars, totalLevels]);
 
   // Progress stats
   const totalStars = Object.values(levelStars).reduce((sum, s) => sum + s, 0);
   const maxStars = totalLevels * 3;
 
-  const renderLevel = ({ item }: { item: LevelItem }) => (
-    <LevelCard
-      item={item}
-      onPress={() => navigation.navigate('Game', { level: item.level })}
-    />
-  );
+  const handleLevelPress = (level: number) => {
+    navigation.navigate('Game', { level });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <Animated.View style={[styles.header, { opacity: headerOpacity, transform: [{ translateY: headerSlide }] }]}>
-        <Button title="‹" onPress={() => navigation.goBack()} variant="ghost" size="small" />
+        <Button title={'\u2039'} onPress={() => navigation.goBack()} variant="ghost" size="small" />
         <Text style={styles.headerTitle}>Levels</Text>
         <CurrencyDisplay coins={coins} gems={gems} compact />
       </Animated.View>
@@ -157,20 +202,27 @@ export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation
         </View>
       </View>
 
-      <FlatList
-        data={levels}
-        renderItem={renderLevel}
-        keyExtractor={(item) => String(item.level)}
-        numColumns={5}
+      <SectionList
+        sections={sections}
+        keyExtractor={(item, index) => `row-${index}-${item[0]?.level}`}
+        renderItem={({ item, section }) => (
+          <LevelRow
+            items={item}
+            worldColor={section.world.color}
+            onLevelPress={handleLevelPress}
+          />
+        )}
+        renderSectionHeader={({ section }) => (
+          <WorldHeader
+            world={section.world}
+            unlocked={section.worldUnlocked}
+            starsEarned={section.starsEarned}
+            starsTotal={section.starsTotal}
+          />
+        )}
+        stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.grid}
-        columnWrapperStyle={styles.gridRow}
         showsVerticalScrollIndicator={false}
-        initialScrollIndex={Math.max(0, Math.floor(highestLevel / 5) - 2)}
-        getItemLayout={(_, index) => ({
-          length: 84,
-          offset: 84 * Math.floor(index / 5),
-          index,
-        })}
       />
     </SafeAreaView>
   );
@@ -228,10 +280,64 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   gridRow: {
+    flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
     marginBottom: 8,
   },
+  // World headers
+  worldHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginTop: 16,
+    marginBottom: 8,
+    marginHorizontal: 4,
+    backgroundColor: `${COLORS.surface}C0`,
+    borderRadius: RADII.md,
+    borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+  },
+  worldHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  worldIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  worldName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: 0.5,
+  },
+  worldNameLocked: {
+    color: COLORS.textMuted,
+  },
+  worldSubtitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textMuted,
+    marginTop: 1,
+  },
+  worldStars: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  worldStarsText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  // Level cards
   levelCard: {
     width: 64,
     height: 72,
@@ -243,6 +349,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...SHADOWS.small,
   },
+  levelCardEmpty: {
+    width: 64,
+    height: 72,
+  },
   levelUnlocked: {
     borderColor: COLORS.surfaceBorder,
   },
@@ -252,7 +362,6 @@ const styles = StyleSheet.create({
   },
   levelBoss: {
     borderWidth: 2,
-    borderColor: COLORS.accentGold,
     backgroundColor: `${COLORS.accentGold}10`,
   },
   bossGlow: {
@@ -263,7 +372,6 @@ const styles = StyleSheet.create({
     bottom: -1,
     borderRadius: RADII.md,
     borderWidth: 1,
-    borderColor: `${COLORS.accentGold}40`,
   },
   levelNumber: {
     fontSize: 20,
@@ -279,7 +387,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: COLORS.accentGold,
     borderRadius: RADII.sm,
     paddingHorizontal: 4,
     paddingVertical: 1,

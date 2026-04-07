@@ -16,44 +16,48 @@ export interface DifficultyParams {
 
 /** Get difficulty parameters for a given level number */
 export function getDifficultyParams(levelNumber: number): DifficultyParams {
+  // Difficulty spike levels — harder piece pools and higher targets
+  const isSpikeLevel = [15, 35, 65, 90, 130, 175].includes(levelNumber);
+  const spikeMultiplier = isSpikeLevel ? 1.3 : 1;
+
   if (levelNumber <= 5) {
     // Tutorial: very easy
     return {
       gridSize: 8,
       piecePool: PIECE_POOLS.easy,
-      scoreTarget: 200 + levelNumber * 50,
+      scoreTarget: Math.round((200 + levelNumber * 50) * spikeMultiplier),
       starThresholds: [
-        150 + levelNumber * 30,
-        250 + levelNumber * 50,
-        400 + levelNumber * 60,
+        Math.round((150 + levelNumber * 30) * spikeMultiplier),
+        Math.round((250 + levelNumber * 50) * spikeMultiplier),
+        Math.round((400 + levelNumber * 60) * spikeMultiplier),
       ],
     };
   }
 
   if (levelNumber <= 20) {
-    // Easy: learn the basics
+    // Easy: learn the basics — spike levels get medium pieces early
     return {
       gridSize: 8,
-      piecePool: PIECE_POOLS.easy,
-      scoreTarget: 400 + (levelNumber - 5) * 40,
+      piecePool: isSpikeLevel ? PIECE_POOLS.medium : PIECE_POOLS.easy,
+      scoreTarget: Math.round((400 + (levelNumber - 5) * 40) * spikeMultiplier),
       starThresholds: [
-        300 + (levelNumber - 5) * 30,
-        500 + (levelNumber - 5) * 50,
-        750 + (levelNumber - 5) * 60,
+        Math.round((300 + (levelNumber - 5) * 30) * spikeMultiplier),
+        Math.round((500 + (levelNumber - 5) * 50) * spikeMultiplier),
+        Math.round((750 + (levelNumber - 5) * 60) * spikeMultiplier),
       ],
     };
   }
 
   if (levelNumber <= 50) {
-    // Medium: more complex pieces
+    // Medium: more complex pieces — spike levels get hard pieces
     return {
       gridSize: 8,
-      piecePool: PIECE_POOLS.medium,
-      scoreTarget: 800 + (levelNumber - 20) * 30,
+      piecePool: isSpikeLevel ? PIECE_POOLS.hard : PIECE_POOLS.medium,
+      scoreTarget: Math.round((800 + (levelNumber - 20) * 30) * spikeMultiplier),
       starThresholds: [
-        600 + (levelNumber - 20) * 25,
-        1000 + (levelNumber - 20) * 40,
-        1500 + (levelNumber - 20) * 50,
+        Math.round((600 + (levelNumber - 20) * 25) * spikeMultiplier),
+        Math.round((1000 + (levelNumber - 20) * 40) * spikeMultiplier),
+        Math.round((1500 + (levelNumber - 20) * 50) * spikeMultiplier),
       ],
     };
   }
@@ -63,11 +67,11 @@ export function getDifficultyParams(levelNumber: number): DifficultyParams {
     return {
       gridSize: 8,
       piecePool: PIECE_POOLS.hard,
-      scoreTarget: 1500 + (levelNumber - 50) * 25,
+      scoreTarget: Math.round((1500 + (levelNumber - 50) * 25) * spikeMultiplier),
       starThresholds: [
-        1200 + (levelNumber - 50) * 20,
-        2000 + (levelNumber - 50) * 35,
-        3000 + (levelNumber - 50) * 45,
+        Math.round((1200 + (levelNumber - 50) * 20) * spikeMultiplier),
+        Math.round((2000 + (levelNumber - 50) * 35) * spikeMultiplier),
+        Math.round((3000 + (levelNumber - 50) * 45) * spikeMultiplier),
       ],
     };
   }
@@ -77,11 +81,11 @@ export function getDifficultyParams(levelNumber: number): DifficultyParams {
     return {
       gridSize: levelNumber > 150 ? 10 : 8,
       piecePool: PIECE_POOLS.hard,
-      scoreTarget: 2500 + (levelNumber - 100) * 20,
+      scoreTarget: Math.round((2500 + (levelNumber - 100) * 20) * spikeMultiplier),
       starThresholds: [
-        2000 + (levelNumber - 100) * 18,
-        3500 + (levelNumber - 100) * 30,
-        5000 + (levelNumber - 100) * 40,
+        Math.round((2000 + (levelNumber - 100) * 18) * spikeMultiplier),
+        Math.round((3500 + (levelNumber - 100) * 30) * spikeMultiplier),
+        Math.round((5000 + (levelNumber - 100) * 40) * spikeMultiplier),
       ],
     };
   }
@@ -90,11 +94,11 @@ export function getDifficultyParams(levelNumber: number): DifficultyParams {
   return {
     gridSize: 10,
     piecePool: PIECE_POOLS.extreme,
-    scoreTarget: 4000 + (levelNumber - 200) * 15,
+    scoreTarget: Math.round((4000 + (levelNumber - 200) * 15) * spikeMultiplier),
     starThresholds: [
-      3500 + (levelNumber - 200) * 12,
-      5500 + (levelNumber - 200) * 25,
-      8000 + (levelNumber - 200) * 35,
+      Math.round((3500 + (levelNumber - 200) * 12) * spikeMultiplier),
+      Math.round((5500 + (levelNumber - 200) * 25) * spikeMultiplier),
+      Math.round((8000 + (levelNumber - 200) * 35) * spikeMultiplier),
     ],
   };
 }
