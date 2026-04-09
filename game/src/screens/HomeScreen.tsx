@@ -351,8 +351,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
             <View style={styles.bottomButtonWrapper}>
               <Button
-                title="Rankings"
-                onPress={() => navigation.navigate('Leaderboard')}
+                title="Season"
+                onPress={() => navigation.navigate('BattlePass')}
                 variant="ghost"
                 size="small"
                 style={styles.bottomButton}

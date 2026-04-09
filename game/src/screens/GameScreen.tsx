@@ -34,6 +34,7 @@ import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/c
 import { formatScore } from '../utils/formatters';
 import { calculateCoinReward } from '../game/engine/Scoring';
 import { canShowRewarded, onLevelCompleted, showRewardedAd, showInterstitialAd, AD_REWARDS } from '../services/ads';
+import { createChallenge, shareChallenge } from '../services/challenges';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -75,10 +76,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     resetLevel,
     undoLastMove,
     canUndo,
+    continueGame,
   } = useGameEngine();
 
   const { playSound, playPlacement } = useSound();
-  const { powerUps, usePowerUp, coins, gems, addCoins, addPowerUp, levelHighScores, zenHighScore, consecutiveFailures, lastFailedLevel } = usePlayerStore();
+  const { powerUps, usePowerUp, coins, gems, addCoins, addPowerUp, spendGems, levelHighScores, zenHighScore, consecutiveFailures, lastFailedLevel, displayName } = usePlayerStore();
   const { tutorialCompleted, completeTutorial } = useSettingsStore();
 
   const showTutorial = !isEndless && level === 1 && !tutorialCompleted;
@@ -102,6 +104,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const milestoneShownRef = useRef(false);
   const [hintCells, setHintCells] = useState<{ row: number; col: number; colorIndex: number }[]>([]);
   const [rescueClaimed, setRescueClaimed] = useState(false);
+  const [continueUsed, setContinueUsed] = useState(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastActionRef = useRef(Date.now());
   const [clearedRows, setClearedRows] = useState<number[]>([]);
@@ -436,6 +439,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     } catch {}
   }, [gameState, levelConfig, stars, isEndless, currentWorld]);
 
+  const handleChallengeFriend = useCallback(async () => {
+    if (!gameState || !levelConfig || isEndless) return;
+    const challenge = createChallenge(levelConfig.levelNumber, gameState.score, displayName);
+    await shareChallenge(challenge);
+  }, [gameState, levelConfig, isEndless, displayName]);
+
   const handleDoubleCoins = useCallback(() => {
     if (doubleCoinsUsed) return;
     const bonus = calculateCoinReward(stars);
@@ -643,6 +652,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           )}
           <Button title="Retry" onPress={handleRetry} variant="secondary" size="small" />
           <View style={styles.shareRow}>
+            {!isEndless && (
+              <Button title="Challenge" onPress={handleChallengeFriend} variant="ghost" size="small" />
+            )}
             <Button title="Share" onPress={handleShare} variant="ghost" size="small" />
             <Button title="Home" onPress={handleHome} variant="ghost" size="small" />
           </View>
@@ -683,6 +695,23 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
               size="small"
             />
           </View>
+        )}
+
+        {/* Continue button — near-miss only, costs 10 gems */}
+        {!isEndless && !continueUsed && gameState.score >= levelConfig.objective.target * 0.7 && gems >= 10 && (
+          <Button
+            title="Continue (10 Gems)"
+            onPress={() => {
+              if (spendGems(10) && continueGame()) {
+                setContinueUsed(true);
+                setShowLoseModal(false);
+                playSound('combo');
+              }
+            }}
+            variant="primary"
+            size="medium"
+            style={styles.continueButton}
+          />
         )}
 
         <View style={styles.modalButtons}>
@@ -858,6 +887,10 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     fontWeight: '600',
     letterSpacing: 0.5,
+  },
+  continueButton: {
+    width: '100%',
+    marginBottom: 8,
   },
   worldUnlockBanner: {
     flexDirection: 'row',

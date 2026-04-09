@@ -43,6 +43,8 @@ interface GameStore {
   /** Undo the last placement (one free per level) */
   undoLastMove: () => boolean;
   canUndo: () => boolean;
+  /** Continue from game over — gives fresh pieces and resumes play */
+  continueGame: () => boolean;
 
   // Derived getters
   getAvailablePieces: () => (Piece | null)[];
@@ -211,6 +213,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
   canUndo: () => {
     const { undoSnapshot, undoUsed } = get();
     return undoSnapshot !== null && !undoUsed;
+  },
+
+  continueGame: (): boolean => {
+    const { gameState, levelConfig, rng } = get();
+    if (!gameState || gameState.status !== 'lost' || !rng || !levelConfig) return false;
+
+    // Generate fresh pieces from the level's piece pool and resume
+    const newPieces = generatePieceSet(rng, levelConfig.piecePool);
+    set({
+      gameState: {
+        ...gameState,
+        status: 'playing',
+        availablePieces: newPieces,
+      },
+      selectedPieceIndex: null,
+    });
+    return true;
   },
 
   getAvailablePieces: () => get().gameState?.availablePieces ?? [],

@@ -26,9 +26,10 @@ export function useGameEngine() {
     getStars,
     undoLastMove,
     canUndo,
+    continueGame,
   } = useGameStore();
 
-  const { completeLevel, addCoins, updateStreak, checkAchievements, recordGamePlayed, recordZenGame, recordFailure, resetFailures, addPiggyBankCoins } = usePlayerStore();
+  const { completeLevel, addCoins, updateStreak, checkAchievements, recordGamePlayed, recordZenGame, recordFailure, resetFailures, addPiggyBankCoins, addBattlePassXP } = usePlayerStore();
 
   // Start a level by number
   const loadLevel = useCallback((levelNumber: number) => {
@@ -70,10 +71,17 @@ export function useGameEngine() {
 
       recordGamePlayed(gameState.combo ?? 0);
       resetFailures();
+
+      // Battle Pass XP: 50 base + 15 per star + 5 per line cleared
+      const bpXP = 50 + stars * 15 + Math.min(gameState.linesCleared * 5, 100);
+      addBattlePassXP(bpXP);
+
       checkAchievements();
     } else if (gameState.status === 'lost') {
       if (isZen) {
         recordZenGame(gameState.score, gameState.linesCleared, gameState.combo ?? 0);
+        // Zen mode XP: 20 base + lines bonus
+        addBattlePassXP(20 + Math.min(gameState.linesCleared * 3, 60));
       } else {
         recordGamePlayed(gameState.combo ?? 0);
         recordFailure(levelConfig.levelNumber);
@@ -102,5 +110,6 @@ export function useGameEngine() {
     resetLevel,
     undoLastMove,
     canUndo,
+    continueGame,
   };
 }

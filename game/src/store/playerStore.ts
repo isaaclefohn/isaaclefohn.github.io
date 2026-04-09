@@ -83,6 +83,11 @@ interface PlayerStoreState {
   // Piggy Bank
   piggyBankCoins: number;
   piggyBankLastBroken: string | null;
+  // Battle Pass
+  battlePassXP: number;
+  battlePassPremium: boolean;
+  battlePassClaimedTiers: number[];
+  battlePassSeason: number;
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -108,6 +113,9 @@ interface PlayerStore extends PlayerStoreState {
   resetFailures: () => void;
   addPiggyBankCoins: (amount: number) => void;
   breakPiggyBank: () => number;
+  addBattlePassXP: (amount: number) => void;
+  claimBattlePassTier: (tier: number) => void;
+  upgradeBattlePass: () => void;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -145,6 +153,10 @@ export const usePlayerStore = create<PlayerStore>()(
       lastFailedLevel: 0,
       piggyBankCoins: 0,
       piggyBankLastBroken: null,
+      battlePassXP: 0,
+      battlePassPremium: false,
+      battlePassClaimedTiers: [],
+      battlePassSeason: 1,
 
       addCoins: (amount) =>
         set((s) => ({ coins: s.coins + amount })),
@@ -326,6 +338,20 @@ export const usePlayerStore = create<PlayerStore>()(
         const { piggyBankCoins } = get();
         set({ piggyBankCoins: 0, piggyBankLastBroken: getToday() });
         return piggyBankCoins;
+      },
+
+      addBattlePassXP: (amount: number) => {
+        set((s) => ({ battlePassXP: s.battlePassXP + amount }));
+      },
+
+      claimBattlePassTier: (tier: number) => {
+        set((s) => ({
+          battlePassClaimedTiers: [...s.battlePassClaimedTiers, tier],
+        }));
+      },
+
+      upgradeBattlePass: () => {
+        set({ battlePassPremium: true });
       },
     }),
     {
