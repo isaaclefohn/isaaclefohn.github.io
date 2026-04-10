@@ -16,9 +16,10 @@ import { LuckySpinModal } from '../components/LuckySpinModal';
 import { PiggyBankModal } from '../components/PiggyBankModal';
 import { GameIcon } from '../components/GameIcon';
 import { EventBanner } from '../components/EventBanner';
+import { isFeatureUnlocked, getNextUnlock } from '../game/progression/FeatureGating';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
-import { requestNotificationPermissions, scheduleStreakReminder, clearBadge } from '../services/notifications';
+import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetentionNotifications, clearBadge } from '../services/notifications';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatCompact } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -74,6 +75,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     if (currentStreak >= 2) {
       scheduleStreakReminder(currentStreak).catch(() => {});
     }
+    // Schedule retention notifications (re-engagement at 2hr, 24hr, 72hr)
+    scheduleRetentionNotifications().catch(() => {});
   }, []);
 
   // Entrance animations
@@ -289,13 +292,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
           {/* Secondary row - Daily Challenge + Level Select + Zen */}
           <View style={styles.secondaryRow}>
-            <Button
-              title="Daily"
-              onPress={() => navigation.navigate('DailyChallenge')}
-              variant="secondary"
-              size="medium"
-              style={styles.thirdButton}
-            />
+            {isFeatureUnlocked('daily_challenge', highestLevel) && (
+              <Button
+                title="Daily"
+                onPress={() => navigation.navigate('DailyChallenge')}
+                variant="secondary"
+                size="medium"
+                style={styles.thirdButton}
+              />
+            )}
             <Button
               title="Levels"
               onPress={() => navigation.navigate('LevelSelect')}
@@ -303,65 +308,77 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               size="medium"
               style={styles.thirdButton}
             />
-            <Button
-              title="Zen"
-              onPress={() => navigation.navigate('Game', { level: 0, endless: true })}
-              variant="secondary"
-              size="medium"
-              style={styles.thirdButton}
-            />
+            {isFeatureUnlocked('zen_mode', highestLevel) && (
+              <Button
+                title="Zen"
+                onPress={() => navigation.navigate('Game', { level: 0, endless: true })}
+                variant="secondary"
+                size="medium"
+                style={styles.thirdButton}
+              />
+            )}
           </View>
 
           {/* Live event banners */}
           <EventBanner />
 
-          {/* Bottom row - Spin, Shop, Trophies, Rankings, Settings */}
+          {/* Bottom row - progressively unlocked features */}
           <View style={styles.bottomRow}>
-            <View style={styles.bottomButtonWrapper}>
-              <Button
-                title={canSpin ? 'Spin!' : 'Spin'}
-                onPress={() => setShowSpin(true)}
-                variant={canSpin ? 'secondary' : 'ghost'}
-                size="small"
-                style={styles.bottomButton}
-              />
-            </View>
-            <View style={styles.bottomButtonWrapper}>
-              <Button
-                title={piggyBankCoins > 0 ? `Bank (${piggyBankCoins})` : 'Bank'}
-                onPress={() => setShowPiggyBank(true)}
-                variant={piggyBankCoins >= 100 ? 'secondary' : 'ghost'}
-                size="small"
-                style={styles.bottomButton}
-              />
-            </View>
-            <View style={styles.bottomButtonWrapper}>
-              <Button
-                title="Shop"
-                onPress={() => navigation.navigate('Shop')}
-                variant="ghost"
-                size="small"
-                style={styles.bottomButton}
-              />
-            </View>
-            <View style={styles.bottomButtonWrapper}>
-              <Button
-                title="Trophies"
-                onPress={() => setShowAchievements(true)}
-                variant="ghost"
-                size="small"
-                style={styles.bottomButton}
-              />
-            </View>
-            <View style={styles.bottomButtonWrapper}>
-              <Button
-                title="Season"
-                onPress={() => navigation.navigate('BattlePass')}
-                variant="ghost"
-                size="small"
-                style={styles.bottomButton}
-              />
-            </View>
+            {isFeatureUnlocked('lucky_spin', highestLevel) && (
+              <View style={styles.bottomButtonWrapper}>
+                <Button
+                  title={canSpin ? 'Spin!' : 'Spin'}
+                  onPress={() => setShowSpin(true)}
+                  variant={canSpin ? 'secondary' : 'ghost'}
+                  size="small"
+                  style={styles.bottomButton}
+                />
+              </View>
+            )}
+            {isFeatureUnlocked('piggy_bank', highestLevel) && (
+              <View style={styles.bottomButtonWrapper}>
+                <Button
+                  title={piggyBankCoins > 0 ? `Bank (${piggyBankCoins})` : 'Bank'}
+                  onPress={() => setShowPiggyBank(true)}
+                  variant={piggyBankCoins >= 100 ? 'secondary' : 'ghost'}
+                  size="small"
+                  style={styles.bottomButton}
+                />
+              </View>
+            )}
+            {isFeatureUnlocked('shop', highestLevel) && (
+              <View style={styles.bottomButtonWrapper}>
+                <Button
+                  title="Shop"
+                  onPress={() => navigation.navigate('Shop')}
+                  variant="ghost"
+                  size="small"
+                  style={styles.bottomButton}
+                />
+              </View>
+            )}
+            {isFeatureUnlocked('achievements', highestLevel) && (
+              <View style={styles.bottomButtonWrapper}>
+                <Button
+                  title="Trophies"
+                  onPress={() => setShowAchievements(true)}
+                  variant="ghost"
+                  size="small"
+                  style={styles.bottomButton}
+                />
+              </View>
+            )}
+            {isFeatureUnlocked('battle_pass', highestLevel) && (
+              <View style={styles.bottomButtonWrapper}>
+                <Button
+                  title="Season"
+                  onPress={() => navigation.navigate('BattlePass')}
+                  variant="ghost"
+                  size="small"
+                  style={styles.bottomButton}
+                />
+              </View>
+            )}
             <View style={styles.bottomButtonWrapper}>
               <Button
                 title="Settings"
@@ -372,6 +389,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               />
             </View>
           </View>
+
+          {/* Next unlock hint for new players */}
+          {highestLevel > 0 && highestLevel < 15 && getNextUnlock(highestLevel) && (
+            <View style={styles.unlockHint}>
+              <GameIcon name="star" size={12} color={COLORS.textMuted} />
+              <Text style={styles.unlockHintText}>
+                Level {getNextUnlock(highestLevel)!.unlockLevel}: {getNextUnlock(highestLevel)!.name}
+              </Text>
+            </View>
+          )}
         </Animated.View>
 
         {/* Level indicator */}
@@ -622,5 +649,18 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.accentGold,
     letterSpacing: 1.5,
+  },
+  unlockHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 6,
+  },
+  unlockHintText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textMuted,
+    letterSpacing: 0.5,
   },
 });

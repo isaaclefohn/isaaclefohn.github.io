@@ -78,6 +78,10 @@ const LevelCard: React.FC<{
           <Text style={styles.bossLabel}>BOSS</Text>
         </View>
       )}
+      {/* Replay indicator for completed levels with < 3 stars */}
+      {item.unlocked && item.stars > 0 && item.stars < 3 && (
+        <View style={styles.replayDot} />
+      )}
     </TouchableOpacity>
   );
 };
@@ -396,5 +400,14 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: COLORS.background,
     letterSpacing: 0.5,
+  },
+  replayDot: {
+    position: 'absolute',
+    top: 3,
+    right: 3,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.accentGold,
   },
 });

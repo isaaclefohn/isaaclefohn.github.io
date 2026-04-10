@@ -31,6 +31,7 @@ import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { ComboDisplay } from '../components/ComboDisplay';
 import { ScoreOdometer } from '../components/ScoreOdometer';
+import { Leaderboard } from '../components/Leaderboard';
 import { getActiveEvents } from '../game/events/LiveEvents';
 import { useSettingsStore } from '../store/settingsStore';
 import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
@@ -659,6 +660,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           <Text style={styles.rewardText}>+{calculateCoinReward(stars)}{doubleCoinsUsed ? ' x2!' : ''}</Text>
           <GameIcon name="coin" size={18} />
         </View>
+        {/* Mini leaderboard for social proof */}
+        {!isEndless && (
+          <Leaderboard
+            playerScore={gameState.score}
+            playerName={displayName}
+            level={level}
+          />
+        )}
+
         <View style={styles.modalButtons}>
           <Button title="Next Level" onPress={handleNextLevel} variant="primary" size="medium" />
           {!doubleCoinsUsed && calculateCoinReward(stars) > 0 && (

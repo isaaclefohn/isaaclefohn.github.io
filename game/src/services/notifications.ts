@@ -91,6 +91,68 @@ export async function cancelStreakReminder(): Promise<void> {
   }
 }
 
+/**
+ * Schedule retention notifications at optimal intervals (2hr, 24hr, 72hr).
+ * Top puzzle games use these exact intervals for re-engagement.
+ * Called once on first launch; they don't repeat.
+ */
+export async function scheduleRetentionNotifications(): Promise<void> {
+  // Cancel any existing retention notifications first
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  for (const notif of scheduled) {
+    if (notif.content.data?.type === 'retention') {
+      await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+    }
+  }
+
+  // 2-hour "come back" nudge
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Your pieces are waiting!',
+      body: 'Jump back in for a quick game.',
+      sound: true,
+      data: { type: 'retention' },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 2 * 60 * 60,
+      repeats: false,
+    },
+  });
+
+  // 24-hour daily reward reminder
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Daily reward waiting!',
+      body: 'Claim your free coins and spin the wheel.',
+      sound: true,
+      badge: 1,
+      data: { type: 'retention' },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 24 * 60 * 60,
+      repeats: false,
+    },
+  });
+
+  // 72-hour win-back
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'We miss you!',
+      body: 'Come back for a bonus reward — your streak is at risk!',
+      sound: true,
+      badge: 1,
+      data: { type: 'retention' },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 72 * 60 * 60,
+      repeats: false,
+    },
+  });
+}
+
 /** Clear badge count */
 export async function clearBadge(): Promise<void> {
   if (Platform.OS === 'ios') {
