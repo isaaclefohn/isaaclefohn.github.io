@@ -2,7 +2,7 @@
  * Level selection screen with themed world sections, animated grid, and premium cards.
  */
 
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { getTotalLevels, isBossLevel } from '../game/levels/LevelGenerator';
 import { WORLDS, getWorldForLevel, isWorldUnlocked, World } from '../game/levels/Worlds';
 import { Button } from '../components/common/Button';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
+import { LevelPreview } from '../components/LevelPreview';
 import { GameIcon } from '../components/GameIcon';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -132,7 +133,8 @@ const WorldHeader: React.FC<{ world: World; unlocked: boolean; starsEarned: numb
 );
 
 export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation }) => {
-  const { highestLevel, levelStars, coins, gems } = usePlayerStore();
+  const { highestLevel, levelStars, levelHighScores, coins, gems } = usePlayerStore();
+  const [previewLevel, setPreviewLevel] = useState<number | null>(null);
   const totalLevels = getTotalLevels();
 
   // Header entrance animation
@@ -181,9 +183,16 @@ export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation
   const totalStars = Object.values(levelStars).reduce((sum, s) => sum + s, 0);
   const maxStars = totalLevels * 3;
 
-  const handleLevelPress = (level: number) => {
-    navigation.navigate('Game', { level });
-  };
+  const handleLevelPress = useCallback((level: number) => {
+    setPreviewLevel(level);
+  }, []);
+
+  const handlePlayLevel = useCallback(() => {
+    if (previewLevel !== null) {
+      setPreviewLevel(null);
+      navigation.navigate('Game', { level: previewLevel });
+    }
+  }, [previewLevel, navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -228,6 +237,18 @@ export const LevelSelectScreen: React.FC<LevelSelectScreenProps> = ({ navigation
         contentContainerStyle={styles.grid}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Level preview modal */}
+      {previewLevel !== null && (
+        <LevelPreview
+          visible={previewLevel !== null}
+          level={previewLevel}
+          highScore={levelHighScores[previewLevel] ?? 0}
+          bestStars={levelStars[previewLevel] ?? 0}
+          onPlay={handlePlayLevel}
+          onClose={() => setPreviewLevel(null)}
+        />
+      )}
     </SafeAreaView>
   );
 };
