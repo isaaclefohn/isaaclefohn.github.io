@@ -44,7 +44,7 @@ const TITLE_BLOCKS = [
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, piggyBankCoins } = usePlayerStore();
-  const { tutorialCompleted, completeTutorial } = useSettingsStore();
+  const { tutorialCompleted, completeTutorial, notificationsEnabled } = useSettingsStore();
   const [showTutorial, setShowTutorial] = useState(!tutorialCompleted);
   const [showDailyReward, setShowDailyReward] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -71,12 +71,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     requestNotificationPermissions().catch(() => {});
     // Clear badge on app open
     clearBadge().catch(() => {});
-    // Schedule streak reminder if player has an active streak
-    if (currentStreak >= 2) {
-      scheduleStreakReminder(currentStreak).catch(() => {});
+    if (notificationsEnabled) {
+      // Schedule streak reminder if player has an active streak
+      if (currentStreak >= 2) {
+        scheduleStreakReminder(currentStreak).catch(() => {});
+      }
+      // Schedule retention notifications (re-engagement at 2hr, 24hr, 72hr)
+      scheduleRetentionNotifications().catch(() => {});
     }
-    // Schedule retention notifications (re-engagement at 2hr, 24hr, 72hr)
-    scheduleRetentionNotifications().catch(() => {});
   }, []);
 
   // Entrance animations

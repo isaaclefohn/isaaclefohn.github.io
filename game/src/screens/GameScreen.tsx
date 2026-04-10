@@ -23,7 +23,7 @@ import { Modal } from '../components/common/Modal';
 import { ScorePopup } from '../components/animations/ScorePopup';
 import { ComboBanner } from '../components/animations/ComboBanner';
 import { Confetti } from '../components/animations/Confetti';
-import { PowerUpType } from '../game/powerups/PowerUpManager';
+import { PowerUpType, previewBomb, previewRowClear, previewColorClear } from '../game/powerups/PowerUpManager';
 import { MilestoneBanner } from '../components/animations/MilestoneBanner';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ClearFlash } from '../components/animations/ClearFlash';
@@ -117,6 +117,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [clearedCols, setClearedCols] = useState<number[]>([]);
   const [unlockedFeature, setUnlockedFeature] = useState<FeatureGate | null>(null);
   const [showFeatureUnlock, setShowFeatureUnlock] = useState(false);
+  const [powerUpPreview, setPowerUpPreview] = useState<{ row: number; col: number; colorIndex: number }[]>([]);
 
   // Drag-and-drop state
   const [draggedPieceIndex, setDraggedPieceIndex] = useState<number | null>(null);
@@ -303,6 +304,23 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     if (!gameState) return;
 
     if (activePowerUp) {
+      // Show preview first, then apply
+      let previewCells: { row: number; col: number }[] = [];
+      if (activePowerUp === 'bomb') {
+        previewCells = previewBomb(gameState.grid, row, col);
+      } else if (activePowerUp === 'rowClear') {
+        previewCells = previewRowClear(gameState.grid, row);
+      } else if (activePowerUp === 'colorClear') {
+        const colorIdx = gameState.grid[row]?.[col] ?? 0;
+        if (colorIdx > 0) previewCells = previewColorClear(gameState.grid, colorIdx);
+      }
+
+      // Brief flash of preview then apply
+      if (previewCells.length > 0) {
+        setPowerUpPreview(previewCells.map(c => ({ ...c, colorIndex: 0 })));
+        setTimeout(() => setPowerUpPreview([]), 300);
+      }
+
       const success = usePowerUp(activePowerUp);
       if (success) {
         const result = applyPowerUp(activePowerUp, row, col);

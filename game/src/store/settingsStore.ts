@@ -18,6 +18,7 @@ interface SettingsStore {
   tutorialCompleted: boolean;
   colorblindMode: boolean;
   reducedMotion: boolean;
+  notificationsEnabled: boolean;
 
   toggleSound: () => void;
   toggleMusic: () => void;
@@ -29,6 +30,7 @@ interface SettingsStore {
   completeTutorial: () => void;
   toggleColorblindMode: () => void;
   toggleReducedMotion: () => void;
+  toggleNotifications: () => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -44,6 +46,7 @@ export const useSettingsStore = create<SettingsStore>()(
       tutorialCompleted: false,
       colorblindMode: false,
       reducedMotion: false,
+      notificationsEnabled: true,
 
       toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
       toggleMusic: () => set((s) => ({ musicEnabled: !s.musicEnabled })),
@@ -55,6 +58,7 @@ export const useSettingsStore = create<SettingsStore>()(
       completeTutorial: () => set({ tutorialCompleted: true }),
       toggleColorblindMode: () => set((s) => ({ colorblindMode: !s.colorblindMode })),
       toggleReducedMotion: () => set((s) => ({ reducedMotion: !s.reducedMotion })),
+      toggleNotifications: () => set((s) => ({ notificationsEnabled: !s.notificationsEnabled })),
     }),
     {
       name: 'color-block-blast-settings',

@@ -160,6 +160,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
               label="Reduced Motion"
               value={settings.reducedMotion}
               onToggle={settings.toggleReducedMotion}
+            />
+            <Divider />
+            <SettingRow
+              icon="lightning"
+              label="Push Notifications"
+              value={settings.notificationsEnabled}
+              onToggle={settings.toggleNotifications}
               last
             />
           </View>

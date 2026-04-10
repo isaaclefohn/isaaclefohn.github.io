@@ -114,3 +114,41 @@ export function applyColorClear(
 export function getPowerUpCost(type: PowerUpType): number {
   return POWER_UP_CONFIGS[type].coinCost;
 }
+
+/** Preview which cells a bomb would clear (for targeting overlay) */
+export function previewBomb(grid: Grid, centerRow: number, centerCol: number): { row: number; col: number }[] {
+  const size = getGridSize(grid);
+  const cells: { row: number; col: number }[] = [];
+  for (let r = centerRow - 1; r <= centerRow + 1; r++) {
+    for (let c = centerCol - 1; c <= centerCol + 1; c++) {
+      if (r >= 0 && r < size && c >= 0 && c < size) {
+        cells.push({ row: r, col: c });
+      }
+    }
+  }
+  return cells;
+}
+
+/** Preview which cells a row clear would affect */
+export function previewRowClear(grid: Grid, row: number): { row: number; col: number }[] {
+  const size = getGridSize(grid);
+  const cells: { row: number; col: number }[] = [];
+  for (let c = 0; c < size; c++) {
+    cells.push({ row, col: c });
+  }
+  return cells;
+}
+
+/** Preview which cells a color clear would affect */
+export function previewColorClear(grid: Grid, colorIndex: number): { row: number; col: number }[] {
+  const size = getGridSize(grid);
+  const cells: { row: number; col: number }[] = [];
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (grid[r][c] === colorIndex) {
+        cells.push({ row: r, col: c });
+      }
+    }
+  }
+  return cells;
+}
