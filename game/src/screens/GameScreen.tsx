@@ -32,7 +32,9 @@ import { TutorialOverlay } from '../components/TutorialOverlay';
 import { ComboDisplay } from '../components/ComboDisplay';
 import { ScoreOdometer } from '../components/ScoreOdometer';
 import { Leaderboard } from '../components/Leaderboard';
+import { FeatureUnlockBanner } from '../components/FeatureUnlockBanner';
 import { getActiveEvents } from '../game/events/LiveEvents';
+import { getNewlyUnlockedFeatures, FeatureGate } from '../game/progression/FeatureGating';
 import { useSettingsStore } from '../store/settingsStore';
 import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
@@ -84,7 +86,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   } = useGameEngine();
 
   const { playSound, playPlacement } = useSound();
-  const { powerUps, usePowerUp, coins, gems, addCoins, addPowerUp, spendGems, levelHighScores, zenHighScore, consecutiveFailures, lastFailedLevel, displayName } = usePlayerStore();
+  const { powerUps, usePowerUp, coins, gems, addCoins, addPowerUp, spendGems, levelHighScores, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel } = usePlayerStore();
   const { tutorialCompleted, completeTutorial } = useSettingsStore();
 
   const showTutorial = !isEndless && level === 1 && !tutorialCompleted;
@@ -113,6 +115,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const lastActionRef = useRef(Date.now());
   const [clearedRows, setClearedRows] = useState<number[]>([]);
   const [clearedCols, setClearedCols] = useState<number[]>([]);
+  const [unlockedFeature, setUnlockedFeature] = useState<FeatureGate | null>(null);
+  const [showFeatureUnlock, setShowFeatureUnlock] = useState(false);
 
   // Drag-and-drop state
   const [draggedPieceIndex, setDraggedPieceIndex] = useState<number | null>(null);
@@ -172,6 +176,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       setTimeout(() => setShowWinModal(true), 600);
       if (onLevelCompleted()) {
         showInterstitialAd();
+      }
+      // Check for feature unlocks (previous highest was level-1 since we just completed `level`)
+      if (!isEndless) {
+        const newFeatures = getNewlyUnlockedFeatures(level - 1, level);
+        if (newFeatures.length > 0) {
+          setTimeout(() => {
+            setUnlockedFeature(newFeatures[0]);
+            setShowFeatureUnlock(true);
+          }, 1200);
+        }
       }
     } else if (gameState?.status === 'lost') {
       playSound('gameOver');
@@ -759,6 +773,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           </View>
         </View>
       </Modal>
+      {/* Feature unlock celebration */}
+      <FeatureUnlockBanner
+        feature={unlockedFeature}
+        visible={showFeatureUnlock}
+        onDismiss={() => setShowFeatureUnlock(false)}
+      />
+
       {/* Tutorial overlay for first-time players */}
       <TutorialOverlay visible={showTutorial} onComplete={completeTutorial} />
 

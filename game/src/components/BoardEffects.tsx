@@ -35,29 +35,44 @@ interface BoardEffectsProps {
   combo: number;
 }
 
-// Per-cell placement squish animation
+// Per-cell placement squish + settle bounce animation
 const PlacementSquish: React.FC<{ cells: PlacedCell[] }> = ({ cells }) => {
-  const anims = useRef(cells.map(() => new Animated.Value(0))).current;
+  const squishAnims = useRef(cells.map(() => new Animated.Value(0))).current;
+  const bounceAnims = useRef(cells.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     if (cells.length === 0) return;
 
-    // Reset and stagger
-    anims.forEach((a, i) => {
-      a.setValue(0);
+    // Reset and stagger squish + bounce
+    cells.forEach((_, i) => {
+      if (squishAnims[i]) squishAnims[i].setValue(0);
+      if (bounceAnims[i]) bounceAnims[i].setValue(-6); // Start slightly above
+
       Animated.sequence([
         Animated.delay(i * 25),
-        Animated.timing(a, {
-          toValue: 1,
-          duration: 80,
-          useNativeDriver: true,
-        }),
-        Animated.spring(a, {
-          toValue: 2,
-          tension: 180,
-          friction: 6,
-          useNativeDriver: true,
-        }),
+        Animated.parallel([
+          // Squish: compress then spring back
+          Animated.sequence([
+            Animated.timing(squishAnims[i], {
+              toValue: 1,
+              duration: 80,
+              useNativeDriver: true,
+            }),
+            Animated.spring(squishAnims[i], {
+              toValue: 2,
+              tension: 180,
+              friction: 6,
+              useNativeDriver: true,
+            }),
+          ]),
+          // Settle bounce: drop in with overshoot
+          Animated.spring(bounceAnims[i], {
+            toValue: 0,
+            speed: 20,
+            bounciness: 12,
+            useNativeDriver: true,
+          }),
+        ]),
       ]).start();
     });
   }, [cells]);
@@ -70,15 +85,17 @@ const PlacementSquish: React.FC<{ cells: PlacedCell[] }> = ({ cells }) => {
         const x = CELL_GAP + cell.col * (CELL_SIZE + CELL_GAP);
         const y = CELL_GAP + cell.row * (CELL_SIZE + CELL_GAP);
 
-        const scaleY = anims[i] ? anims[i].interpolate({
+        const scaleY = squishAnims[i] ? squishAnims[i].interpolate({
           inputRange: [0, 1, 2],
           outputRange: [1, 0.7, 1],
         }) : 1;
 
-        const scaleX = anims[i] ? anims[i].interpolate({
+        const scaleX = squishAnims[i] ? squishAnims[i].interpolate({
           inputRange: [0, 1, 2],
           outputRange: [1, 1.15, 1],
         }) : 1;
+
+        const translateY = bounceAnims[i] ?? 0;
 
         return (
           <Animated.View
@@ -88,7 +105,7 @@ const PlacementSquish: React.FC<{ cells: PlacedCell[] }> = ({ cells }) => {
               {
                 left: x,
                 top: y,
-                transform: [{ scaleX }, { scaleY }],
+                transform: [{ scaleX }, { scaleY }, { translateY }],
                 backgroundColor: 'rgba(255,255,255,0.25)',
               },
             ]}
