@@ -277,11 +277,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       milestoneShownRef.current = true;
       setMilestoneMsg('New personal best!');
       setShowMilestone(true);
+      playSound('combo'); // Haptic + sound for new best
       setTimeout(() => setShowMilestone(false), 3500);
     } else if (highScore > 200 && gameState.score >= highScore - 200 && gameState.score < highScore && !milestoneShownRef.current) {
       milestoneShownRef.current = true;
       setMilestoneMsg(`${highScore - gameState.score} points from your best!`);
       setShowMilestone(true);
+      playSound('select'); // Light haptic for approaching best
       setTimeout(() => setShowMilestone(false), 3500);
     }
   }, [gameState?.score]);

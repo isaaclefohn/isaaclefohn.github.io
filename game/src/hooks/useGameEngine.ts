@@ -9,6 +9,7 @@ import { usePlayerStore } from '../store/playerStore';
 import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
 import { calculateCoinReward } from '../game/engine/Scoring';
 import { getScoreMultiplier, getXPMultiplier, getCoinMultiplier } from '../game/events/LiveEvents';
+import { recordCompletionForRating, maybePromptRating } from '../services/appRating';
 
 export function useGameEngine() {
   const {
@@ -83,6 +84,14 @@ export function useGameEngine() {
       addBattlePassXP(bpXP);
 
       checkAchievements();
+
+      // Track for app rating prompt — prompt after 3-star wins
+      recordCompletionForRating().catch(() => {});
+      if (stars === 3) {
+        setTimeout(() => {
+          maybePromptRating(levelConfig.levelNumber).catch(() => {});
+        }, 2000);
+      }
     } else if (gameState.status === 'lost') {
       if (isZen) {
         recordZenGame(gameState.score, gameState.linesCleared, gameState.combo ?? 0);
