@@ -32,7 +32,7 @@ export function useGameEngine() {
     continueGame,
   } = useGameStore();
 
-  const { completeLevel, addCoins, addGems, updateStreak, checkAchievements, recordGamePlayed, recordZenGame, recordFailure, resetFailures, addPiggyBankCoins, addBattlePassXP, completeWeeklyChallenge, incrementGamesPlayedToday } = usePlayerStore();
+  const { completeLevel, addCoins, addGems, updateStreak, checkAchievements, recordGamePlayed, recordZenGame, recordFailure, resetFailures, addPiggyBankCoins, addBattlePassXP, completeWeeklyChallenge, incrementGamesPlayedToday, updateQuestProgress } = usePlayerStore();
 
   // Start a level by number (negative = weekly challenge)
   const loadLevel = useCallback((levelNumber: number) => {
@@ -103,6 +103,18 @@ export function useGameEngine() {
       incrementGamesPlayedToday();
       resetFailures();
       checkAchievements();
+
+      // Update daily quest progress
+      updateQuestProgress('score_earned', gameState.score);
+      updateQuestProgress('lines_cleared', gameState.linesCleared);
+      updateQuestProgress('pieces_placed', gameState.piecesPlaced);
+      updateQuestProgress('stars_earned', stars);
+      if (gameState.combo > 1) {
+        updateQuestProgress('combos_achieved', gameState.combo - 1);
+      }
+      if (!isWeekly) {
+        updateQuestProgress('levels_completed', 1);
+      }
 
       // Track for app rating prompt — prompt after 3-star wins
       recordCompletionForRating().catch(() => {});

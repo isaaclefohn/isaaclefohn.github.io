@@ -26,6 +26,7 @@ import { ComebackBonusModal } from '../components/ComebackBonusModal';
 import { getStreakMilestone, getDailyStreakBonus, StreakMilestone } from '../game/rewards/StreakRewards';
 import { StreakMilestoneModal } from '../components/StreakMilestoneModal';
 import { LivesDisplay } from '../components/LivesDisplay';
+import { DailyQuestsCard } from '../components/DailyQuestsCard';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetentionNotifications, clearBadge } from '../services/notifications';
@@ -385,6 +386,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               />
             )}
           </View>
+
+          {/* Daily quests */}
+          {isFeatureUnlocked('daily_challenge', highestLevel) && (
+            <DailyQuestsCard visible={true} />
+          )}
 
           {/* Live event banners */}
           <EventBanner />

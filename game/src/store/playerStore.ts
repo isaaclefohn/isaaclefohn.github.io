@@ -102,6 +102,10 @@ interface PlayerStoreState {
   lives: number;
   lastLifeLostAt: number | null;
   infiniteLivesUntil: number | null;
+  // Daily Quests
+  dailyQuestProgress: Record<string, number>;
+  dailyQuestsClaimed: string[];
+  dailyQuestsDate: string | null;
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -142,6 +146,9 @@ interface PlayerStore extends PlayerStoreState {
   loseLife: () => void;
   refillLives: () => void;
   activateInfiniteLives: (durationMs: number) => void;
+  // Daily Quests
+  updateQuestProgress: (key: string, amount: number) => void;
+  claimDailyQuest: (questId: string) => void;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -193,6 +200,9 @@ export const usePlayerStore = create<PlayerStore>()(
       lives: 5,
       lastLifeLostAt: null,
       infiniteLivesUntil: null,
+      dailyQuestProgress: {},
+      dailyQuestsClaimed: [],
+      dailyQuestsDate: null,
 
       addCoins: (amount) =>
         set((s) => ({ coins: s.coins + amount })),
@@ -437,6 +447,26 @@ export const usePlayerStore = create<PlayerStore>()(
           lives: 5,
           infiniteLivesUntil: Date.now() + durationMs,
         });
+      },
+
+      updateQuestProgress: (key: string, amount: number) => {
+        const today = getToday();
+        set((s) => {
+          const isToday = s.dailyQuestsDate === today;
+          const currentProgress = isToday ? (s.dailyQuestProgress[key] ?? 0) : 0;
+          return {
+            dailyQuestProgress: isToday
+              ? { ...s.dailyQuestProgress, [key]: currentProgress + amount }
+              : { [key]: amount },
+            dailyQuestsDate: today,
+          };
+        });
+      },
+
+      claimDailyQuest: (questId: string) => {
+        set((s) => ({
+          dailyQuestsClaimed: [...s.dailyQuestsClaimed, questId],
+        }));
       },
     }),
     {
