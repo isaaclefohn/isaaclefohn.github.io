@@ -27,6 +27,8 @@ import { getStreakMilestone, getDailyStreakBonus, StreakMilestone } from '../gam
 import { StreakMilestoneModal } from '../components/StreakMilestoneModal';
 import { LivesDisplay } from '../components/LivesDisplay';
 import { DailyQuestsCard } from '../components/DailyQuestsCard';
+import { StickerAlbumModal } from '../components/StickerAlbumModal';
+import { checkStickerUnlocks } from '../game/systems/StickerAlbum';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetentionNotifications, clearBadge } from '../services/notifications';
@@ -53,7 +55,7 @@ const TITLE_BLOCKS = [
 ];
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, piggyBankCoins, lastGiftDate, gamesPlayedToday, claimGift, lastPlayDate } = usePlayerStore();
+  const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, piggyBankCoins, lastGiftDate, gamesPlayedToday, claimGift, lastPlayDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak } = usePlayerStore();
   const { tutorialCompleted, completeTutorial, notificationsEnabled, comebackShownDate, setComebackShownDate } = useSettingsStore();
   const [showTutorial, setShowTutorial] = useState(!tutorialCompleted);
   const [showDailyReward, setShowDailyReward] = useState(false);
@@ -68,6 +70,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [comebackReward, setComebackReward] = useState<ComebackReward | null>(null);
   const [showStreakMilestone, setShowStreakMilestone] = useState(false);
   const [streakMilestone, setStreakMilestone] = useState<StreakMilestone | null>(null);
+  const [showAlbum, setShowAlbum] = useState(false);
 
   const seasonalTheme = getActiveSeasonalTheme();
 
@@ -83,9 +86,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   }, [dailyRewardLastClaimed, showTutorial]);
 
-  // Check achievements, notifications, and gift box on screen load
+  // Check achievements, stickers, notifications, and gift box on screen load
   useEffect(() => {
     checkAchievements();
+    // Check for new sticker unlocks
+    const newStickers = checkStickerUnlocks({
+      highestLevel, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, totalScore, collectedStickers,
+    });
+    for (const id of newStickers) {
+      collectSticker(id);
+    }
     // Request notification permissions (non-blocking)
     requestNotificationPermissions().catch(() => {});
     // Clear badge on app open
@@ -452,6 +462,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 />
               </View>
             )}
+            {isFeatureUnlocked('achievements', highestLevel) && (
+              <View style={styles.bottomButtonWrapper}>
+                <Button
+                  title="Album"
+                  onPress={() => setShowAlbum(true)}
+                  variant="ghost"
+                  size="small"
+                  style={styles.bottomButton}
+                />
+              </View>
+            )}
             <View style={styles.bottomButtonWrapper}>
               <Button
                 title="Profile"
@@ -547,6 +568,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         visible={showComeback}
         reward={comebackReward}
         onClose={() => setShowComeback(false)}
+      />
+
+      {/* Sticker Album modal */}
+      <StickerAlbumModal
+        visible={showAlbum}
+        onClose={() => setShowAlbum(false)}
       />
 
       {/* Streak Milestone modal */}

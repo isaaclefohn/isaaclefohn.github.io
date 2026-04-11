@@ -106,6 +106,11 @@ interface PlayerStoreState {
   dailyQuestProgress: Record<string, number>;
   dailyQuestsClaimed: string[];
   dailyQuestsDate: string | null;
+  // Sticker Album
+  collectedStickers: string[];
+  claimedAlbumPages: string[];
+  // Star Chests
+  claimedStarChests: string[];
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -149,6 +154,11 @@ interface PlayerStore extends PlayerStoreState {
   // Daily Quests
   updateQuestProgress: (key: string, amount: number) => void;
   claimDailyQuest: (questId: string) => void;
+  // Sticker Album
+  collectSticker: (stickerId: string) => void;
+  claimAlbumPage: (pageId: string) => void;
+  // Star Chests
+  claimStarChest: (chestId: string) => void;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -203,6 +213,9 @@ export const usePlayerStore = create<PlayerStore>()(
       dailyQuestProgress: {},
       dailyQuestsClaimed: [],
       dailyQuestsDate: null,
+      collectedStickers: [],
+      claimedAlbumPages: [],
+      claimedStarChests: [],
 
       addCoins: (amount) =>
         set((s) => ({ coins: s.coins + amount })),
@@ -466,6 +479,30 @@ export const usePlayerStore = create<PlayerStore>()(
       claimDailyQuest: (questId: string) => {
         set((s) => ({
           dailyQuestsClaimed: [...s.dailyQuestsClaimed, questId],
+        }));
+      },
+
+      collectSticker: (stickerId: string) => {
+        set((s) => ({
+          collectedStickers: s.collectedStickers.includes(stickerId)
+            ? s.collectedStickers
+            : [...s.collectedStickers, stickerId],
+        }));
+      },
+
+      claimAlbumPage: (pageId: string) => {
+        set((s) => ({
+          claimedAlbumPages: s.claimedAlbumPages.includes(pageId)
+            ? s.claimedAlbumPages
+            : [...s.claimedAlbumPages, pageId],
+        }));
+      },
+
+      claimStarChest: (chestId: string) => {
+        set((s) => ({
+          claimedStarChests: s.claimedStarChests.includes(chestId)
+            ? s.claimedStarChests
+            : [...s.claimedStarChests, chestId],
         }));
       },
     }),
