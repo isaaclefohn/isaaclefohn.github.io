@@ -21,6 +21,8 @@ import { EventBanner } from '../components/EventBanner';
 import { isFeatureUnlocked, getNextUnlock } from '../game/progression/FeatureGating';
 import { shouldShowGift, generateGiftBox, GiftBox } from '../game/rewards/GiftBox';
 import { getActiveSeasonalTheme } from '../game/themes/SeasonalThemes';
+import { getComebackReward, ComebackReward } from '../game/rewards/ComebackBonus';
+import { ComebackBonusModal } from '../components/ComebackBonusModal';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetentionNotifications, clearBadge } from '../services/notifications';
@@ -47,8 +49,8 @@ const TITLE_BLOCKS = [
 ];
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, piggyBankCoins, lastGiftDate, gamesPlayedToday, claimGift } = usePlayerStore();
-  const { tutorialCompleted, completeTutorial, notificationsEnabled } = useSettingsStore();
+  const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, piggyBankCoins, lastGiftDate, gamesPlayedToday, claimGift, lastPlayDate } = usePlayerStore();
+  const { tutorialCompleted, completeTutorial, notificationsEnabled, comebackShownDate, setComebackShownDate } = useSettingsStore();
   const [showTutorial, setShowTutorial] = useState(!tutorialCompleted);
   const [showDailyReward, setShowDailyReward] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -58,6 +60,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showGiftBox, setShowGiftBox] = useState(false);
   const [currentGift, setCurrentGift] = useState<GiftBox | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [showComeback, setShowComeback] = useState(false);
+  const [comebackReward, setComebackReward] = useState<ComebackReward | null>(null);
 
   const seasonalTheme = getActiveSeasonalTheme();
 
@@ -92,6 +96,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       setCurrentGift(gift);
       const timer = setTimeout(() => setShowGiftBox(true), 1500);
       return () => clearTimeout(timer);
+    }
+    // Check for comeback bonus (player returning after 2+ days)
+    const today = new Date().toISOString().split('T')[0];
+    if (comebackShownDate !== today) {
+      const reward = getComebackReward(lastPlayDate);
+      if (reward) {
+        setComebackReward(reward);
+        const timer = setTimeout(() => setShowComeback(true), 2000);
+        setComebackShownDate(today);
+        return () => clearTimeout(timer);
+      }
     }
   }, []);
 
@@ -502,6 +517,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <PlayerProfileCard
         visible={showProfile}
         onClose={() => setShowProfile(false)}
+      />
+
+      {/* Comeback Bonus modal */}
+      <ComebackBonusModal
+        visible={showComeback}
+        reward={comebackReward}
+        onClose={() => setShowComeback(false)}
       />
     </SafeAreaView>
   );

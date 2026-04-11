@@ -37,6 +37,8 @@ import { FeatureUnlockBanner } from '../components/FeatureUnlockBanner';
 import { getActiveEvents } from '../game/events/LiveEvents';
 import { getNewlyUnlockedFeatures, FeatureGate } from '../game/progression/FeatureGating';
 import { useSettingsStore } from '../store/settingsStore';
+import { GameTip, TipId } from '../components/GameTip';
+import { isBossLevel } from '../game/levels/LevelGenerator';
 import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 import { calculateCoinReward } from '../game/engine/Scoring';
@@ -88,7 +90,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
 
   const { playSound, playPlacement } = useSound();
   const { powerUps, usePowerUp, coins, gems, addCoins, addPowerUp, spendGems, levelHighScores, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel } = usePlayerStore();
-  const { tutorialCompleted, completeTutorial } = useSettingsStore();
+  const { tutorialCompleted, completeTutorial, shownTips, markTipShown } = useSettingsStore();
 
   const showTutorial = !isEndless && level === 1 && !tutorialCompleted;
 
@@ -122,6 +124,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [flyUpData, setFlyUpData] = useState<{ points: number; row: number; col: number; isCombo: boolean; key: number } | null>(null);
   const flyUpKeyRef = useRef(0);
   const lastPlacementRef = useRef<{ row: number; col: number }>({ row: 4, col: 4 });
+  const [activeTip, setActiveTip] = useState<TipId | null>(null);
+
+  // Difficulty label for the current level
+  const difficultyInfo = !isEndless && level > 0
+    ? level <= 20 ? { label: 'Easy', color: COLORS.success }
+      : level <= 100 ? { label: 'Normal', color: COLORS.info }
+      : level <= 200 ? { label: 'Hard', color: COLORS.warning }
+      : { label: 'Expert', color: COLORS.danger }
+    : null;
+  const isWeekly = level === -1;
+  const isBoss = !isEndless && level > 0 && isBossLevel(level);
 
   // Drag-and-drop state
   const [draggedPieceIndex, setDraggedPieceIndex] = useState<number | null>(null);
@@ -303,6 +316,46 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       setTimeout(() => setShowMilestone(false), 3500);
     }
   }, [gameState?.score]);
+
+  // Contextual tips — show once per lifetime at relevant moments
+  useEffect(() => {
+    if (!gameState || gameState.status !== 'playing') return;
+
+    // Boss level tip
+    if (isBoss && !shownTips.includes('boss_level_tip')) {
+      setActiveTip('boss_level_tip');
+      markTipShown('boss_level_tip');
+      return;
+    }
+    // Weekly challenge tip
+    if (isWeekly && !shownTips.includes('weekly_challenge_tip')) {
+      setActiveTip('weekly_challenge_tip');
+      markTipShown('weekly_challenge_tip');
+      return;
+    }
+    // Zen mode tip
+    if (isEndless && !shownTips.includes('zen_mode_tip')) {
+      setActiveTip('zen_mode_tip');
+      markTipShown('zen_mode_tip');
+      return;
+    }
+    // Rotate tip — show on level 2 or 3
+    if (level >= 2 && level <= 3 && !shownTips.includes('rotate_tip')) {
+      const timer = setTimeout(() => {
+        setActiveTip('rotate_tip');
+        markTipShown('rotate_tip');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Combo tip — triggered when player gets first combo
+  useEffect(() => {
+    if (gameState?.combo === 2 && !shownTips.includes('combo_tip')) {
+      setActiveTip('combo_tip');
+      markTipShown('combo_tip');
+    }
+  }, [gameState?.combo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSelectPiece = useCallback((index: number) => {
     setActivePowerUp(null);
@@ -559,7 +612,24 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       {/* Header */}
       <View style={styles.header}>
         <Button title={'\u2039'} onPress={handleHome} variant="ghost" size="small" />
-        <CurrencyDisplay coins={coins} gems={gems} compact />
+        {/* Level info with difficulty badge */}
+        <View style={styles.headerCenter}>
+          {isWeekly && (
+            <View style={[styles.diffBadge, { backgroundColor: `${COLORS.accent}20` }]}>
+              <Text style={[styles.diffBadgeText, { color: COLORS.accent }]}>WEEKLY</Text>
+            </View>
+          )}
+          {isBoss && (
+            <View style={[styles.diffBadge, { backgroundColor: `${COLORS.accentGold}20` }]}>
+              <Text style={[styles.diffBadgeText, { color: COLORS.accentGold }]}>BOSS</Text>
+            </View>
+          )}
+          {difficultyInfo && !isBoss && (
+            <View style={[styles.diffBadge, { backgroundColor: `${difficultyInfo.color}20` }]}>
+              <Text style={[styles.diffBadgeText, { color: difficultyInfo.color }]}>{difficultyInfo.label}</Text>
+            </View>
+          )}
+        </View>
         <View style={styles.headerRight}>
           <Button title={'\u21BB'} onPress={handleRetry} variant="ghost" size="small" />
           <Button title={'\u23F8'} onPress={handlePause} variant="ghost" size="small" />
@@ -721,6 +791,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         {!isEndless && gameState.score > (levelHighScores[level] ?? 0) && (levelHighScores[level] ?? 0) > 0 && (
           <Text style={styles.newBestLabel}>NEW BEST!</Text>
         )}
+        {/* Detailed stats summary */}
+        <View style={styles.statsSummary}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Pieces</Text>
+            <Text style={styles.summaryValue}>{gameState.piecesPlaced}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Lines</Text>
+            <Text style={styles.summaryValue}>{gameState.linesCleared}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Combo</Text>
+            <Text style={styles.summaryValue}>{gameState.combo}x</Text>
+          </View>
+        </View>
         <View style={styles.rewardRow}>
           <Text style={styles.rewardText}>+{calculateCoinReward(stars)}{doubleCoinsUsed ? ' x2!' : ''}</Text>
           <GameIcon name="coin" size={18} />
@@ -774,9 +859,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             )}
           </View>
         ) : (
-          <Text style={styles.modalTarget}>
-            Target: {formatScore(levelConfig.objective.target)}
-          </Text>
+          <>
+            <Text style={styles.modalTarget}>
+              Target: {formatScore(levelConfig.objective.target)}
+            </Text>
+            <View style={styles.statsSummary}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Pieces</Text>
+                <Text style={styles.summaryValue}>{gameState.piecesPlaced}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Lines</Text>
+                <Text style={styles.summaryValue}>{gameState.linesCleared}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Progress</Text>
+                <Text style={styles.summaryValue}>{Math.min(Math.round((gameState.score / levelConfig.objective.target) * 100), 100)}%</Text>
+              </View>
+            </View>
+          </>
         )}
         {/* Rescue offer after 2+ failures on same level */}
         {!isEndless && consecutiveFailures >= 2 && lastFailedLevel === level && !rescueClaimed && (
@@ -824,6 +925,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           </View>
         </View>
       </Modal>
+      {/* Contextual tutorial tips */}
+      <GameTip
+        tipId={activeTip ?? 'combo_tip'}
+        visible={activeTip !== null}
+        onDismiss={() => setActiveTip(null)}
+      />
+
       {/* Feature unlock celebration */}
       <FeatureUnlockBanner
         feature={unlockedFeature}
@@ -1072,5 +1180,45 @@ const styles = StyleSheet.create({
     color: COLORS.accentGold,
     letterSpacing: 2,
     marginBottom: 4,
+  },
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  diffBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: RADII.round,
+  },
+  diffBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  statsSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: COLORS.surfaceLight,
+    borderRadius: RADII.md,
+  },
+  summaryRow: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  summaryLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    letterSpacing: 0.5,
+  },
+  summaryValue: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: COLORS.textPrimary,
   },
 });

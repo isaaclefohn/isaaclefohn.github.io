@@ -19,6 +19,10 @@ interface SettingsStore {
   colorblindMode: boolean;
   reducedMotion: boolean;
   notificationsEnabled: boolean;
+  /** Track which tutorial tips have been shown (one-time each) */
+  shownTips: string[];
+  /** Whether comeback bonus was already shown this session */
+  comebackShownDate: string | null;
 
   toggleSound: () => void;
   toggleMusic: () => void;
@@ -31,6 +35,9 @@ interface SettingsStore {
   toggleColorblindMode: () => void;
   toggleReducedMotion: () => void;
   toggleNotifications: () => void;
+  markTipShown: (tipId: string) => void;
+  hasTipBeenShown: (tipId: string) => boolean;
+  setComebackShownDate: (date: string) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -47,6 +54,8 @@ export const useSettingsStore = create<SettingsStore>()(
       colorblindMode: false,
       reducedMotion: false,
       notificationsEnabled: true,
+      shownTips: [],
+      comebackShownDate: null,
 
       toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
       toggleMusic: () => set((s) => ({ musicEnabled: !s.musicEnabled })),
@@ -59,6 +68,15 @@ export const useSettingsStore = create<SettingsStore>()(
       toggleColorblindMode: () => set((s) => ({ colorblindMode: !s.colorblindMode })),
       toggleReducedMotion: () => set((s) => ({ reducedMotion: !s.reducedMotion })),
       toggleNotifications: () => set((s) => ({ notificationsEnabled: !s.notificationsEnabled })),
+      markTipShown: (tipId: string) => set((s) => ({
+        shownTips: s.shownTips.includes(tipId) ? s.shownTips : [...s.shownTips, tipId],
+      })),
+      hasTipBeenShown: (tipId: string) => {
+        // This is a getter, not a setter — but zustand pattern uses get()
+        // We'll check via the state directly in components
+        return false; // Placeholder; components check shownTips directly
+      },
+      setComebackShownDate: (date: string) => set({ comebackShownDate: date }),
     }),
     {
       name: 'color-block-blast-settings',
