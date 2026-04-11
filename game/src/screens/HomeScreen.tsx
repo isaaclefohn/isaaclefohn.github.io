@@ -29,6 +29,7 @@ import { LivesDisplay } from '../components/LivesDisplay';
 import { DailyQuestsCard } from '../components/DailyQuestsCard';
 import { StickerAlbumModal } from '../components/StickerAlbumModal';
 import { checkStickerUnlocks } from '../game/systems/StickerAlbum';
+import { SkillRatingDisplay } from '../components/SkillRatingDisplay';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetentionNotifications, clearBadge } from '../services/notifications';
@@ -294,6 +295,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <Animated.View style={[styles.livesRow, { opacity: statsOpacity }]}>
           <LivesDisplay />
         </Animated.View>
+
+        {/* Skill Rating badge */}
+        {isFeatureUnlocked('skill_rating', highestLevel) && (
+          <Animated.View style={[styles.srRow, { opacity: statsOpacity }]}>
+            <SkillRatingDisplay compact />
+          </Animated.View>
+        )}
 
         {/* Stats bar — tap to open stats dashboard */}
         <TouchableOpacity activeOpacity={0.7} onPress={() => setShowStats(true)} style={{ width: '100%' }}>
@@ -805,6 +813,10 @@ const styles = StyleSheet.create({
   livesRow: {
     alignItems: 'center',
     marginBottom: SPACING.xs,
+  },
+  srRow: {
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
   },
   seasonBanner: {
     flexDirection: 'row',

@@ -111,6 +111,8 @@ interface PlayerStoreState {
   claimedAlbumPages: string[];
   // Star Chests
   claimedStarChests: string[];
+  // Skill Rating
+  skillRating: number;
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -159,6 +161,8 @@ interface PlayerStore extends PlayerStoreState {
   claimAlbumPage: (pageId: string) => void;
   // Star Chests
   claimStarChest: (chestId: string) => void;
+  // Skill Rating
+  updateSkillRating: (change: number) => void;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -216,6 +220,7 @@ export const usePlayerStore = create<PlayerStore>()(
       collectedStickers: [],
       claimedAlbumPages: [],
       claimedStarChests: [],
+      skillRating: 100,
 
       addCoins: (amount) =>
         set((s) => ({ coins: s.coins + amount })),
@@ -504,6 +509,10 @@ export const usePlayerStore = create<PlayerStore>()(
             ? s.claimedStarChests
             : [...s.claimedStarChests, chestId],
         }));
+      },
+
+      updateSkillRating: (change: number) => {
+        set((s) => ({ skillRating: Math.max(0, s.skillRating + change) }));
       },
     }),
     {

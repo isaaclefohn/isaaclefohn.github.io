@@ -35,12 +35,13 @@ import { ScoreOdometer } from '../components/ScoreOdometer';
 import { Leaderboard } from '../components/Leaderboard';
 import { FeatureUnlockBanner } from '../components/FeatureUnlockBanner';
 import { getActiveEvents } from '../game/events/LiveEvents';
-import { getNewlyUnlockedFeatures, FeatureGate } from '../game/progression/FeatureGating';
+import { getNewlyUnlockedFeatures, isFeatureUnlocked, FeatureGate } from '../game/progression/FeatureGating';
 import { useSettingsStore } from '../store/settingsStore';
 import { GameTip, TipId } from '../components/GameTip';
 import { isBossLevel } from '../game/levels/LevelGenerator';
 import { getLuckyLevelReward, LuckyLevelReward } from '../game/rewards/LuckyLevel';
 import { LuckyLevelModal } from '../components/LuckyLevelModal';
+import { calculateSRChange, getSkillTier } from '../game/systems/SkillRating';
 import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 import { calculateCoinReward } from '../game/engine/Scoring';
@@ -91,7 +92,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   } = useGameEngine();
 
   const { playSound, playPlacement } = useSound();
-  const { powerUps, usePowerUp, coins, gems, addCoins, addPowerUp, spendGems, levelHighScores, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel } = usePlayerStore();
+  const { powerUps, usePowerUp, coins, gems, addCoins, addPowerUp, spendGems, levelHighScores, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating } = usePlayerStore();
   const { tutorialCompleted, completeTutorial, shownTips, markTipShown } = useSettingsStore();
 
   const showTutorial = !isEndless && level === 1 && !tutorialCompleted;
@@ -129,6 +130,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [activeTip, setActiveTip] = useState<TipId | null>(null);
   const [luckyReward, setLuckyReward] = useState<LuckyLevelReward | null>(null);
   const [showLuckyLevel, setShowLuckyLevel] = useState(false);
+  const [srChange, setSrChange] = useState<number | null>(null);
 
   // Difficulty label for the current level
   const difficultyInfo = !isEndless && level > 0
@@ -199,6 +201,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       if (onLevelCompleted()) {
         showInterstitialAd();
       }
+      // Calculate SR change for display
+      if (!isEndless && isFeatureUnlocked('skill_rating', highestLevel)) {
+        const change = calculateSRChange({
+          won: true,
+          level: Math.abs(level),
+          stars: stars,
+          scorePercent: levelConfig ? (gameState.score / levelConfig.objective.target) * 100 : 100,
+          currentSR: skillRating,
+        });
+        setSrChange(change);
+      }
       // Check for feature unlocks (previous highest was level-1 since we just completed `level`)
       if (!isEndless && level > 0) {
         const newFeatures = getNewlyUnlockedFeatures(level - 1, level);
@@ -219,6 +232,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       playSound('gameOver');
       shakeBoard(2);
       setTimeout(() => setShowLoseModal(true), 400);
+      // Calculate SR change for display
+      if (!isEndless && level > 0 && isFeatureUnlocked('skill_rating', highestLevel)) {
+        const change = calculateSRChange({
+          won: false,
+          level,
+          stars: 0,
+          scorePercent: levelConfig ? (gameState.score / levelConfig.objective.target) * 100 : 0,
+          currentSR: skillRating,
+        });
+        setSrChange(change);
+      }
     }
   }, [gameState?.status, playSound, shakeBoard]);
 
@@ -820,6 +844,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           <Text style={styles.rewardText}>+{calculateCoinReward(stars)}{doubleCoinsUsed ? ' x2!' : ''}</Text>
           <GameIcon name="coin" size={18} />
         </View>
+        {srChange !== null && (
+          <View style={styles.srChangeRow}>
+            <GameIcon name="shield" size={14} color={getSkillTier(skillRating).color} />
+            <Text style={[styles.srChangeText, { color: srChange >= 0 ? COLORS.success : COLORS.danger }]}>
+              {srChange >= 0 ? '+' : ''}{srChange} SR
+            </Text>
+          </View>
+        )}
         {/* Mini leaderboard for social proof */}
         {!isEndless && (
           <Leaderboard
@@ -888,6 +920,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
               </View>
             </View>
           </>
+        )}
+        {srChange !== null && (
+          <View style={styles.srChangeRow}>
+            <GameIcon name="shield" size={14} color={getSkillTier(skillRating).color} />
+            <Text style={[styles.srChangeText, { color: COLORS.danger }]}>
+              {srChange} SR
+            </Text>
+          </View>
         )}
         {/* Rescue offer after 2+ failures on same level */}
         {!isEndless && consecutiveFailures >= 2 && lastFailedLevel === level && !rescueClaimed && (
@@ -1238,5 +1278,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
     color: COLORS.textPrimary,
+  },
+  srChangeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 4,
+  },
+  srChangeText: {
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });

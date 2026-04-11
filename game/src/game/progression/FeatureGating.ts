@@ -24,6 +24,7 @@ export const FEATURE_GATES: FeatureGate[] = [
   { id: 'weekly_challenge', name: 'Weekly Challenge', unlockLevel: 10, unlockMessage: 'Weekly Challenge unlocked! Compete on the same board every week.' },
   { id: 'friend_challenge', name: 'Friend Challenge', unlockLevel: 15, unlockMessage: 'Friend Challenges unlocked! Challenge friends to beat your score.' },
   { id: 'achievements', name: 'Achievements', unlockLevel: 7, unlockMessage: 'Achievements unlocked! Complete goals to earn rewards.' },
+  { id: 'skill_rating', name: 'Skill Rating', unlockLevel: 8, unlockMessage: 'Skill Rating unlocked! Track your rank as you climb the tiers.' },
 ];
 
 /** Check if a feature is unlocked based on the player's highest completed level */

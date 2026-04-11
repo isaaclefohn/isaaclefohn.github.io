@@ -11,6 +11,7 @@ import { calculateCoinReward } from '../game/engine/Scoring';
 import { getScoreMultiplier, getXPMultiplier, getCoinMultiplier } from '../game/events/LiveEvents';
 import { recordCompletionForRating, maybePromptRating } from '../services/appRating';
 import { getWeeklyChallengeConfig, getCurrentWeekId, WEEKLY_COIN_REWARDS, WEEKLY_GEM_BONUS } from '../game/challenges/WeeklyChallenge';
+import { calculateSRChange } from '../game/systems/SkillRating';
 
 export function useGameEngine() {
   const {
@@ -32,7 +33,7 @@ export function useGameEngine() {
     continueGame,
   } = useGameStore();
 
-  const { completeLevel, addCoins, addGems, updateStreak, checkAchievements, recordGamePlayed, recordZenGame, recordFailure, resetFailures, addPiggyBankCoins, addBattlePassXP, completeWeeklyChallenge, incrementGamesPlayedToday, updateQuestProgress } = usePlayerStore();
+  const { completeLevel, addCoins, addGems, updateStreak, checkAchievements, recordGamePlayed, recordZenGame, recordFailure, resetFailures, addPiggyBankCoins, addBattlePassXP, completeWeeklyChallenge, incrementGamesPlayedToday, updateQuestProgress, updateSkillRating, skillRating } = usePlayerStore();
 
   // Start a level by number (negative = weekly challenge)
   const loadLevel = useCallback((levelNumber: number) => {
@@ -116,6 +117,20 @@ export function useGameEngine() {
         updateQuestProgress('levels_completed', 1);
       }
 
+      // Update Skill Rating on win
+      if (!isZen) {
+        const srChange = calculateSRChange({
+          won: true,
+          level: Math.abs(levelConfig.levelNumber),
+          stars,
+          scorePercent: levelConfig.objective.target > 0
+            ? (gameState.score / levelConfig.objective.target) * 100
+            : 100,
+          currentSR: skillRating,
+        });
+        updateSkillRating(srChange);
+      }
+
       // Track for app rating prompt — prompt after 3-star wins
       recordCompletionForRating().catch(() => {});
       if (stars === 3 && !isWeekly) {
@@ -136,6 +151,17 @@ export function useGameEngine() {
       } else {
         recordGamePlayed(gameState.combo ?? 0);
         recordFailure(levelConfig.levelNumber);
+        // Update Skill Rating on loss
+        const srChange = calculateSRChange({
+          won: false,
+          level: levelConfig.levelNumber,
+          stars: 0,
+          scorePercent: levelConfig.objective.target > 0
+            ? (gameState.score / levelConfig.objective.target) * 100
+            : 0,
+          currentSR: skillRating,
+        });
+        updateSkillRating(srChange);
       }
       incrementGamesPlayedToday();
       checkAchievements();
