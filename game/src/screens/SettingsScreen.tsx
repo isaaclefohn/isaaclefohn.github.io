@@ -12,9 +12,14 @@ import {
   Switch,
   ScrollView,
   Animated,
+  Alert,
+  Share,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Tutorial } from '../components/Tutorial';
 import { GameIcon, IconName } from '../components/GameIcon';
+import { SkillRatingDisplay } from '../components/SkillRatingDisplay';
+import { getSkillTier } from '../game/systems/SkillRating';
 import { useSettingsStore } from '../store/settingsStore';
 import { usePlayerStore } from '../store/playerStore';
 import { Button } from '../components/common/Button';
@@ -67,8 +72,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
   const settings = useSettingsStore();
   const player = usePlayerStore();
 
-  // 7 animated sections: header, profile, audio, visual, help, stats, footer
-  const anims = useStaggeredEntrance(7);
+  // 9 animated sections: header, profile, audio, visual, help, stats, rank, data, footer
+  const anims = useStaggeredEntrance(9);
   const [showTutorial, setShowTutorial] = useState(false);
 
   const initials = (player.displayName || 'P').charAt(0).toUpperCase();
@@ -201,8 +206,80 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           </View>
         </Animated.View>
 
+        {/* Skill Rating section */}
+        {player.highestLevel >= 8 && (
+          <Animated.View style={animatedStyle(anims[6])}>
+            <Text style={styles.sectionTitle}>Rank</Text>
+            <View style={styles.sectionCard}>
+              <View style={styles.rankSection}>
+                <SkillRatingDisplay />
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Data section */}
+        <Animated.View style={animatedStyle(anims[7])}>
+          <Text style={styles.sectionTitle}>Data</Text>
+          <View style={styles.sectionCard}>
+            <View style={styles.dataRow}>
+              <Button
+                title="Export Progress"
+                onPress={async () => {
+                  const data = {
+                    level: player.highestLevel,
+                    score: player.totalScore,
+                    stars: Object.values(player.levelStars).reduce((a, b) => a + b, 0),
+                    streak: player.longestStreak,
+                    coins: player.coins,
+                    gems: player.gems,
+                    skillRating: player.skillRating,
+                    achievements: player.unlockedAchievements.length,
+                  };
+                  try {
+                    await Share.share({ message: `Color Block Blast Progress\n${JSON.stringify(data, null, 2)}` });
+                  } catch { /* cancelled */ }
+                }}
+                variant="ghost"
+                size="medium"
+              />
+            </View>
+            <Divider />
+            <View style={styles.dataRow}>
+              <Button
+                title="Reset All Progress"
+                onPress={() => {
+                  Alert.alert(
+                    'Reset Progress',
+                    'This will permanently delete all your game data. This cannot be undone.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Reset',
+                        style: 'destructive',
+                        onPress: async () => {
+                          await AsyncStorage.removeItem('color-block-blast-player');
+                          await AsyncStorage.removeItem('color-block-blast-settings');
+                          Alert.alert('Progress Reset', 'Restart the app to start fresh.');
+                        },
+                      },
+                    ]
+                  );
+                }}
+                variant="ghost"
+                size="medium"
+              />
+            </View>
+            <View style={styles.privacyNote}>
+              <Text style={styles.privacyText}>
+                All data is stored locally on your device. No data is sent to external servers.
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+
         {/* About footer */}
-        <Animated.View style={[styles.footer, animatedStyle(anims[6])]}>
+        <Animated.View style={[styles.footer, animatedStyle(anims[8])]}>
           <GameIcon name="gamepad" size={32} />
           <Text style={styles.footerAppName}>Color Block Blast</Text>
           <Text style={styles.footerVersion}>Version 1.0.0</Text>
@@ -397,6 +474,27 @@ const styles = StyleSheet.create({
     width: 1,
     height: 28,
     backgroundColor: COLORS.surfaceBorder,
+  },
+
+  // Rank
+  rankSection: {
+    padding: SPACING.md,
+  },
+
+  // Data
+  dataRow: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+  },
+  privacyNote: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+  },
+  privacyText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    lineHeight: 16,
+    fontStyle: 'italic',
   },
 
   // Footer

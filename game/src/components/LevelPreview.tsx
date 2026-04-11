@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { getLevel, isBossLevel } from '../game/levels/LevelGenerator';
 import { getWorldForLevel } from '../game/levels/Worlds';
+import { getMasteryInfo } from '../game/systems/MasterySystem';
 import { GameIcon } from './GameIcon';
 import { Button } from './common/Button';
 import { Modal } from './common/Modal';
@@ -111,6 +112,29 @@ export const LevelPreview: React.FC<LevelPreviewProps> = ({
           <Text style={styles.bestText}>Best: {formatScore(highScore)}</Text>
         </View>
       )}
+
+      {/* Mastery rank */}
+      {highScore > 0 && config.starThresholds[2] > 0 && (() => {
+        const mastery = getMasteryInfo(highScore, config.starThresholds[2]);
+        return (
+          <View style={styles.masteryRow}>
+            <View style={[styles.masteryBadge, { borderColor: mastery.color }]}>
+              <Text style={[styles.masteryLabel, { color: mastery.color }]}>{mastery.label}</Text>
+            </View>
+            {mastery.nextRank && mastery.nextThreshold && (
+              <Text style={styles.masteryNext}>
+                {formatScore(mastery.nextThreshold - highScore)} to {mastery.nextRank}
+              </Text>
+            )}
+            {mastery.bonusCoins > 0 && (
+              <View style={styles.masteryBonusRow}>
+                <GameIcon name="coin" size={11} />
+                <Text style={styles.masteryBonusText}>+{mastery.bonusCoins} replay bonus</Text>
+              </View>
+            )}
+          </View>
+        );
+      })()}
 
       {/* Action buttons */}
       <View style={styles.actions}>
@@ -238,6 +262,37 @@ const styles = StyleSheet.create({
   bestText: {
     fontSize: 14,
     fontWeight: '800',
+    color: COLORS.accentGold,
+  },
+  masteryRow: {
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 16,
+  },
+  masteryBadge: {
+    borderWidth: 1.5,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+  },
+  masteryLabel: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  masteryNext: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.textMuted,
+  },
+  masteryBonusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  masteryBonusText: {
+    fontSize: 10,
+    fontWeight: '700',
     color: COLORS.accentGold,
   },
   actions: {

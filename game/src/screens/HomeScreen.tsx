@@ -30,6 +30,7 @@ import { DailyQuestsCard } from '../components/DailyQuestsCard';
 import { StickerAlbumModal } from '../components/StickerAlbumModal';
 import { checkStickerUnlocks } from '../game/systems/StickerAlbum';
 import { SkillRatingDisplay } from '../components/SkillRatingDisplay';
+import { AchievementShowcase } from '../components/AchievementShowcase';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetentionNotifications, clearBadge } from '../services/notifications';
@@ -72,6 +73,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showStreakMilestone, setShowStreakMilestone] = useState(false);
   const [streakMilestone, setStreakMilestone] = useState<StreakMilestone | null>(null);
   const [showAlbum, setShowAlbum] = useState(false);
+  const [showShowcase, setShowShowcase] = useState(false);
 
   const seasonalTheme = getActiveSeasonalTheme();
 
@@ -481,6 +483,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 />
               </View>
             )}
+            {isFeatureUnlocked('achievements', highestLevel) && (
+              <View style={styles.bottomButtonWrapper}>
+                <Button
+                  title="Showcase"
+                  onPress={() => setShowShowcase(true)}
+                  variant="ghost"
+                  size="small"
+                  style={styles.bottomButton}
+                />
+              </View>
+            )}
             <View style={styles.bottomButtonWrapper}>
               <Button
                 title="Profile"
@@ -582,6 +595,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <StickerAlbumModal
         visible={showAlbum}
         onClose={() => setShowAlbum(false)}
+      />
+
+      {/* Achievement Showcase modal */}
+      <AchievementShowcase
+        visible={showShowcase}
+        onClose={() => setShowShowcase(false)}
       />
 
       {/* Streak Milestone modal */}
