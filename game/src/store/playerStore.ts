@@ -96,6 +96,12 @@ interface PlayerStoreState {
   lastGiftDate: string | null;
   gamesPlayedToday: number;
   gamesPlayedDate: string | null;
+  // Streak Freeze
+  streakFreezes: number;
+  // Energy / Lives
+  lives: number;
+  lastLifeLostAt: number | null;
+  infiniteLivesUntil: number | null;
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -129,6 +135,13 @@ interface PlayerStore extends PlayerStoreState {
   // Gift Box
   claimGift: () => void;
   incrementGamesPlayedToday: () => void;
+  // Streak Freeze
+  addStreakFreezes: (count: number) => void;
+  useStreakFreeze: () => boolean;
+  // Energy / Lives
+  loseLife: () => void;
+  refillLives: () => void;
+  activateInfiniteLives: (durationMs: number) => void;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -176,6 +189,10 @@ export const usePlayerStore = create<PlayerStore>()(
       lastGiftDate: null,
       gamesPlayedToday: 0,
       gamesPlayedDate: null,
+      streakFreezes: 0,
+      lives: 5,
+      lastLifeLostAt: null,
+      infiniteLivesUntil: null,
 
       addCoins: (amount) =>
         set((s) => ({ coins: s.coins + amount })),
@@ -391,6 +408,35 @@ export const usePlayerStore = create<PlayerStore>()(
           gamesPlayedToday: s.gamesPlayedDate === today ? s.gamesPlayedToday + 1 : 1,
           gamesPlayedDate: today,
         }));
+      },
+
+      addStreakFreezes: (count: number) => {
+        set((s) => ({ streakFreezes: s.streakFreezes + count }));
+      },
+
+      useStreakFreeze: () => {
+        const { streakFreezes } = get();
+        if (streakFreezes <= 0) return false;
+        set({ streakFreezes: streakFreezes - 1 });
+        return true;
+      },
+
+      loseLife: () => {
+        set((s) => ({
+          lives: Math.max(0, s.lives - 1),
+          lastLifeLostAt: Date.now(),
+        }));
+      },
+
+      refillLives: () => {
+        set({ lives: 5, lastLifeLostAt: null });
+      },
+
+      activateInfiniteLives: (durationMs: number) => {
+        set({
+          lives: 5,
+          infiniteLivesUntil: Date.now() + durationMs,
+        });
       },
     }),
     {

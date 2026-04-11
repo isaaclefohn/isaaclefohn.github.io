@@ -39,6 +39,8 @@ import { getNewlyUnlockedFeatures, FeatureGate } from '../game/progression/Featu
 import { useSettingsStore } from '../store/settingsStore';
 import { GameTip, TipId } from '../components/GameTip';
 import { isBossLevel } from '../game/levels/LevelGenerator';
+import { getLuckyLevelReward, LuckyLevelReward } from '../game/rewards/LuckyLevel';
+import { LuckyLevelModal } from '../components/LuckyLevelModal';
 import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 import { calculateCoinReward } from '../game/engine/Scoring';
@@ -125,6 +127,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const flyUpKeyRef = useRef(0);
   const lastPlacementRef = useRef<{ row: number; col: number }>({ row: 4, col: 4 });
   const [activeTip, setActiveTip] = useState<TipId | null>(null);
+  const [luckyReward, setLuckyReward] = useState<LuckyLevelReward | null>(null);
+  const [showLuckyLevel, setShowLuckyLevel] = useState(false);
 
   // Difficulty label for the current level
   const difficultyInfo = !isEndless && level > 0
@@ -196,13 +200,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         showInterstitialAd();
       }
       // Check for feature unlocks (previous highest was level-1 since we just completed `level`)
-      if (!isEndless) {
+      if (!isEndless && level > 0) {
         const newFeatures = getNewlyUnlockedFeatures(level - 1, level);
         if (newFeatures.length > 0) {
           setTimeout(() => {
             setUnlockedFeature(newFeatures[0]);
             setShowFeatureUnlock(true);
           }, 1200);
+        }
+        // Check for lucky level milestone
+        const lucky = getLuckyLevelReward(level);
+        if (lucky) {
+          setLuckyReward(lucky);
+          setTimeout(() => setShowLuckyLevel(true), 1800);
         }
       }
     } else if (gameState?.status === 'lost') {
@@ -937,6 +947,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         feature={unlockedFeature}
         visible={showFeatureUnlock}
         onDismiss={() => setShowFeatureUnlock(false)}
+      />
+
+      {/* Lucky level milestone modal */}
+      <LuckyLevelModal
+        visible={showLuckyLevel}
+        reward={luckyReward}
+        level={level}
+        onClose={() => setShowLuckyLevel(false)}
       />
 
       {/* Tutorial overlay for first-time players */}

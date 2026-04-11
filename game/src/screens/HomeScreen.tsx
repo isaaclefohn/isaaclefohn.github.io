@@ -23,6 +23,9 @@ import { shouldShowGift, generateGiftBox, GiftBox } from '../game/rewards/GiftBo
 import { getActiveSeasonalTheme } from '../game/themes/SeasonalThemes';
 import { getComebackReward, ComebackReward } from '../game/rewards/ComebackBonus';
 import { ComebackBonusModal } from '../components/ComebackBonusModal';
+import { getStreakMilestone, getDailyStreakBonus, StreakMilestone } from '../game/rewards/StreakRewards';
+import { StreakMilestoneModal } from '../components/StreakMilestoneModal';
+import { LivesDisplay } from '../components/LivesDisplay';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetentionNotifications, clearBadge } from '../services/notifications';
@@ -62,6 +65,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [showComeback, setShowComeback] = useState(false);
   const [comebackReward, setComebackReward] = useState<ComebackReward | null>(null);
+  const [showStreakMilestone, setShowStreakMilestone] = useState(false);
+  const [streakMilestone, setStreakMilestone] = useState<StreakMilestone | null>(null);
 
   const seasonalTheme = getActiveSeasonalTheme();
 
@@ -95,6 +100,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       const gift = generateGiftBox(highestLevel);
       setCurrentGift(gift);
       const timer = setTimeout(() => setShowGiftBox(true), 1500);
+      return () => clearTimeout(timer);
+    }
+    // Check for streak milestone
+    const milestone = getStreakMilestone(currentStreak);
+    if (milestone) {
+      setStreakMilestone(milestone);
+      const timer = setTimeout(() => setShowStreakMilestone(true), 1200);
       return () => clearTimeout(timer);
     }
     // Check for comeback bonus (player returning after 2+ days)
@@ -266,6 +278,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             Puzzle your way to the top
           </Animated.Text>
         </View>
+
+        {/* Lives display */}
+        <Animated.View style={[styles.livesRow, { opacity: statsOpacity }]}>
+          <LivesDisplay />
+        </Animated.View>
 
         {/* Stats bar — tap to open stats dashboard */}
         <TouchableOpacity activeOpacity={0.7} onPress={() => setShowStats(true)} style={{ width: '100%' }}>
@@ -525,6 +542,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         reward={comebackReward}
         onClose={() => setShowComeback(false)}
       />
+
+      {/* Streak Milestone modal */}
+      <StreakMilestoneModal
+        visible={showStreakMilestone}
+        milestone={streakMilestone}
+        onClose={() => setShowStreakMilestone(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -744,6 +768,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.textMuted,
     letterSpacing: 0.5,
+  },
+  livesRow: {
+    alignItems: 'center',
+    marginBottom: SPACING.xs,
   },
   seasonBanner: {
     flexDirection: 'row',
