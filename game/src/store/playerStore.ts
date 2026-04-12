@@ -133,6 +133,14 @@ interface PlayerStoreState {
   // Treasure Hunt
   treasureMapPieces: number;
   treasureChestsOpened: number;
+  // Tournaments
+  activeTournament: {
+    tier: 'bronze' | 'silver' | 'gold' | 'diamond';
+    startedAt: number;
+    endsAt: number;
+    playerScore: number;
+  } | null;
+  tournamentBestScore: number;
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -200,6 +208,9 @@ interface PlayerStore extends PlayerStoreState {
   // Treasure Hunt
   addTreasureMapPiece: () => void;
   openTreasureChest: () => void;
+  // Tournaments
+  enterTournament: (tier: 'bronze' | 'silver' | 'gold' | 'diamond', playerScore: number) => void;
+  finishTournament: (finalRank: number) => void;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -271,6 +282,8 @@ export const usePlayerStore = create<PlayerStore>()(
       bossRushRunsCompleted: 0,
       treasureMapPieces: 0,
       treasureChestsOpened: 0,
+      activeTournament: null,
+      tournamentBestScore: 0,
 
       addCoins: (amount) =>
         set((s) => ({ coins: s.coins + amount })),
@@ -624,6 +637,28 @@ export const usePlayerStore = create<PlayerStore>()(
         set((s) => ({
           treasureMapPieces: Math.max(0, s.treasureMapPieces - 5),
           treasureChestsOpened: s.treasureChestsOpened + 1,
+        }));
+      },
+
+      enterTournament: (tier, playerScore) => {
+        const now = Date.now();
+        set({
+          activeTournament: {
+            tier,
+            startedAt: now,
+            endsAt: now + 24 * 60 * 60 * 1000,
+            playerScore,
+          },
+        });
+      },
+
+      finishTournament: (finalRank: number) => {
+        set((s) => ({
+          activeTournament: null,
+          tournamentBestScore:
+            s.tournamentBestScore === 0
+              ? finalRank
+              : Math.min(s.tournamentBestScore, finalRank),
         }));
       },
     }),

@@ -40,6 +40,8 @@ import { isBossRushUnlocked } from '../game/modes/BossRush';
 import { TreasureHuntModal } from '../components/TreasureHuntModal';
 import { LeaderboardModal } from '../components/LeaderboardModal';
 import { PIECES_REQUIRED } from '../game/rewards/TreasureHunt';
+import { TournamentModal } from '../components/TournamentModal';
+import { getHighestTier } from '../game/modes/Tournament';
 import { calculateOfflineReward, OfflineReward } from '../game/rewards/OfflineRewards';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
@@ -90,7 +92,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showBossRush, setShowBossRush] = useState(false);
   const [showTreasure, setShowTreasure] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showTournament, setShowTournament] = useState(false);
   const treasureMapPieces = usePlayerStore((s) => s.treasureMapPieces);
+  const activeTournament = usePlayerStore((s) => s.activeTournament);
   const [offlineReward, setOfflineReward] = useState<OfflineReward | null>(null);
 
   const seasonalTheme = getActiveSeasonalTheme();
@@ -560,6 +564,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 />
               </View>
             )}
+            {getHighestTier(highestLevel) !== null && (
+              <View style={styles.bottomButtonWrapper}>
+                <Button
+                  title={activeTournament ? 'Cup (Active)' : 'Cup'}
+                  onPress={() => setShowTournament(true)}
+                  variant={activeTournament ? 'secondary' : 'ghost'}
+                  size="small"
+                  style={styles.bottomButton}
+                />
+              </View>
+            )}
             {isFeatureUnlocked('achievements', highestLevel) && (
               <View style={styles.bottomButtonWrapper}>
                 <Button
@@ -727,6 +742,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <LeaderboardModal
         visible={showLeaderboard}
         onClose={() => setShowLeaderboard(false)}
+      />
+
+      {/* Tournament modal */}
+      <TournamentModal
+        visible={showTournament}
+        onClose={() => setShowTournament(false)}
       />
 
       {/* Offline reward modal */}
