@@ -151,6 +151,10 @@ interface PlayerStoreState {
   vipDailyClaimedDate: string | null;
   // Level skip tokens
   levelSkipTokens: number;
+  // Quest chains
+  claimedQuestChains: string[];
+  // Mega power-ups (from fusion)
+  megaPowerUps: { megabomb: number; megaRow: number; megaColor: number };
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -231,6 +235,11 @@ interface PlayerStore extends PlayerStoreState {
   // Level skip tokens
   addLevelSkipTokens: (count: number) => void;
   useLevelSkipToken: () => boolean;
+  // Quest chains
+  claimQuestChain: (chainId: string) => void;
+  // Fusion & trade
+  fusePowerUp: (source: 'bomb' | 'rowClear' | 'colorClear', sourceCost: number, result: 'megabomb' | 'megaRow' | 'megaColor') => boolean;
+  tradePowerUp: (from: 'bomb' | 'rowClear' | 'colorClear', fromCost: number, to: 'bomb' | 'rowClear' | 'colorClear', toAmount: number) => boolean;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -310,6 +319,8 @@ export const usePlayerStore = create<PlayerStore>()(
       vipUntil: null,
       vipDailyClaimedDate: null,
       levelSkipTokens: 0,
+      claimedQuestChains: [],
+      megaPowerUps: { megabomb: 0, megaRow: 0, megaColor: 0 },
 
       addCoins: (amount) =>
         set((s) => ({ coins: s.coins + amount })),
@@ -731,6 +742,37 @@ export const usePlayerStore = create<PlayerStore>()(
         const { levelSkipTokens } = get();
         if (levelSkipTokens <= 0) return false;
         set({ levelSkipTokens: levelSkipTokens - 1 });
+        return true;
+      },
+
+      claimQuestChain: (chainId: string) => {
+        set((s) => ({
+          claimedQuestChains: s.claimedQuestChains.includes(chainId)
+            ? s.claimedQuestChains
+            : [...s.claimedQuestChains, chainId],
+        }));
+      },
+
+      fusePowerUp: (source, sourceCost, result) => {
+        const { powerUps } = get();
+        if (powerUps[source] < sourceCost) return false;
+        set((s) => ({
+          powerUps: { ...s.powerUps, [source]: s.powerUps[source] - sourceCost },
+          megaPowerUps: { ...s.megaPowerUps, [result]: s.megaPowerUps[result] + 1 },
+        }));
+        return true;
+      },
+
+      tradePowerUp: (from, fromCost, to, toAmount) => {
+        const { powerUps } = get();
+        if (powerUps[from] < fromCost) return false;
+        set((s) => ({
+          powerUps: {
+            ...s.powerUps,
+            [from]: s.powerUps[from] - fromCost,
+            [to]: s.powerUps[to] + toAmount,
+          },
+        }));
         return true;
       },
     }),

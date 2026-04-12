@@ -44,6 +44,8 @@ import { TournamentModal } from '../components/TournamentModal';
 import { getHighestTier } from '../game/modes/Tournament';
 import { InboxModal } from '../components/InboxModal';
 import { VIPModal } from '../components/VIPModal';
+import { QuestChainModal } from '../components/QuestChainModal';
+import { PowerUpFusionModal } from '../components/PowerUpFusionModal';
 import { getUnclaimedCount, generateWelcomeMessage } from '../game/systems/Inbox';
 import { isVIPActive } from '../game/systems/VIPMembership';
 import { calculateOfflineReward, OfflineReward } from '../game/rewards/OfflineRewards';
@@ -99,6 +101,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showTournament, setShowTournament] = useState(false);
   const [showInbox, setShowInbox] = useState(false);
   const [showVIP, setShowVIP] = useState(false);
+  const [showQuestChains, setShowQuestChains] = useState(false);
+  const [showFusion, setShowFusion] = useState(false);
   const treasureMapPieces = usePlayerStore((s) => s.treasureMapPieces);
   const activeTournament = usePlayerStore((s) => s.activeTournament);
   const inboxMessages = usePlayerStore((s) => s.inboxMessages);
@@ -619,6 +623,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 style={styles.bottomButton}
               />
             </View>
+            <View style={styles.bottomButtonWrapper}>
+              <Button
+                title="Quests"
+                onPress={() => setShowQuestChains(true)}
+                variant="ghost"
+                size="small"
+                style={styles.bottomButton}
+              />
+            </View>
+            <View style={styles.bottomButtonWrapper}>
+              <Button
+                title="Fuse"
+                onPress={() => setShowFusion(true)}
+                variant="ghost"
+                size="small"
+                style={styles.bottomButton}
+              />
+            </View>
             {isFeatureUnlocked('achievements', highestLevel) && (
               <View style={styles.bottomButtonWrapper}>
                 <Button
@@ -804,6 +826,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <VIPModal
         visible={showVIP}
         onClose={() => setShowVIP(false)}
+      />
+
+      {/* Quest Chains modal */}
+      <QuestChainModal
+        visible={showQuestChains}
+        onClose={() => setShowQuestChains(false)}
+      />
+
+      {/* Power-Up Fusion modal */}
+      <PowerUpFusionModal
+        visible={showFusion}
+        onClose={() => setShowFusion(false)}
       />
 
       {/* Offline reward modal */}
