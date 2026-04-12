@@ -33,6 +33,10 @@ import { SkillRatingDisplay } from '../components/SkillRatingDisplay';
 import { AchievementShowcase } from '../components/AchievementShowcase';
 import { OfflineRewardModal } from '../components/OfflineRewardModal';
 import { LoginCalendarModal } from '../components/LoginCalendarModal';
+import { DailyDealModal } from '../components/DailyDealModal';
+import { getTodaysDeal, getTodayDealKey, isDealClaimed } from '../game/rewards/DailyDeal';
+import { BossRushModal } from '../components/BossRushModal';
+import { isBossRushUnlocked } from '../game/modes/BossRush';
 import { calculateOfflineReward, OfflineReward } from '../game/rewards/OfflineRewards';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
@@ -60,7 +64,7 @@ const TITLE_BLOCKS = [
 ];
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, piggyBankCoins, lastGiftDate, gamesPlayedToday, claimGift, lastPlayDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, addCoins } = usePlayerStore();
+  const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, piggyBankCoins, lastGiftDate, gamesPlayedToday, claimGift, lastPlayDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, addCoins, lastDealClaimed } = usePlayerStore();
   const { tutorialCompleted, completeTutorial, notificationsEnabled, comebackShownDate, setComebackShownDate } = useSettingsStore();
   const [showTutorial, setShowTutorial] = useState(!tutorialCompleted);
   const [showDailyReward, setShowDailyReward] = useState(false);
@@ -79,6 +83,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showShowcase, setShowShowcase] = useState(false);
   const [showOfflineReward, setShowOfflineReward] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showDailyDeal, setShowDailyDeal] = useState(false);
+  const [showBossRush, setShowBossRush] = useState(false);
   const [offlineReward, setOfflineReward] = useState<OfflineReward | null>(null);
 
   const seasonalTheme = getActiveSeasonalTheme();
@@ -429,6 +435,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <DailyQuestsCard visible={true} />
           )}
 
+          {/* Daily deal banner */}
+          {isFeatureUnlocked('shop', highestLevel) && !isDealClaimed(lastDealClaimed) && (
+            <TouchableOpacity
+              style={styles.dealBanner}
+              onPress={() => setShowDailyDeal(true)}
+              activeOpacity={0.85}
+            >
+              <View style={styles.dealBannerLeft}>
+                <GameIcon name="gift" size={22} color={COLORS.accentGold} />
+                <View>
+                  <Text style={styles.dealBannerTitle}>Daily Deal</Text>
+                  <Text style={styles.dealBannerSub}>
+                    {getTodaysDeal().name} — {getTodaysDeal().discountPercent}% off
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.dealBannerArrow}>
+                <Text style={styles.dealBannerArrowText}>›</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
           {/* Live event banners */}
           <EventBanner />
 
@@ -483,6 +511,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 <Button
                   title="Season"
                   onPress={() => navigation.navigate('BattlePass')}
+                  variant="ghost"
+                  size="small"
+                  style={styles.bottomButton}
+                />
+              </View>
+            )}
+            {isBossRushUnlocked(highestLevel) && (
+              <View style={styles.bottomButtonWrapper}>
+                <Button
+                  title="Boss Rush"
+                  onPress={() => setShowBossRush(true)}
                   variant="ghost"
                   size="small"
                   style={styles.bottomButton}
@@ -627,6 +666,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <LoginCalendarModal
         visible={showCalendar}
         onClose={() => setShowCalendar(false)}
+      />
+
+      {/* Daily deal modal */}
+      <DailyDealModal
+        visible={showDailyDeal}
+        onClose={() => setShowDailyDeal(false)}
+      />
+
+      {/* Boss Rush modal */}
+      <BossRushModal
+        visible={showBossRush}
+        onClose={() => setShowBossRush(false)}
+        onStart={() => {
+          setShowBossRush(false);
+          // Start with the first boss level
+          navigation.navigate('Game', { level: 25 });
+        }}
       />
 
       {/* Offline reward modal */}
@@ -832,6 +888,48 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: SPACING.xs,
     gap: SPACING.sm,
+  },
+  dealBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: RADII.md,
+    backgroundColor: `${COLORS.accentGold}12`,
+    borderWidth: 1,
+    borderColor: `${COLORS.accentGold}35`,
+    width: '100%',
+  },
+  dealBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  dealBannerTitle: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: COLORS.accentGold,
+    letterSpacing: 0.5,
+  },
+  dealBannerSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  dealBannerArrow: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: `${COLORS.accentGold}20`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dealBannerArrowText: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: COLORS.accentGold,
+    marginTop: -3,
   },
   bottomButtonWrapper: {
     flex: 1,

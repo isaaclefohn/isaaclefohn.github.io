@@ -121,6 +121,15 @@ interface PlayerStoreState {
   // Login Calendar
   calendarLastDay: number;
   calendarMonth: string | null;
+  // Daily Deal
+  lastDealClaimed: string | null;
+  // Avatars
+  ownedAvatars: string[];
+  equippedAvatar: string;
+  // Boss Rush
+  bossRushBestScore: number;
+  bossRushBestBosses: number;
+  bossRushRunsCompleted: number;
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -178,6 +187,13 @@ interface PlayerStore extends PlayerStoreState {
   claimWorldPerfect: (worldId: number) => void;
   // Login Calendar
   claimCalendarDay: (day: number, month: string) => void;
+  // Daily Deal
+  claimDailyDeal: (date: string) => void;
+  // Avatars
+  equipAvatar: (id: string) => void;
+  purchaseAvatar: (id: string) => void;
+  // Boss Rush
+  recordBossRushResult: (bosses: number, score: number) => void;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -241,6 +257,12 @@ export const usePlayerStore = create<PlayerStore>()(
       claimedWorldPerfects: [],
       calendarLastDay: 0,
       calendarMonth: null,
+      lastDealClaimed: null,
+      ownedAvatars: ['default'],
+      equippedAvatar: 'default',
+      bossRushBestScore: 0,
+      bossRushBestBosses: 0,
+      bossRushRunsCompleted: 0,
 
       addCoins: (amount) =>
         set((s) => ({ coins: s.coins + amount })),
@@ -562,6 +584,28 @@ export const usePlayerStore = create<PlayerStore>()(
 
       claimCalendarDay: (day: number, month: string) => {
         set({ calendarLastDay: day, calendarMonth: month });
+      },
+
+      claimDailyDeal: (date: string) => {
+        set({ lastDealClaimed: date });
+      },
+
+      equipAvatar: (id: string) => {
+        set({ equippedAvatar: id });
+      },
+
+      purchaseAvatar: (id: string) => {
+        set((s) => ({
+          ownedAvatars: s.ownedAvatars.includes(id) ? s.ownedAvatars : [...s.ownedAvatars, id],
+        }));
+      },
+
+      recordBossRushResult: (bosses: number, score: number) => {
+        set((s) => ({
+          bossRushBestScore: Math.max(s.bossRushBestScore, score),
+          bossRushBestBosses: Math.max(s.bossRushBestBosses, bosses),
+          bossRushRunsCompleted: s.bossRushRunsCompleted + 1,
+        }));
       },
     }),
     {

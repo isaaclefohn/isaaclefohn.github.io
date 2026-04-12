@@ -4,13 +4,15 @@
  * current progress, and performance metrics.
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { usePlayerStore } from '../store/playerStore';
 import { Modal } from './common/Modal';
 import { GameIcon } from './GameIcon';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
 import { formatScore, formatCompact } from '../utils/formatters';
+import { getAvatarFrame } from '../game/customization/Avatars';
+import { AvatarPickerModal } from './AvatarPickerModal';
 
 interface PlayerProfileCardProps {
   visible: boolean;
@@ -77,7 +79,11 @@ export const PlayerProfileCard: React.FC<PlayerProfileCardProps> = ({ visible, o
     zenGamesPlayed,
     totalPowerUpsUsed,
     battlePassXP,
+    equippedAvatar,
   } = usePlayerStore();
+
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const avatarFrame = getAvatarFrame(equippedAvatar);
 
   const rank = getRankTitle(highestLevel);
   const totalStars = Object.values(levelStars).reduce((a, b) => a + b, 0);
@@ -90,9 +96,22 @@ export const PlayerProfileCard: React.FC<PlayerProfileCardProps> = ({ visible, o
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scroll}>
         {/* Profile header */}
         <View style={styles.header}>
-          <View style={[styles.avatar, { borderColor: rank.color }]}>
-            <Text style={styles.avatarText}>{displayName[0]?.toUpperCase() ?? 'P'}</Text>
-          </View>
+          <TouchableOpacity
+            onPress={() => setShowAvatarPicker(true)}
+            activeOpacity={0.8}
+            style={[
+              styles.avatar,
+              {
+                borderColor: avatarFrame.color,
+                borderWidth: avatarFrame.borderWidth,
+              },
+            ]}
+          >
+            <GameIcon name={avatarFrame.icon as any} size={28} color={avatarFrame.color} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowAvatarPicker(true)} activeOpacity={0.8}>
+            <Text style={styles.editAvatarText}>Change Avatar</Text>
+          </TouchableOpacity>
           <Text style={styles.name}>{displayName}</Text>
           <View style={[styles.rankBadge, { backgroundColor: `${rank.color}20`, borderColor: `${rank.color}40` }]}>
             <GameIcon name="crown" size={12} color={rank.color} />
@@ -155,6 +174,11 @@ export const PlayerProfileCard: React.FC<PlayerProfileCardProps> = ({ visible, o
           <StatRow icon="gem" label="Gems" value={gems} color={COLORS.info} />
         </View>
       </ScrollView>
+
+      <AvatarPickerModal
+        visible={showAvatarPicker}
+        onClose={() => setShowAvatarPicker(false)}
+      />
     </Modal>
   );
 };
@@ -182,6 +206,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     color: COLORS.textPrimary,
+  },
+  editAvatarText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.accent,
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
   name: {
     fontSize: 20,
