@@ -54,6 +54,8 @@ import { DailyRouletteModal } from '../components/DailyRouletteModal';
 import { hasSpunToday } from '../game/challenges/DailyRoulette';
 import { StarterPackModal } from '../components/StarterPackModal';
 import { FlashOfferModal } from '../components/FlashOfferModal';
+import { FreeChestModal } from '../components/FreeChestModal';
+import { isFreeChestReady, getFreeChestTimeRemaining } from '../game/rewards/FreeChest';
 import {
   isStarterPackAvailable,
   STARTER_PACK_UNLOCK_LEVEL,
@@ -122,6 +124,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showDailyRoulette, setShowDailyRoulette] = useState(false);
   const [showStarterPack, setShowStarterPack] = useState(false);
   const [showFlashOffer, setShowFlashOffer] = useState(false);
+  const [showFreeChest, setShowFreeChest] = useState(false);
+  const freeChestLastClaimedAt = usePlayerStore((s) => s.freeChestLastClaimedAt);
+  const [nowTick, setNowTick] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  const freeChestReady = isFreeChestReady(freeChestLastClaimedAt, nowTick);
+  const freeChestMs = getFreeChestTimeRemaining(freeChestLastClaimedAt, nowTick);
+  const freeChestLabel = freeChestReady
+    ? 'Chest!'
+    : `Chest ${Math.floor(freeChestMs / 3_600_000)}h${Math.floor((freeChestMs % 3_600_000) / 60_000)
+        .toString()
+        .padStart(2, '0')}`;
   const activeSeason = getActiveEvent();
   const starterPackUnlockedAt = usePlayerStore((s) => s.starterPackUnlockedAt);
   const starterPackClaimed = usePlayerStore((s) => s.starterPackClaimed);
@@ -773,6 +789,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
             <View style={styles.bottomButtonWrapper}>
               <Button
+                title={freeChestLabel}
+                onPress={() => setShowFreeChest(true)}
+                variant={freeChestReady ? 'secondary' : 'ghost'}
+                size="small"
+                style={styles.bottomButton}
+              />
+            </View>
+            <View style={styles.bottomButtonWrapper}>
+              <Button
                 title="Mastery"
                 onPress={() => setShowBlockMastery(true)}
                 variant="ghost"
@@ -1038,6 +1063,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <FlashOfferModal
         visible={showFlashOffer}
         onClose={() => setShowFlashOffer(false)}
+      />
+
+      {/* Free Chest retention modal */}
+      <FreeChestModal
+        visible={showFreeChest}
+        onClose={() => setShowFreeChest(false)}
       />
     </SafeAreaView>
   );

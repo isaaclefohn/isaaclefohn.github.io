@@ -179,6 +179,8 @@ interface PlayerStoreState {
   starterPackClaimed: boolean;
   // Flash offers — per-bucket purchase tracking
   flashOfferPurchases: string[];
+  // Free chest — recurring reward timer
+  freeChestLastClaimedAt: number | null;
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -278,6 +280,8 @@ interface PlayerStore extends PlayerStoreState {
   claimStarterPack: () => void;
   // Flash offers
   recordFlashOfferPurchase: (key: string) => void;
+  // Free chest
+  claimFreeChest: () => void;
 }
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -369,6 +373,7 @@ export const usePlayerStore = create<PlayerStore>()(
       starterPackUnlockedAt: null,
       starterPackClaimed: false,
       flashOfferPurchases: [],
+      freeChestLastClaimedAt: null,
 
       addCoins: (amount) =>
         set((s) => ({ coins: s.coins + amount })),
@@ -886,6 +891,10 @@ export const usePlayerStore = create<PlayerStore>()(
             ? s.flashOfferPurchases
             : [...s.flashOfferPurchases, key],
         }));
+      },
+
+      claimFreeChest: () => {
+        set({ freeChestLastClaimedAt: Date.now() });
       },
     }),
     {
