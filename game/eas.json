@@ -26,7 +26,10 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID"
+        "//": "Set ascAppId to your App Store Connect numeric app ID once the app record is created in App Store Connect. Until then `eas submit` will prompt for it.",
+        "appleId": "",
+        "ascAppId": "",
+        "appleTeamId": ""
       }
     }
   }

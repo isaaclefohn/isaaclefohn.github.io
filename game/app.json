@@ -24,6 +24,24 @@
       },
       "package": "com.isaaclefohn.colorblockblast"
     },
-    "plugins": []
+    "plugins": [
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-9923892524770034~9844822777",
+          "iosAppId": "ca-app-pub-9923892524770034~9844822777",
+          "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
+        }
+      ],
+      "@sentry/react-native/expo",
+      "react-native-iap",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#1a1a2e"
+        }
+      ]
+    ]
   }
 }

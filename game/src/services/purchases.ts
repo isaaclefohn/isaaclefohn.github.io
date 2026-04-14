@@ -1,10 +1,131 @@
 /**
  * In-app purchase service.
  * Handles Apple IAP product definitions, purchase flow, and receipt validation.
- * Falls back gracefully when IAP is not available (e.g., simulator).
+ * Falls back gracefully when IAP is not available (e.g., Expo Go, simulator).
  */
 
+import Constants from 'expo-constants';
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
+const isExpoGo = Constants.appOwnership === 'expo';
+
+// Lazy-loaded native module. Stays null in Expo Go.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let IAP: any = null;
+let iapInitialized = false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let purchaseUpdateSubscription: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let purchaseErrorSubscription: any = null;
+
+function loadIAP(): boolean {
+  if (IAP || isExpoGo) return Boolean(IAP);
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    IAP = require('react-native-iap');
+    return true;
+  } catch {
+    IAP = null;
+    return false;
+  }
+}
+
+/** Initialize the IAP connection and fetch the product catalog. */
+export async function initializePurchases(): Promise<void> {
+  if (isExpoGo) return;
+  if (iapInitialized) return;
+  if (!loadIAP() || !IAP) return;
+
+  try {
+    await IAP.initConnection();
+    iapInitialized = true;
+
+    // Subscribe to purchase events so interrupted/background purchases still resolve.
+    purchaseUpdateSubscription = IAP.purchaseUpdatedListener(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (purchase: any) => {
+        const receipt = purchase?.transactionReceipt;
+        if (!receipt) return;
+        try {
+          await validateReceipt(receipt, purchase.productId);
+        } finally {
+          try {
+            await IAP.finishTransaction({ purchase, isConsumable: true });
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    );
+
+    purchaseErrorSubscription = IAP.purchaseErrorListener(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error: any) => {
+        console.warn('[IAP] purchase error', error?.code, error?.message);
+      }
+    );
+
+    // Warm up the product catalog so the store screen renders fast.
+    try {
+      await IAP.getProducts({ skus: PRODUCTS.map((p) => p.id) });
+    } catch (err) {
+      console.warn('[IAP] getProducts failed', err);
+    }
+  } catch (err) {
+    console.warn('[IAP] initConnection failed', err);
+  }
+}
+
+/** Tear down IAP listeners. Normally not called — kept for testability. */
+export async function teardownPurchases(): Promise<void> {
+  try {
+    purchaseUpdateSubscription?.remove?.();
+    purchaseErrorSubscription?.remove?.();
+  } catch {
+    /* ignore */
+  }
+  if (IAP && iapInitialized) {
+    try {
+      await IAP.endConnection();
+    } catch {
+      /* ignore */
+    }
+    iapInitialized = false;
+  }
+}
+
+/**
+ * Kick off a purchase flow for the given product ID. Resolves when the
+ * platform has received the request — the actual credit happens inside
+ * the purchaseUpdatedListener after successful receipt validation.
+ */
+export async function requestPurchase(productId: string): Promise<boolean> {
+  if (isExpoGo || !loadIAP() || !IAP) {
+    console.warn('[IAP] not available, cannot purchase', productId);
+    return false;
+  }
+  if (!iapInitialized) await initializePurchases();
+  try {
+    await IAP.requestPurchase({ sku: productId, andDangerouslyFinishTransactionAutomaticallyIOS: false });
+    return true;
+  } catch (err) {
+    console.warn('[IAP] requestPurchase failed', err);
+    return false;
+  }
+}
+
+/** Fetch the live product catalog from the store. Returns empty array on failure. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function fetchStoreProducts(): Promise<any[]> {
+  if (isExpoGo || !loadIAP() || !IAP) return [];
+  if (!iapInitialized) await initializePurchases();
+  try {
+    return await IAP.getProducts({ skus: PRODUCTS.map((p) => p.id) });
+  } catch (err) {
+    console.warn('[IAP] fetchStoreProducts failed', err);
+    return [];
+  }
+}
 
 /** Product catalog */
 export interface Product {
