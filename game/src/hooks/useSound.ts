@@ -46,24 +46,21 @@ const HAPTIC_MAP: Record<SoundType, HapticType> = {
   select: 'light',
 };
 
-// Sound asset map — point each sound type to its file.
-// Uses require() so Metro bundles them. If a file doesn't exist yet,
-// we catch the error and skip audio (haptics still work).
-const SOUND_ASSETS: Partial<Record<SoundType, number>> = {};
-
-// Try to require sound files — gracefully handle if they don't exist yet
-try {
-  // These will work once audio files are added to assets/sounds/
-  // SOUND_ASSETS.place = require('../../assets/sounds/place.mp3');
-  // SOUND_ASSETS.clear = require('../../assets/sounds/clear.mp3');
-  // SOUND_ASSETS.combo = require('../../assets/sounds/combo.mp3');
-  // SOUND_ASSETS.gameOver = require('../../assets/sounds/game-over.mp3');
-  // SOUND_ASSETS.levelWin = require('../../assets/sounds/level-win.mp3');
-  // SOUND_ASSETS.button = require('../../assets/sounds/button.mp3');
-  // SOUND_ASSETS.select = require('../../assets/sounds/select.mp3');
-} catch {
-  // Sound files not available yet — haptics-only mode
-}
+// Sound asset map — each SoundType points to its bundled WAV file.
+// Generated procedurally by scripts/generate-sounds.js into assets/sounds/;
+// the filenames are stable so higher-quality CC0 assets can replace them
+// later without touching this file. require() lets Metro bundle them with
+// the app. If a file ever goes missing the Audio.Sound.createAsync call
+// below will throw and we skip that slot — haptics still fire.
+const SOUND_ASSETS: Partial<Record<SoundType, number>> = {
+  place: require('../../assets/sounds/place.wav'),
+  clear: require('../../assets/sounds/clear.wav'),
+  combo: require('../../assets/sounds/combo.wav'),
+  gameOver: require('../../assets/sounds/game-over.wav'),
+  levelWin: require('../../assets/sounds/level-win.wav'),
+  button: require('../../assets/sounds/button.wav'),
+  select: require('../../assets/sounds/select.wav'),
+};
 
 export function useSound() {
   const { soundEnabled, hapticsEnabled, hapticIntensity, soundVolume } = useSettingsStore();
