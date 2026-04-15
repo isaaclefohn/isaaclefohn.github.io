@@ -77,6 +77,7 @@ export const FlashOfferModal: React.FC<FlashOfferModalProps> = ({
 
   return (
     <Modal visible={visible} onClose={onClose} dismissable>
+      <View style={styles.body}>
       <View style={styles.headerRow}>
         <View style={[styles.discountBadge, { backgroundColor: offer.accentColor }]}>
           <Text style={styles.discountText}>-{offer.discount}%</Text>
@@ -158,11 +159,15 @@ export const FlashOfferModal: React.FC<FlashOfferModalProps> = ({
           size="large"
         />
       </View>
+      </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  body: {
+    width: '100%',
+  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

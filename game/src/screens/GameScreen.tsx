@@ -10,6 +10,7 @@ import { useSound } from '../hooks/useSound';
 import { usePlayerStore } from '../store/playerStore';
 import { GameBoard } from '../components/GameBoard';
 import { PieceTray, DragEvent } from '../components/PieceTray';
+import { HoldSlot } from '../components/HoldSlot';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { Piece, getPieceCells, getPieceCentroid } from '../game/engine/Piece';
 import { canPlace, findBestPlacement } from '../game/engine/Board';
@@ -92,6 +93,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     gameState,
     levelConfig,
     selectedPieceIndex,
+    heldPiece,
     stars,
     loadLevel,
     loadEndless,
@@ -100,6 +102,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     placePiece,
     rotatePiece,
     swapPieces,
+    holdPiece,
+    retrieveHeldPiece,
     applyPowerUp,
     pauseGame,
     resumeGame,
@@ -858,6 +862,28 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           onDragEnd={handleDragEnd}
         />
         <View style={styles.trayActions}>
+          <HoldSlot
+            heldPiece={heldPiece}
+            canHold={selectedPieceIndex !== null && gameState.status === 'playing'}
+            canRetrieve={
+              heldPiece !== null &&
+              gameState.status === 'playing' &&
+              gameState.availablePieces.some((p) => p === null)
+            }
+            onPress={() => {
+              if (selectedPieceIndex !== null) {
+                if (holdPiece(selectedPieceIndex)) {
+                  setGhostCells([]);
+                  playSound('select');
+                }
+              } else if (heldPiece) {
+                if (retrieveHeldPiece()) {
+                  setGhostCells([]);
+                  playSound('select');
+                }
+              }
+            }}
+          />
           <Button
             title="Undo"
             onPress={() => {

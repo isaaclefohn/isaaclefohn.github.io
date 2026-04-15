@@ -29,6 +29,8 @@ interface GameStore {
   undoSnapshot: GameState | null;
   /** Whether undo has been used this level */
   undoUsed: boolean;
+  /** Piece stashed in the hold slot for later use */
+  heldPiece: Piece | null;
 
   // Actions
   startLevel: (config: LevelConfig) => void;
@@ -36,6 +38,10 @@ interface GameStore {
   placePiece: (pieceIndex: number, row: number, col: number) => boolean;
   rotatePiece: (pieceIndex: number) => boolean;
   swapPieces: () => boolean;
+  /** Swap a tray piece with the hold slot. Used to save a piece for later. */
+  holdPiece: (pieceIndex: number) => boolean;
+  /** Retrieve the held piece into the first empty tray slot. */
+  retrieveHeldPiece: () => boolean;
   applyPowerUp: (type: PowerUpType, row: number, col: number, colorIndex?: number) => { cellsCleared: number } | null;
   pauseGame: () => void;
   resumeGame: () => void;
@@ -62,11 +68,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedPieceIndex: null,
   undoSnapshot: null,
   undoUsed: false,
+  heldPiece: null,
 
   startLevel: (config: LevelConfig) => {
     const rng = new SeededRandom(config.seed);
     const gameState = initGame(config);
-    set({ gameState, levelConfig: config, rng, selectedPieceIndex: null, undoSnapshot: null, undoUsed: false });
+    set({ gameState, levelConfig: config, rng, selectedPieceIndex: null, undoSnapshot: null, undoUsed: false, heldPiece: null });
   },
 
   selectPiece: (index: number | null) => {
@@ -74,7 +81,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   placePiece: (pieceIndex: number, row: number, col: number): boolean => {
-    const { gameState, rng, levelConfig } = get();
+    const { gameState, rng, levelConfig, heldPiece } = get();
     if (!gameState || !rng || !levelConfig) return false;
     if (gameState.status !== 'playing') return false;
 
@@ -87,7 +94,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         row,
         col,
         rng,
-        levelConfig.piecePool
+        levelConfig.piecePool,
+        heldPiece,
       );
       set({ gameState: newState, selectedPieceIndex: null, undoSnapshot: snapshot });
       return true;
@@ -140,6 +148,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return true;
   },
 
+  holdPiece: (pieceIndex: number): boolean => {
+    const { gameState, heldPiece } = get();
+    if (!gameState || gameState.status !== 'playing') return false;
+    const piece = gameState.availablePieces[pieceIndex];
+    if (!piece) return false;
+    // Swap tray slot with hold slot. If hold was empty, the tray slot becomes null.
+    const newAvailable = [...gameState.availablePieces];
+    newAvailable[pieceIndex] = heldPiece;
+    set({
+      gameState: { ...gameState, availablePieces: newAvailable },
+      heldPiece: piece,
+      selectedPieceIndex: null,
+    });
+    return true;
+  },
+
+  retrieveHeldPiece: (): boolean => {
+    const { gameState, heldPiece } = get();
+    if (!gameState || gameState.status !== 'playing' || !heldPiece) return false;
+    const emptyIdx = gameState.availablePieces.findIndex((p) => p === null);
+    if (emptyIdx === -1) return false;
+    const newAvailable = [...gameState.availablePieces];
+    newAvailable[emptyIdx] = heldPiece;
+    set({
+      gameState: { ...gameState, availablePieces: newAvailable },
+      heldPiece: null,
+      selectedPieceIndex: emptyIdx,
+    });
+    return true;
+  },
+
   applyPowerUp: (type: PowerUpType, row: number, col: number, colorIndex?: number) => {
     const { gameState } = get();
     if (!gameState || gameState.status !== 'playing') return null;
@@ -165,9 +204,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const scoreEvent = scorePlacement(result.cellsCleared);
     const newScore = gameState.score + scoreEvent.points;
 
-    // Re-check game state after power-up
+    // Re-check game state after power-up (held piece is considered too)
+    const { heldPiece } = get();
     const remainingPieces = gameState.availablePieces.filter((p): p is Piece => p !== null);
-    const gameOver = remainingPieces.length > 0 && isGameOver(result.grid, remainingPieces);
+    const gameOverPool = heldPiece ? [...remainingPieces, heldPiece] : remainingPieces;
+    const gameOver = gameOverPool.length > 0 && isGameOver(result.grid, gameOverPool);
 
     set({
       gameState: {

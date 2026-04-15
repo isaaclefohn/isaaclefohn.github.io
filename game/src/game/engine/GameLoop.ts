@@ -97,7 +97,10 @@ export function processTurn(
   row: number,
   col: number,
   rng: SeededRandom,
-  piecePool: PieceType[]
+  piecePool: PieceType[],
+  /** Optional held piece — if present, its placeability is considered
+   *  during game-over detection so a held piece can't be stranded. */
+  heldPiece: Piece | null = null,
 ): GameState {
   const piece = state.availablePieces[pieceIndex];
   if (!piece) throw new Error(`No piece at index ${pieceIndex}`);
@@ -139,8 +142,9 @@ export function processTurn(
   const remainingPieces = newAvailable.filter((p): p is Piece => p !== null);
   if (remainingPieces.length === 0) {
     const newSet = generatePieceSet(rng, piecePool);
-    // Check for game over with the new set
-    const gameOver = isGameOver(result.grid, newSet);
+    // Check for game over with the new set (plus any held piece)
+    const gameOverPool = heldPiece ? [...newSet, heldPiece] : newSet;
+    const gameOver = isGameOver(result.grid, gameOverPool);
     // Check for win
     const won = checkObjective(state.objective, newScore);
 
@@ -160,8 +164,9 @@ export function processTurn(
     };
   }
 
-  // Check for game over with remaining pieces
-  const gameOver = isGameOver(result.grid, remainingPieces);
+  // Check for game over with remaining pieces (plus any held piece)
+  const gameOverPool = heldPiece ? [...remainingPieces, heldPiece] : remainingPieces;
+  const gameOver = isGameOver(result.grid, gameOverPool);
   const won = checkObjective(state.objective, newScore);
 
   return {

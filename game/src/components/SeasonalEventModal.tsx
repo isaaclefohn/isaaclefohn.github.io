@@ -41,8 +41,12 @@ export const SeasonalEventModal: React.FC<SeasonalEventModalProps> = ({
   if (!event) {
     return (
       <Modal visible={visible} onClose={onClose} dismissable>
-        <Text style={styles.title}>No Active Event</Text>
-        <Text style={styles.subtitle}>Check back soon for the next seasonal event!</Text>
+        <View style={styles.body}>
+          <Text style={[styles.title, { textAlign: 'center' }]}>No Active Event</Text>
+          <Text style={[styles.subtitle, { textAlign: 'center' }]}>
+            Check back soon for the next seasonal event!
+          </Text>
+        </View>
       </Modal>
     );
   }
@@ -72,6 +76,7 @@ export const SeasonalEventModal: React.FC<SeasonalEventModalProps> = ({
 
   return (
     <Modal visible={visible} onClose={onClose} dismissable>
+      <View style={styles.body}>
       <View style={[styles.header, { borderColor: event.color }]}>
         <View style={[styles.iconCircle, { backgroundColor: `${event.color}20` }]}>
           <GameIcon name={event.icon as any} size={24} color={event.color} />
@@ -173,11 +178,15 @@ export const SeasonalEventModal: React.FC<SeasonalEventModalProps> = ({
           );
         })}
       </ScrollView>
+      </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  body: {
+    width: '100%',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
