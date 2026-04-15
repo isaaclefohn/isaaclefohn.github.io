@@ -1070,6 +1070,28 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           </View>
         )}
 
+        {/* "Oops Shield" — if the player still has their one free undo
+            available at game-over, offer it right here. App Store reviews
+            of Block Blast / Woody Puzzle consistently highlight the
+            "undo the move that killed me" escape hatch as the single
+            most-wanted feature. We already track a one-shot undo
+            snapshot on every placement, so this is essentially free. */}
+        {!isEndless && canUndo() && (
+          <Button
+            title={isDaily ? 'Oops! Undo Last Move' : 'Oops! Undo (Free)'}
+            onPress={() => {
+              if (undoLastMove()) {
+                setShowLoseModal(false);
+                setGhostCells([]);
+                playSound('combo');
+              }
+            }}
+            variant="primary"
+            size="medium"
+            style={styles.continueButton}
+          />
+        )}
+
         {/* Continue button — near-miss only, costs 10 gems */}
         {!isEndless && !isDaily && !continueUsed && gameState.score >= levelConfig.objective.target * 0.7 && gems >= 10 && (
           <Button
