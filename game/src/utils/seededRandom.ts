@@ -29,6 +29,13 @@ export class SeededRandom {
     return array[Math.floor(this.next() * array.length)];
   }
 
+  /** Create a copy with the same internal state (for peeking without advancing) */
+  clone(): SeededRandom {
+    const copy = new SeededRandom(0);
+    copy.state = this.state;
+    return copy;
+  }
+
   /** Shuffles an array in place (Fisher-Yates) */
   shuffle<T>(array: T[]): T[] {
     for (let i = array.length - 1; i > 0; i--) {

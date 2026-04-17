@@ -11,6 +11,7 @@ import { usePlayerStore } from '../store/playerStore';
 import { GameBoard } from '../components/GameBoard';
 import { PieceTray, DragEvent } from '../components/PieceTray';
 import { HoldSlot } from '../components/HoldSlot';
+import { NextPiecesPreview } from '../components/NextPiecesPreview';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { Piece, getPieceCells, getPieceCentroid } from '../game/engine/Piece';
 import { canPlace, findBestPlacement } from '../game/engine/Board';
@@ -104,6 +105,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     swapPieces,
     holdPiece,
     retrieveHeldPiece,
+    peekNextPieces,
     applyPowerUp,
     pauseGame,
     resumeGame,
@@ -897,7 +899,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             disabled={!canUndo() || gameState.status !== 'playing'}
           />
           <Button
-            title={gameState.swapsUsed === 0 ? 'Swap' : 'Swap'}
+            title="Swap"
             onPress={() => {
               swapPieces();
               setGhostCells([]);
@@ -906,6 +908,35 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             variant="ghost"
             size="small"
             disabled={gameState.status !== 'playing'}
+          />
+          <Button
+            title="Hint"
+            onPress={() => {
+              const state = gameState;
+              if (!state || state.status !== 'playing') return;
+              const idx = selectedPieceIndex ?? state.availablePieces.findIndex(p => p !== null);
+              const piece = idx >= 0 ? state.availablePieces[idx] : null;
+              if (!piece) return;
+              const best = findBestPlacement(state.grid, piece);
+              if (best) {
+                const cells = getPieceCells(piece);
+                setHintCells(cells.map(c => ({
+                  row: best.row + c.row,
+                  col: best.col + c.col,
+                  colorIndex: piece.colorIndex,
+                })));
+                if (idx >= 0 && selectedPieceIndex === null) selectPiece(idx);
+                playSound('select');
+                setTimeout(() => setHintCells([]), 3000);
+              }
+            }}
+            variant="ghost"
+            size="small"
+            disabled={gameState.status !== 'playing'}
+          />
+          <NextPiecesPreview
+            pieces={peekNextPieces()}
+            visible={gameState.status === 'playing' && gameState.availablePieces.some(p => p !== null)}
           />
           {selectedPieceIndex !== null && (
             <Text style={styles.rotateHint}>Tap piece to rotate</Text>

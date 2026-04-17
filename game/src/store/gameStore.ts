@@ -52,6 +52,9 @@ interface GameStore {
   /** Continue from game over — gives fresh pieces and resumes play */
   continueGame: () => boolean;
 
+  /** Peek at what pieces come next (without advancing the RNG) */
+  peekNextPieces: () => Piece[];
+
   // Derived getters
   getAvailablePieces: () => (Piece | null)[];
   getScore: () => number;
@@ -271,6 +274,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPieceIndex: null,
     });
     return true;
+  },
+
+  peekNextPieces: () => {
+    const { rng, levelConfig } = get();
+    if (!rng || !levelConfig) return [];
+    const peekRng = rng.clone();
+    return generatePieceSet(peekRng, levelConfig.piecePool);
   },
 
   getAvailablePieces: () => get().gameState?.availablePieces ?? [],
