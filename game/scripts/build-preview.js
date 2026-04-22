@@ -42,22 +42,21 @@ if (fs.existsSync(indexPath)) {
   // the instant the HTML lands, before the JS bundle has parsed and rendered.
   // Also surface any runtime error so a blank page is never silent.
   if (!html.includes('id="bootSplash"')) {
-    const bootFragment =
-      '<div id="root"></div>\n' +
-      '    <div id="bootSplash" style="position:fixed;inset:0;background:#0F0E1A;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8B89A6;font-family:system-ui,-apple-system,sans-serif;font-size:12px;letter-spacing:4px;font-weight:700;z-index:-1;">\n' +
-      '      <div>LOADING</div>\n' +
-      '      <div id="bootError" style="margin-top:16px;max-width:80%;font-size:11px;letter-spacing:0;color:#FF3B5C;text-align:center;white-space:pre-wrap;"></div>\n' +
-      '    </div>\n' +
-      '    <script>\n' +
-      "      window.addEventListener('error', function (e) {\n" +
-      "        var box = document.getElementById('bootError');\n" +
-      "        if (box) box.textContent = (e.message || 'Unknown error') + '\\n' + (e.filename || '') + ':' + (e.lineno || '');\n" +
-      '      });\n' +
-      "      window.addEventListener('unhandledrejection', function (e) {\n" +
-      "        var box = document.getElementById('bootError');\n" +
-      "        if (box) box.textContent = 'Unhandled rejection: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason));\n" +
-      '      });\n' +
-      '    </script>';
+    const bootFragment = `<div id="root"></div>
+    <div id="bootSplash" style="position:fixed;inset:0;background:#0F0E1A;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8B89A6;font-family:system-ui,-apple-system,sans-serif;font-size:12px;letter-spacing:4px;font-weight:700;z-index:-1;">
+      <div>LOADING</div>
+      <div id="bootError" style="margin-top:16px;max-width:80%;font-size:11px;letter-spacing:0;color:#FF3B5C;text-align:center;white-space:pre-wrap;"></div>
+    </div>
+    <script>
+      window.addEventListener('error', function (e) {
+        var box = document.getElementById('bootError');
+        if (box) box.textContent = (e.message || 'Unknown error') + '\\n' + (e.filename || '') + ':' + (e.lineno || '');
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var box = document.getElementById('bootError');
+        if (box) box.textContent = 'Unhandled rejection: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason));
+      });
+    </script>`;
     html = html.replace('<div id="root"></div>', bootFragment);
   }
 

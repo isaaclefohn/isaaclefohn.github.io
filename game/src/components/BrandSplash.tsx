@@ -1,14 +1,8 @@
-/**
- * Animated brand reveal shown once per session on cold start.
- * Six colored blocks fall into place forming the Chroma Drop mark,
- * then the title and tagline fade in. Auto-dismisses after ~1.9s.
- */
-
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { View, StyleSheet, Animated, Easing } from 'react-native';
 import { COLORS, RADII } from '../utils/constants';
 
-const MARK_BLOCKS = [
+const MARK_COLORS = [
   COLORS.blocks[0],
   COLORS.blocks[4],
   COLORS.blocks[2],
@@ -22,14 +16,37 @@ interface BrandSplashProps {
 }
 
 export const BrandSplash: React.FC<BrandSplashProps> = ({ onDone }) => {
-  const blockAnims = useRef(MARK_BLOCKS.map(() => new Animated.Value(0))).current;
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+  const calledRef = useRef(false);
+
+  const blockAnims = useRef(MARK_COLORS.map(() => new Animated.Value(0))).current;
   const settleAnim = useRef(new Animated.Value(0)).current;
   const titleOpacity = useRef(new Animated.Value(0)).current;
   const titleTranslate = useRef(new Animated.Value(12)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(1)).current;
 
+  const blockInterpolations = useMemo(
+    () =>
+      blockAnims.map((anim) => ({
+        translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-120, 0] }),
+        opacity: anim.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 1] }),
+        scale: Animated.multiply(
+          anim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }),
+          settleAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.08, 1] }),
+        ),
+      })),
+    [blockAnims, settleAnim],
+  );
+
   useEffect(() => {
+    const finish = () => {
+      if (calledRef.current) return;
+      calledRef.current = true;
+      onDoneRef.current();
+    };
+
     const drops = blockAnims.map((anim, i) =>
       Animated.timing(anim, {
         toValue: 1,
@@ -40,8 +57,8 @@ export const BrandSplash: React.FC<BrandSplashProps> = ({ onDone }) => {
       }),
     );
 
-    Animated.sequence([
-      Animated.stagger(0, drops),
+    const seq = Animated.sequence([
+      Animated.parallel(drops),
       Animated.spring(settleAnim, {
         toValue: 1,
         tension: 180,
@@ -49,11 +66,7 @@ export const BrandSplash: React.FC<BrandSplashProps> = ({ onDone }) => {
         useNativeDriver: true,
       }),
       Animated.parallel([
-        Animated.timing(titleOpacity, {
-          toValue: 1,
-          duration: 320,
-          useNativeDriver: true,
-        }),
+        Animated.timing(titleOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
         Animated.spring(titleTranslate, {
           toValue: 0,
           tension: 140,
@@ -61,43 +74,25 @@ export const BrandSplash: React.FC<BrandSplashProps> = ({ onDone }) => {
           useNativeDriver: true,
         }),
       ]),
-      Animated.timing(taglineOpacity, {
-        toValue: 1,
-        duration: 260,
-        useNativeDriver: true,
-      }),
+      Animated.timing(taglineOpacity, { toValue: 1, duration: 260, useNativeDriver: true }),
       Animated.delay(420),
-      Animated.timing(overlayOpacity, {
-        toValue: 0,
-        duration: 320,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onDone();
-    });
+      Animated.timing(overlayOpacity, { toValue: 0, duration: 320, useNativeDriver: true }),
+    ]);
 
-    // Safety fallback: always dismiss after 3s even if the animation is
-    // interrupted or the native driver is unavailable (e.g. web).
-    const fallback = setTimeout(onDone, 3000);
-    return () => clearTimeout(fallback);
+    seq.start(finish);
+    const fallback = setTimeout(finish, 3000);
+
+    return () => {
+      clearTimeout(fallback);
+      seq.stop();
+    };
   }, []);
 
   return (
     <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} pointerEvents="none">
       <View style={styles.markRow}>
-        {MARK_BLOCKS.map((color, i) => {
-          const translateY = blockAnims[i].interpolate({
-            inputRange: [0, 1],
-            outputRange: [-120, 0],
-          });
-          const opacity = blockAnims[i].interpolate({
-            inputRange: [0, 0.2, 1],
-            outputRange: [0, 1, 1],
-          });
-          const scale = Animated.multiply(
-            blockAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }),
-            settleAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.08, 1] }),
-          );
+        {MARK_COLORS.map((color, i) => {
+          const { translateY, opacity, scale } = blockInterpolations[i];
           return (
             <Animated.View
               key={i}
@@ -115,10 +110,7 @@ export const BrandSplash: React.FC<BrandSplashProps> = ({ onDone }) => {
         })}
       </View>
       <Animated.Text
-        style={[
-          styles.title,
-          { opacity: titleOpacity, transform: [{ translateY: titleTranslate }] },
-        ]}
+        style={[styles.title, { opacity: titleOpacity, transform: [{ translateY: titleTranslate }] }]}
       >
         CHROMA DROP
       </Animated.Text>
@@ -128,9 +120,6 @@ export const BrandSplash: React.FC<BrandSplashProps> = ({ onDone }) => {
     </Animated.View>
   );
 };
-
-const BLOCK_SIZE = 28;
-const BLOCK_GAP = 6;
 
 const styles = StyleSheet.create({
   overlay: {
@@ -142,12 +131,12 @@ const styles = StyleSheet.create({
   },
   markRow: {
     flexDirection: 'row',
-    gap: BLOCK_GAP,
+    gap: 6,
     marginBottom: 28,
   },
   block: {
-    width: BLOCK_SIZE,
-    height: BLOCK_SIZE,
+    width: 28,
+    height: 28,
     borderRadius: RADII.sm,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,

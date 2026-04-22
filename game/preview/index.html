@@ -40,7 +40,6 @@
       <div id="bootError" style="margin-top:16px;max-width:80%;font-size:11px;letter-spacing:0;color:#FF3B5C;text-align:center;white-space:pre-wrap;"></div>
     </div>
     <script>
-      // Surface any script errors so a blank page is never silent.
       window.addEventListener('error', function (e) {
         var box = document.getElementById('bootError');
         if (box) box.textContent = (e.message || 'Unknown error') + '\n' + (e.filename || '') + ':' + (e.lineno || '');
@@ -50,6 +49,6 @@
         if (box) box.textContent = 'Unhandled rejection: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason));
       });
     </script>
-  <script src="./_expo/static/js/web/AppEntry-ef7216128fae95d30756196e65edcbd2.js" defer></script>
+  <script src="./_expo/static/js/web/AppEntry-d324345422691e7c7a3514146495062f.js" defer></script>
 </body>
 </html>
