@@ -89,5 +89,35 @@ const PROJECTS = [
                 <a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/pnw-banks/build_comp_table.py" target="_blank" rel="noopener">View Python source</a>
             </div>
         `
+    },
+    {
+        id: 'stock-pitch-banr',
+        type: 'Stock Pitch',
+        title: 'Long BANR — Buy-Side Pitch Memo (Banner Corporation)',
+        hook: 'Formal 2-page buy-side pitch with triangulated price target. Extends the PNW regional-bank screen into an actionable long recommendation — best-in-class ROE, discount to peers, capital strength, and M&A optionality.',
+        tools: ['Python', 'ReportLab', 'SEC EDGAR API', 'Valuation', 'Comparable Analysis', 'Pitch Memo'],
+        status: 'published',
+        details: `
+            <p><strong>Thesis in one line:</strong> The market is applying a blanket regional-bank discount to a structurally superior franchise — BANR's ROE is 43% higher than COLB's yet it trades at a 12% discount on P/E.</p>
+            <img src="projects/stock-pitch-banr/banr_pitch_chart.png" alt="BANR 5-year price rebased to 100 vs KRE regional-bank ETF, and peer P/E comparison showing BANR trades at discount" loading="lazy">
+            <div class="project-kpis">
+                <div class="project-kpi"><span class="project-kpi-label">Rating</span><span class="project-kpi-value">BUY</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Current Price</span><span class="project-kpi-value">$67.76</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Price Target</span><span class="project-kpi-value">$82.02</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Upside</span><span class="project-kpi-value">+21.1%</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">P/E (trailing)</span><span class="project-kpi-value">11.4×</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">ROE</span><span class="project-kpi-value">10.04%</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">5Y Return vs KRE</span><span class="project-kpi-value">+32.8% vs +11.7%</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Div Yield</span><span class="project-kpi-value">3.09%</span></div>
+            </div>
+            <p><strong>Valuation — triangulated to $82.02:</strong> Three independent methods converge on a similar range, reinforcing conviction. (1) Peer P/E re-rate to 13.5× average → $80.22. (2) Historical BANR P/E mean ~13.5× → $80.22. (3) P/B re-rate to 1.5× for a 10%-ROE bank → $85.42. Blended target = $82.02 (+21.1% upside).</p>
+            <p><strong>Four-part thesis:</strong> (1) Best-in-class ROE trading at a discount — quality should trade at or above peers, not below. (2) Organic-growth franchise with no integration drag — structurally lower-risk than COLB's post-merger synergy execution. (3) Equity/assets of 11.9% provides capital buffer for dividends, buybacks, and M&A optionality. (4) 3.09% dividend yield is well-covered and provides real income while waiting for multiple re-rating.</p>
+            <p><strong>Risks &amp; mitigants:</strong> CRE stress (community-bank CRE is a different risk profile than money-center exposure), deposit outflow (LDR of 78% leaves funding room), regional-bank contagion (capital ratios materially above SVB-type failures), NIM compression (affects peers equally — relative position preserved).</p>
+            <p><strong>Approach:</strong> Pitch-memo format follows sell-side convention: recommendation header box (rating/target/upside), situation paragraph, numbered thesis, catalysts (6–12 month), triangulated valuation table, risks &amp; mitigants table, peer metrics snapshot, bottom line, disclosures. All financial inputs flow live from SEC EDGAR XBRL + yfinance via the reused PNW-banks pipeline — rerun <code>build_pitch.py</code> and the whole memo regenerates end-to-end with current data.</p>
+            <div class="project-links">
+                <a href="projects/stock-pitch-banr/banr_pitch.pdf" target="_blank" rel="noopener">Read pitch memo (PDF)</a>
+                <a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/stock-pitch-banr/build_pitch.py" target="_blank" rel="noopener">View Python source</a>
+            </div>
+        `
     }
 ];
