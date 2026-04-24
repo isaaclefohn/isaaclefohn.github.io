@@ -1156,6 +1156,73 @@ nav {
 }
 
 /* ==========================================================================
+   404 / error page
+   ========================================================================== */
+
+.error-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 80px 24px 100px;
+    text-align: center;
+}
+
+.error-code {
+    font-size: clamp(5em, 15vw, 9em);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-accent);
+    letter-spacing: -0.04em;
+    margin-bottom: 12px;
+}
+
+.error-page h1 {
+    font-size: 2em;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 14px;
+}
+
+.error-page p {
+    color: var(--color-text-muted);
+    font-size: 1.1em;
+    margin-bottom: 32px;
+}
+
+.error-links {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   Print — when someone prints the resume page, suppress nav/footer chrome
+   ========================================================================== */
+
+@media print {
+    nav, footer, .skip-link, .theme-toggle, .mobile-menu-btn,
+    .page-header, .resume-actions, .pdf-fallback-note {
+        display: none !important;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    .pdf-embed-wrapper {
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .pdf-embed-wrapper iframe {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+}
+
+/* ==========================================================================
    Footer
    ========================================================================== */
 

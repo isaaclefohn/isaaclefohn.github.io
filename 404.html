@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Page not found on isaaclefohn.github.io">
+    <meta name="robots" content="noindex">
+    <title>Page Not Found | Isaac Lefohn</title>
+
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231a1a1a'/%3E%3Ctext x='32' y='44' font-family='-apple-system,sans-serif' font-size='32' font-weight='600' text-anchor='middle' fill='%23c5a572'%3EIL%3C/text%3E%3C/svg%3E">
+
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', stored || (prefersDark ? 'dark' : 'light'));
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <nav aria-label="Primary">
+        <div class="nav-container">
+            <a href="/index.html" class="logo">IL</a>
+            <div class="nav-right">
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/experience.html">Experience</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/skills.html">Skills</a></li>
+                    <li><a href="/resume.html">Resume</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+                <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle color theme" aria-pressed="false">
+                    <svg class="icon-sun" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                    <svg class="icon-moon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+                <button class="mobile-menu-btn" onclick="toggleMenu()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navLinks">&#9776;</button>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main">
+        <div class="error-page">
+            <div class="error-code">404</div>
+            <h1>Page not found</h1>
+            <p>The page you're looking for doesn't exist or may have moved. Try one of these instead:</p>
+            <div class="error-links">
+                <a href="/index.html" class="btn btn-primary">Home</a>
+                <a href="/experience.html" class="btn btn-secondary">Experience</a>
+                <a href="/resume.html" class="btn btn-secondary">Resume</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Isaac Lefohn. All rights reserved.</p>
+    </footer>
+
+    <script src="/script.js"></script>
+</body>
+</html>
