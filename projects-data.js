@@ -119,5 +119,37 @@ const PROJECTS = [
                 <a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/stock-pitch-banr/build_pitch.py" target="_blank" rel="noopener">View Python source</a>
             </div>
         `
+    },
+    {
+        id: 'banr-takeout',
+        type: 'M&A Analysis',
+        title: 'BANR Strategic Takeout — Precedent-Multiples Cross-Check on the Long Thesis',
+        hook: 'Applies community-bank M&A multiples to BANR\u2019s tangible book to see where a strategic acquirer would price the franchise. Football-field across four P/TBV scenarios, plus a plausible-acquirer shortlist.',
+        tools: ['Python', 'SEC EDGAR API', 'ReportLab', 'M&A Analysis', 'Precedent Transactions', 'P/TBV'],
+        status: 'published',
+        details: `
+            <p><strong>Why this exists:</strong> The BANR long pitch targets $82 via peer re-rate and historical P/E. This memo asks a different question: would an acquirer rationally pay there? Precedent multiples on tangible book are the standard bank-M&amp;A metric \u2014 they reveal whether the standalone thesis stacks <em>additional</em> upside or whether two unrelated methods just triangulate to the same answer.</p>
+            <img src="projects/banr-takeout/banr_takeout_chart.png" alt="Football-field chart showing BANR implied takeout prices across four P/TBV scenarios from 1.20x to 1.80x, with the current $67.76 price reference line" loading="lazy">
+            <div class="project-kpis">
+                <div class="project-kpi"><span class="project-kpi-label">Current Price</span><span class="project-kpi-value">$67.76</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">TBV / Share</span><span class="project-kpi-value">$46.44</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Current P/TBV</span><span class="project-kpi-value">1.46\u00d7</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Low (1.20\u00d7)</span><span class="project-kpi-value">$55.73</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Conservative (1.35\u00d7)</span><span class="project-kpi-value">$62.69</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Base (1.55\u00d7)</span><span class="project-kpi-value">$71.98</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Strategic (1.80\u00d7)</span><span class="project-kpi-value">$83.59</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Standalone Target</span><span class="project-kpi-value">$82.02</span></div>
+            </div>
+            <p><strong>Finding \u2014 convergence, not incremental upside:</strong> BANR already trades at 1.46\u00d7 P/TBV, <em>above</em> routine deal multiples (~1.35\u00d7), meaning the market already embeds some M&amp;A premium. The base-case takeout of $71.98 is actually <em>below</em> the standalone $82 target. Only the <strong>strategic-premium scenario ($83.59)</strong> converges with the long thesis. The useful takeaway: two unrelated valuation methods \u2014 earnings-based re-rate and franchise-based M&amp;A multiple \u2014 arrive at ~$82\u2013$84 only under a bidding-war scenario. M&amp;A is optionality, not additional thesis.</p>
+            <p><strong>Why BANR is a realistic M&amp;A target:</strong> (1) Attractive size \u2014 $16.4B assets, meaningful but not HSR-encumbered. (2) Scarce franchise \u2014 OR/WA/ID community-banking presence that can\u2019t be built organically. (3) Best-in-class profitability \u2014 10.04% ROE, 1.19% ROA (acquirers pay more for higher-ROE targets because purchase accounting write-ups lever their own earnings). (4) Clean balance sheet \u2014 no regulatory overhangs, CRE within community-bank norms.</p>
+            <p><strong>Plausible acquirer shortlist:</strong> GBCI (PNW/Mountain West culture match), ZION (western regional with strategic gap in OR/WA), FIBK (recent Great Western acquisition shows appetite), WAFD (Seattle-based, recent Luther Burbank deal), USB (long-shot superregional, MUFG-Union precedent).</p>
+            <p><strong>Approach:</strong> Pulled BANR fundamentals from SEC EDGAR XBRL (same pipeline as the PNW-banks project \u2014 imports <code>extract_fundamentals</code> directly rather than duplicating the EDGAR fetcher). Stripped goodwill and intangibles from equity to get tangible equity, divided by shares outstanding for TBV/share. Applied four P/TBV scenarios reflecting published reporting on recent community-bank M&amp;A (S&amp;P Global Market Intelligence, Bank Director). Generated a football-field chart with matplotlib, a three-sheet workbook (Summary / Acquirers / Methodology), and a one-page deal memo PDF with ReportLab.</p>
+            <p><strong>Caveats:</strong> Framework analysis, not an M&amp;A pitch \u2014 no real deal is announced or rumored. Bank Holding Company Act prevents PE from owning &gt;24.99% of a commercial bank, which is why this is a <em>strategic</em>-acquirer analysis rather than an LBO model. Acquirer-specific accretion/dilution not modeled \u2014 a full deal analysis would require pulling the acquirer\u2019s financials, modeling purchase accounting, and layering synergies and financing mix.</p>
+            <div class="project-links">
+                <a href="projects/banr-takeout/banr_takeout_memo.pdf" target="_blank" rel="noopener">Read deal memo (PDF)</a>
+                <a href="projects/banr-takeout/banr_takeout_analysis.xlsx" download>Download Excel workbook (.xlsx)</a>
+                <a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/banr-takeout/build_takeout.py" target="_blank" rel="noopener">View Python source</a>
+            </div>
+        `
     }
 ];
