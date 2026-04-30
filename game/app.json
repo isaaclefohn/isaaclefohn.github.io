@@ -24,6 +24,10 @@
       },
       "package": "com.isaaclefohn.chromadrop"
     },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
     "plugins": [
       [
         "react-native-google-mobile-ads",
