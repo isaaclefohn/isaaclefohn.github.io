@@ -48,6 +48,7 @@ import { VIPModal } from '../components/VIPModal';
 import { QuestChainModal } from '../components/QuestChainModal';
 import { PowerUpFusionModal } from '../components/PowerUpFusionModal';
 import { SeasonalEventModal } from '../components/SeasonalEventModal';
+import { HubMenuModal } from '../components/HubMenuModal';
 import { getActiveEvent } from '../game/events/SeasonalEvent';
 import { MysteryShopModal } from '../components/MysteryShopModal';
 import { BlockMasteryModal } from '../components/BlockMasteryModal';
@@ -129,6 +130,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showStarterPack, setShowStarterPack] = useState(false);
   const [showFlashOffer, setShowFlashOffer] = useState(false);
   const [showFreeChest, setShowFreeChest] = useState(false);
+  const [showRewardsHub, setShowRewardsHub] = useState(false);
+  const [showCompeteHub, setShowCompeteHub] = useState(false);
+  const [showShopHub, setShowShopHub] = useState(false);
+  const [showMoreHub, setShowMoreHub] = useState(false);
   const freeChestLastClaimedAt = usePlayerStore((s) => s.freeChestLastClaimedAt);
   const [nowTick, setNowTick] = useState(Date.now());
   useEffect(() => {
@@ -577,11 +582,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             )}
           </View>
 
-          {/* Daily quests */}
-          {isFeatureUnlocked('daily_challenge', highestLevel) && (
-            <DailyQuestsCard visible={true} />
-          )}
-
           {/* Promotional banner — show ONLY the highest-priority active
               offer at a time. Stacking Starter Pack + Flash Offer + Daily
               Deal simultaneously made the home screen feel like slot-
@@ -674,167 +674,39 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {/* Live event banners */}
           <EventBanner />
 
-          {/* ── Feature Hub ───────────────────────────────── */}
-          {/* Only render tiles for features that are actually unlocked.
-              Disabled/grayed-out tiles look like an unfinished product. */}
-
-          {/* Rewards — always show at least chest + calendar */}
-          <View style={styles.hubSection}>
-            <Text style={styles.hubLabel}>REWARDS</Text>
-            <View style={styles.hubGrid}>
-              <FeatureTile
-                icon="gift"
-                label={freeChestReady ? 'Open!' : 'Free Chest'}
-                onPress={() => setShowFreeChest(true)}
-                accent={COLORS.accentGold}
-                active={freeChestReady}
-              />
-              {isFeatureUnlocked('lucky_spin', highestLevel) && (
-                <FeatureTile
-                  icon="star"
-                  label={canSpin ? 'Spin!' : 'Lucky Spin'}
-                  onPress={() => setShowSpin(true)}
-                  accent="#FACC15"
-                  active={canSpin}
-                />
-              )}
-              <FeatureTile
-                icon="target"
-                label={rouletteAvailable ? 'Spin Now' : 'Roulette'}
-                onPress={() => setShowDailyRoulette(true)}
-                accent="#A78BFA"
-                active={rouletteAvailable}
-              />
-              <FeatureTile
-                icon="calendar"
-                label="Calendar"
-                onPress={() => setShowCalendar(true)}
-                accent={COLORS.info}
-              />
-            </View>
+          {/* ── Hub Buttons ──────────────────────────────── */}
+          <View style={styles.hubButtonRow}>
+            <TouchableOpacity style={styles.hubButton} onPress={() => setShowRewardsHub(true)}>
+              <View style={[styles.hubIconWrap, { backgroundColor: `${COLORS.accentGold}18` }]}>
+                <GameIcon name="gift" size={20} color={COLORS.accentGold} />
+                {(freeChestReady || canSpin || rouletteAvailable) && <View style={styles.hubDot} />}
+              </View>
+              <Text style={styles.hubButtonLabel}>Rewards</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.hubButton} onPress={() => setShowCompeteHub(true)}>
+              <View style={[styles.hubIconWrap, { backgroundColor: 'rgba(96,165,250,0.12)' }]}>
+                <GameIcon name="trophy" size={20} color="#60A5FA" />
+                {!!activeTournament && <View style={styles.hubDot} />}
+              </View>
+              <Text style={styles.hubButtonLabel}>Compete</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.hubButton} onPress={() => setShowShopHub(true)}>
+              <View style={[styles.hubIconWrap, { backgroundColor: `${COLORS.accent}15` }]}>
+                <GameIcon name="shop" size={20} color={COLORS.accent} />
+                {vipActive && <View style={[styles.hubDot, { backgroundColor: '#FACC15' }]} />}
+              </View>
+              <Text style={styles.hubButtonLabel}>Shop</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.hubButton} onPress={() => setShowMoreHub(true)}>
+              <View style={[styles.hubIconWrap, { backgroundColor: 'rgba(167,139,250,0.12)' }]}>
+                <GameIcon name="grid" size={20} color="#A78BFA" />
+                {unclaimedCount > 0 && <View style={styles.hubDot} />}
+              </View>
+              <Text style={styles.hubButtonLabel}>More</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Compete — only show section if at least events or an unlocked feature */}
-          {(activeSeason || isFeatureUnlocked('achievements', highestLevel) || isFeatureUnlocked('battle_pass', highestLevel) || getHighestTier(highestLevel) !== null) && (
-            <View style={styles.hubSection}>
-              <Text style={styles.hubLabel}>COMPETE</Text>
-              <View style={styles.hubGrid}>
-                {isFeatureUnlocked('achievements', highestLevel) && (
-                  <FeatureTile
-                    icon="trophy"
-                    label="Trophies"
-                    onPress={() => setShowAchievements(true)}
-                    accent={COLORS.accentGold}
-                  />
-                )}
-                {isFeatureUnlocked('battle_pass', highestLevel) && (
-                  <FeatureTile
-                    icon="medal-gold"
-                    label="Season Pass"
-                    onPress={() => navigation.navigate('BattlePass')}
-                    accent="#60A5FA"
-                  />
-                )}
-                {activeSeason && (
-                  <FeatureTile
-                    icon={activeSeason.icon as any}
-                    label={activeSeason.name}
-                    onPress={() => setShowSeasonalEvent(true)}
-                    accent={activeSeason.color}
-                    active
-                  />
-                )}
-                {getHighestTier(highestLevel) !== null && (
-                  <FeatureTile
-                    icon="lightning"
-                    label={activeTournament ? 'Live Cup' : 'Tournament'}
-                    onPress={() => setShowTournament(true)}
-                    accent="#F472B6"
-                    active={!!activeTournament}
-                  />
-                )}
-              </View>
-            </View>
-          )}
-
-          {/* Shop & VIP — show once shop unlocks or always show VIP */}
-          <View style={styles.hubSection}>
-            <Text style={styles.hubLabel}>SHOP & VIP</Text>
-            <View style={styles.hubGrid}>
-              {isFeatureUnlocked('shop', highestLevel) && (
-                <FeatureTile
-                  icon="shop"
-                  label="Shop"
-                  onPress={() => navigation.navigate('Shop')}
-                  accent={COLORS.accent}
-                />
-              )}
-              <FeatureTile
-                icon="crown"
-                label={vipActive ? 'VIP Active' : 'Go VIP'}
-                onPress={() => setShowVIP(true)}
-                accent="#FACC15"
-                active={vipActive}
-              />
-              {isFeatureUnlocked('piggy_bank', highestLevel) && (
-                <FeatureTile
-                  icon="coin"
-                  label={piggyBankCoins > 0 ? `Bank (${formatCompact(piggyBankCoins)})` : 'Piggy Bank'}
-                  onPress={() => setShowPiggyBank(true)}
-                  accent="#34D399"
-                  active={piggyBankCoins >= 100}
-                />
-              )}
-              <FeatureTile
-                icon="gem"
-                label="Mystery"
-                onPress={() => setShowMysteryShop(true)}
-                accent="#C084FC"
-              />
-            </View>
-          </View>
-
-          {/* More — only show tiles that are actually unlocked */}
-          {(() => {
-            const moreTiles: React.ReactNode[] = [];
-            if (isBossRushUnlocked(highestLevel))
-              moreTiles.push(
-                <FeatureTile key="boss" icon="bomb" label="Boss Rush" onPress={() => setShowBossRush(true)} accent="#EF4444" />
-              );
-            if (isFeatureUnlocked('shop', highestLevel))
-              moreTiles.push(
-                <FeatureTile key="treasure" icon="map" label={treasureMapPieces >= PIECES_REQUIRED ? 'Dig!' : `Map ${Math.min(treasureMapPieces, PIECES_REQUIRED)}/${PIECES_REQUIRED}`} onPress={() => setShowTreasure(true)} accent="#22C55E" active={treasureMapPieces >= PIECES_REQUIRED} />
-              );
-            moreTiles.push(
-              <FeatureTile key="mastery" icon="fire" label="Mastery" onPress={() => setShowBlockMastery(true)} accent="#FB923C" />
-            );
-            if (isFeatureUnlocked('power_ups', highestLevel))
-              moreTiles.push(
-                <FeatureTile key="fuse" icon="palette" label="Power Fuse" onPress={() => setShowFusion(true)} accent="#F472B6" />
-              );
-            moreTiles.push(
-              <FeatureTile key="quests" icon="book" label="Quests" onPress={() => setShowQuestChains(true)} accent="#60A5FA" />
-            );
-            if (isFeatureUnlocked('weekly_challenge', highestLevel))
-              moreTiles.push(
-                <FeatureTile key="leader" icon="grid" label="Leaderboard" onPress={() => setShowLeaderboard(true)} accent="#A78BFA" />
-              );
-            if (isFeatureUnlocked('achievements', highestLevel))
-              moreTiles.push(
-                <FeatureTile key="album" icon="book" label="Album" onPress={() => setShowAlbum(true)} accent="#34D399" />
-              );
-            moreTiles.push(
-              <FeatureTile key="inbox" icon="film" label={unclaimedCount > 0 ? `Inbox (${unclaimedCount})` : 'Inbox'} onPress={() => setShowInbox(true)} accent={COLORS.info} badge={unclaimedCount > 0 ? String(unclaimedCount) : undefined} />
-            );
-            return moreTiles.length > 0 ? (
-              <View style={styles.hubSection}>
-                <Text style={styles.hubLabel}>MORE</Text>
-                <View style={styles.hubGrid}>{moreTiles}</View>
-              </View>
-            ) : null;
-          })()}
-
-          {/* Utility row — always visible */}
+          {/* Bottom utility row */}
           <View style={styles.utilRow}>
             <TouchableOpacity style={styles.utilButton} onPress={() => setShowProfile(true)}>
               <GameIcon name="gamepad" size={14} color={COLORS.textMuted} />
@@ -1076,6 +948,66 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         visible={showFreeChest}
         onClose={() => setShowFreeChest(false)}
       />
+
+      {/* ── Hub Sub-Menus ──────────────────────────────── */}
+      <HubMenuModal visible={showRewardsHub} onClose={() => setShowRewardsHub(false)} title="REWARDS" accent={COLORS.accentGold}>
+        <FeatureTile icon="gift" label={freeChestReady ? 'Open!' : 'Free Chest'} onPress={() => { setShowRewardsHub(false); setShowFreeChest(true); }} accent={COLORS.accentGold} active={freeChestReady} />
+        {isFeatureUnlocked('lucky_spin', highestLevel) && (
+          <FeatureTile icon="star" label={canSpin ? 'Spin!' : 'Lucky Spin'} onPress={() => { setShowRewardsHub(false); setShowSpin(true); }} accent="#FACC15" active={canSpin} />
+        )}
+        <FeatureTile icon="target" label={rouletteAvailable ? 'Spin Now' : 'Roulette'} onPress={() => { setShowRewardsHub(false); setShowDailyRoulette(true); }} accent="#A78BFA" active={rouletteAvailable} />
+        <FeatureTile icon="calendar" label="Calendar" onPress={() => { setShowRewardsHub(false); setShowCalendar(true); }} accent={COLORS.info} />
+        {isFeatureUnlocked('daily_challenge', highestLevel) && (
+          <FeatureTile icon="fire" label="Daily Quests" onPress={() => { setShowRewardsHub(false); navigation.navigate('DailyChallenge'); }} accent="#FB923C" />
+        )}
+      </HubMenuModal>
+
+      <HubMenuModal visible={showCompeteHub} onClose={() => setShowCompeteHub(false)} title="COMPETE" accent="#60A5FA">
+        {isFeatureUnlocked('achievements', highestLevel) && (
+          <FeatureTile icon="trophy" label="Trophies" onPress={() => { setShowCompeteHub(false); setShowAchievements(true); }} accent={COLORS.accentGold} />
+        )}
+        {isFeatureUnlocked('battle_pass', highestLevel) && (
+          <FeatureTile icon="medal-gold" label="Season Pass" onPress={() => { setShowCompeteHub(false); navigation.navigate('BattlePass'); }} accent="#60A5FA" />
+        )}
+        {activeSeason && (
+          <FeatureTile icon={activeSeason.icon as any} label={activeSeason.name} onPress={() => { setShowCompeteHub(false); setShowSeasonalEvent(true); }} accent={activeSeason.color} active />
+        )}
+        {getHighestTier(highestLevel) !== null && (
+          <FeatureTile icon="lightning" label={activeTournament ? 'Live Cup' : 'Tournament'} onPress={() => { setShowCompeteHub(false); setShowTournament(true); }} accent="#F472B6" active={!!activeTournament} />
+        )}
+        {isFeatureUnlocked('weekly_challenge', highestLevel) && (
+          <FeatureTile icon="grid" label="Leaderboard" onPress={() => { setShowCompeteHub(false); setShowLeaderboard(true); }} accent="#A78BFA" />
+        )}
+      </HubMenuModal>
+
+      <HubMenuModal visible={showShopHub} onClose={() => setShowShopHub(false)} title="SHOP & VIP" accent={COLORS.accent}>
+        {isFeatureUnlocked('shop', highestLevel) && (
+          <FeatureTile icon="shop" label="Shop" onPress={() => { setShowShopHub(false); navigation.navigate('Shop'); }} accent={COLORS.accent} />
+        )}
+        <FeatureTile icon="crown" label={vipActive ? 'VIP Active' : 'Go VIP'} onPress={() => { setShowShopHub(false); setShowVIP(true); }} accent="#FACC15" active={vipActive} />
+        {isFeatureUnlocked('piggy_bank', highestLevel) && (
+          <FeatureTile icon="coin" label={piggyBankCoins > 0 ? `Bank (${formatCompact(piggyBankCoins)})` : 'Piggy Bank'} onPress={() => { setShowShopHub(false); setShowPiggyBank(true); }} accent="#34D399" active={piggyBankCoins >= 100} />
+        )}
+        <FeatureTile icon="gem" label="Mystery" onPress={() => { setShowShopHub(false); setShowMysteryShop(true); }} accent="#C084FC" />
+      </HubMenuModal>
+
+      <HubMenuModal visible={showMoreHub} onClose={() => setShowMoreHub(false)} title="MORE" accent="#A78BFA">
+        {isBossRushUnlocked(highestLevel) && (
+          <FeatureTile icon="bomb" label="Boss Rush" onPress={() => { setShowMoreHub(false); setShowBossRush(true); }} accent="#EF4444" />
+        )}
+        {isFeatureUnlocked('shop', highestLevel) && (
+          <FeatureTile icon="map" label={treasureMapPieces >= PIECES_REQUIRED ? 'Dig!' : `Map ${Math.min(treasureMapPieces, PIECES_REQUIRED)}/${PIECES_REQUIRED}`} onPress={() => { setShowMoreHub(false); setShowTreasure(true); }} accent="#22C55E" active={treasureMapPieces >= PIECES_REQUIRED} />
+        )}
+        <FeatureTile icon="fire" label="Mastery" onPress={() => { setShowMoreHub(false); setShowBlockMastery(true); }} accent="#FB923C" />
+        {isFeatureUnlocked('power_ups', highestLevel) && (
+          <FeatureTile icon="palette" label="Power Fuse" onPress={() => { setShowMoreHub(false); setShowFusion(true); }} accent="#F472B6" />
+        )}
+        <FeatureTile icon="book" label="Quests" onPress={() => { setShowMoreHub(false); setShowQuestChains(true); }} accent="#60A5FA" />
+        {isFeatureUnlocked('achievements', highestLevel) && (
+          <FeatureTile icon="book" label="Album" onPress={() => { setShowMoreHub(false); setShowAlbum(true); }} accent="#34D399" />
+        )}
+        <FeatureTile icon="film" label={unclaimedCount > 0 ? `Inbox (${unclaimedCount})` : 'Inbox'} onPress={() => { setShowMoreHub(false); setShowInbox(true); }} accent={COLORS.info} badge={unclaimedCount > 0 ? String(unclaimedCount) : undefined} />
+      </HubMenuModal>
     </SafeAreaView>
   );
 };
@@ -1091,8 +1023,8 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.lg,
-    paddingBottom: 40,
+    paddingTop: SPACING.sm,
+    paddingBottom: 20,
   },
   // Decorative background elements
   decorOrb: {
@@ -1125,7 +1057,7 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: 'center',
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.md,
     position: 'relative',
     paddingHorizontal: 20,
   },
@@ -1182,7 +1114,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.surfaceBorder,
     paddingVertical: 14,
     paddingHorizontal: 12,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.md,
     alignItems: 'center',
     width: '100%',
     ...SHADOWS.medium,
@@ -1253,23 +1185,44 @@ const styles = StyleSheet.create({
   thirdButton: {
     flex: 1,
   },
-  hubSection: {
+  hubButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     width: '100%',
     marginTop: SPACING.sm,
+    gap: 8,
   },
-  hubLabel: {
+  hubButton: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  hubIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: RADII.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${COLORS.surfaceBorder}80`,
+    position: 'relative',
+  },
+  hubDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: COLORS.accent,
+    borderWidth: 2,
+    borderColor: COLORS.background,
+  },
+  hubButtonLabel: {
     fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 2,
-    color: COLORS.textMuted,
-    marginBottom: 6,
-    marginLeft: 2,
-  },
-  hubGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    justifyContent: 'flex-start',
+    fontWeight: '800',
+    color: COLORS.textSecondary,
+    letterSpacing: 0.5,
   },
   utilRow: {
     flexDirection: 'row',

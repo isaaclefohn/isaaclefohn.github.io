@@ -1,22 +1,41 @@
-/**
- * Subtle edge vignette overlay for visual depth.
- * Darkens screen edges to draw focus to the center.
- */
-
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+
+const VIGNETTE_COLOR = 'rgba(8, 7, 16,';
+
+const LAYERS = [
+  { opacity: 0.18, size: 60 },
+  { opacity: 0.10, size: 40 },
+  { opacity: 0.05, size: 20 },
+];
 
 export const ScreenVignette: React.FC = () => {
   return (
     <View style={styles.container} pointerEvents="none">
-      {/* Top edge */}
-      <View style={[styles.edge, styles.top]} />
-      {/* Bottom edge */}
-      <View style={[styles.edge, styles.bottom]} />
-      {/* Left edge */}
-      <View style={[styles.edgeHorizontal, styles.left]} />
-      {/* Right edge */}
-      <View style={[styles.edgeHorizontal, styles.right]} />
+      {LAYERS.map((layer, i) => (
+        <React.Fragment key={i}>
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: layer.size,
+              backgroundColor: `${VIGNETTE_COLOR} ${layer.opacity})`,
+            }}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: layer.size + 10,
+              backgroundColor: `${VIGNETTE_COLOR} ${layer.opacity * 1.2})`,
+            }}
+          />
+        </React.Fragment>
+      ))}
     </View>
   );
 };
@@ -25,33 +44,5 @@ const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
-  },
-  edge: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 80,
-  },
-  top: {
-    top: 0,
-    backgroundColor: 'rgba(8, 7, 16, 0.35)',
-  },
-  bottom: {
-    bottom: 0,
-    backgroundColor: 'rgba(8, 7, 16, 0.45)',
-  },
-  edgeHorizontal: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 30,
-  },
-  left: {
-    left: 0,
-    backgroundColor: 'rgba(8, 7, 16, 0.2)',
-  },
-  right: {
-    right: 0,
-    backgroundColor: 'rgba(8, 7, 16, 0.2)',
   },
 });
