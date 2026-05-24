@@ -27,6 +27,15 @@ if (fs.existsSync(indexPath)) {
   html = html.replace(/href="\/_expo\//g, 'href="./_expo/');
   html = html.replace(/href="\/assets\//g, 'href="./assets/');
 
+  // The exported bundle uses `import.meta`, which only works in an ES module
+  // context. Expo's template loads it as a classic `defer` script, which throws
+  // "Cannot use 'import.meta' outside a module" and leaves a blank page. Force
+  // the entry script to load as a module.
+  html = html.replace(
+    /<script (src="\.\/_expo\/static\/js\/web\/[^"]+")(?:\s+defer)?><\/script>/,
+    '<script $1 type="module"></script>',
+  );
+
   // Bust browser cache: the bundle filename is content-hashed, but the
   // outer HTML has no hash in the URL, so browsers happily serve a stale
   // HTML that points at a renamed (and now 404ing) bundle. A no-cache meta

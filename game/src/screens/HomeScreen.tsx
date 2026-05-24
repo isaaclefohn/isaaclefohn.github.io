@@ -421,7 +421,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </Animated.View>
           {/* Subtitle tagline */}
           <Animated.Text style={[styles.tagline, { opacity: statsOpacity }]}>
-            Drop \u2022 Clear \u2022 Climb
+            Drop • Clear • Climb
           </Animated.Text>
         </View>
 

@@ -695,8 +695,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     await shareChallenge(challenge);
   }, [gameState, levelConfig, isEndless, displayName]);
 
-  const handleDoubleCoins = useCallback(() => {
-    if (doubleCoinsUsed) return;
+  const handleDoubleCoins = useCallback(async () => {
+    if (doubleCoinsUsed || !canShowRewarded()) return;
+    const earned = await showRewardedAd();
+    if (!earned) return;
     const bonus = calculateCoinReward(stars);
     addCoins(bonus);
     setDoubleCoinsUsed(true);
@@ -1046,9 +1048,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           ) : (
             <Button title="Next Level" onPress={handleNextLevel} variant="primary" size="medium" />
           )}
-          {!isDaily && !doubleCoinsUsed && calculateCoinReward(stars) > 0 && (
+          {!isDaily && !doubleCoinsUsed && calculateCoinReward(stars) > 0 && canShowRewarded() && (
             <Button
-              title={`2x Coins (+${calculateCoinReward(stars)})`}
+              title={`Watch Ad: 2x Coins (+${calculateCoinReward(stars)})`}
               onPress={handleDoubleCoins}
               variant="secondary"
               size="medium"

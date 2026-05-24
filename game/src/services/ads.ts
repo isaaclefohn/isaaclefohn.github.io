@@ -131,9 +131,16 @@ export function onRewardedShown(): void {
  * In Expo Go or when the SDK failed to load, simulates a successful view.
  */
 export async function showRewardedAd(): Promise<boolean> {
-  if (isExpoGo || !loadAdsModule() || !AdsModule) {
+  // Expo Go (dev) has no native ad module — simulate a successful view.
+  if (isExpoGo) {
     onRewardedShown();
     return true;
+  }
+  // Production: if the SDK is unavailable, DENY the reward. Granting it here
+  // would let a player earn rewards simply by blocking the ad network.
+  if (!loadAdsModule() || !AdsModule) {
+    console.warn('[Ads] rewarded unavailable (SDK not loaded) — denying reward');
+    return false;
   }
 
   return new Promise<boolean>((resolve) => {

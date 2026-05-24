@@ -25,8 +25,8 @@ interface GameStore {
   levelConfig: LevelConfig | null;
   rng: SeededRandom | null;
   selectedPieceIndex: number | null;
-  /** Snapshot of state before last placement (for undo) */
-  undoSnapshot: GameState | null;
+  /** Snapshot of state before last placement (board/pieces + hold slot + RNG cursor) */
+  undoSnapshot: { gameState: GameState; heldPiece: Piece | null; rngState: number } | null;
   /** Whether undo has been used this level */
   undoUsed: boolean;
   /** Piece stashed in the hold slot for later use */
@@ -89,8 +89,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (gameState.status !== 'playing') return false;
 
     try {
-      // Snapshot current state for undo
-      const snapshot = { ...gameState, grid: gameState.grid.map(r => [...r]), availablePieces: [...gameState.availablePieces] };
+      // Snapshot current state for undo: board/pieces + hold slot + RNG cursor,
+      // so re-placing after an undo reproduces the same future (not a fresh draw).
+      const snapshot = {
+        gameState: { ...gameState, grid: gameState.grid.map(r => [...r]), availablePieces: [...gameState.availablePieces] },
+        heldPiece,
+        rngState: rng.getState(),
+      };
       const newState = processTurn(
         gameState,
         pieceIndex,
@@ -248,11 +253,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   undoLastMove: (): boolean => {
-    const { undoSnapshot, undoUsed } = get();
+    const { undoSnapshot, undoUsed, rng } = get();
     if (!undoSnapshot || undoUsed) return false;
-    set({ gameState: undoSnapshot, undoSnapshot: null, undoUsed: true, selectedPieceIndex: null });
+    // Restore the RNG cursor and hold slot too, not just the board.
+    if (rng) rng.setState(undoSnapshot.rngState);
+    set({
+      gameState: undoSnapshot.gameState,
+      heldPiece: undoSnapshot.heldPiece,
+      undoSnapshot: null,
+      undoUsed: true,
+      selectedPieceIndex: null,
+    });
     return true;
   },
+
 
   canUndo: () => {
     const { undoSnapshot, undoUsed } = get();

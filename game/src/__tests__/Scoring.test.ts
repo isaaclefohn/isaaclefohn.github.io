@@ -30,9 +30,10 @@ describe('Scoring', () => {
 
     it('applies line bonus for multiple lines', () => {
       const event = scoreClear(2, 16, 0);
-      // 16 * 10 * 1.5 (2 lines) * 1.0 (combo 1) = 240
-      expect(event.points).toBe(240);
+      // (16 * 10 * 1.5 line bonus + 50 flat multi-line bonus) * 1.0 combo = 290
+      expect(event.points).toBe(290);
       expect(event.combo).toBe(1);
+      expect(event.breakdown.multiLineBonus).toBe(50);
     });
 
     it('applies combo multiplier for consecutive clears', () => {

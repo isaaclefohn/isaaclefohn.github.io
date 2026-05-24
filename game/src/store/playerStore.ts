@@ -972,6 +972,15 @@ export const usePlayerStore = create<PlayerStore>()(
     {
       name: 'chroma-drop-player',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      // Existing installs saved state with no version (treated as v0). Return it
+      // as-is so the player's economy/progress survives the upgrade; the default
+      // merge backfills any newly added fields. Without a migrate, Zustand
+      // discards the old save on a version bump.
+      migrate: (persisted) => persisted as PlayerStore,
+      onRehydrateStorage: () => (_state, error) => {
+        if (error) console.warn('[playerStore] rehydrate failed', error);
+      },
     }
   )
 );

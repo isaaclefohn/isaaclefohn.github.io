@@ -30,9 +30,11 @@ export function getLevelRange(start: number, end: number): LevelConfig[] {
   return levels;
 }
 
-/** Check if a level is a boss level */
+/** Check if a level is a boss level (i.e. has a hand-crafted template). */
 export function isBossLevel(levelNumber: number): boolean {
-  return levelNumber % 25 === 0 && levelNumber > 0;
+  // Derive from the actual template set so the flag never lies. Boss content
+  // currently runs 25–250; levels past that are procedural until authored.
+  return BOSS_LEVELS[levelNumber] !== undefined;
 }
 
 /** Get an endless/zen mode config (no score target, play until stuck) */

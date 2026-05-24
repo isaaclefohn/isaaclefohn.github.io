@@ -36,6 +36,16 @@ export class SeededRandom {
     return copy;
   }
 
+  /** Capture the internal cursor so it can be restored later (e.g. for undo) */
+  getState(): number {
+    return this.state;
+  }
+
+  /** Restore a previously captured internal cursor */
+  setState(state: number): void {
+    this.state = state;
+  }
+
   /** Shuffles an array in place (Fisher-Yates) */
   shuffle<T>(array: T[]): T[] {
     for (let i = array.length - 1; i > 0; i--) {
