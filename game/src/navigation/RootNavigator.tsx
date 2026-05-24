@@ -3,7 +3,8 @@
  */
 
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
+import { trackScreen } from '../services/analytics';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeScreen } from '../screens/HomeScreen';
 import { GameScreen } from '../screens/GameScreen';
@@ -30,8 +31,22 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
+  const navRef = useNavigationContainerRef<RootStackParamList>();
+  const routeNameRef = React.useRef<string | undefined>(undefined);
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      ref={navRef}
+      onReady={() => {
+        routeNameRef.current = navRef.getCurrentRoute()?.name;
+        if (routeNameRef.current) trackScreen(routeNameRef.current);
+      }}
+      onStateChange={() => {
+        const previous = routeNameRef.current;
+        const current = navRef.getCurrentRoute()?.name;
+        if (current && previous !== current) trackScreen(current);
+        routeNameRef.current = current;
+      }}
+    >
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={{

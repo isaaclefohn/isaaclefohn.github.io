@@ -15,6 +15,7 @@ import { getDailyPuzzleConfig, getDailyPuzzleId, DAILY_PUZZLE_LEVEL_NUMBER, DAIL
 import { calculateSRChange } from '../game/systems/SkillRating';
 import { calculateReplayReward } from '../game/rewards/ReplayRewards';
 import { getActiveEvent, getEventInstanceId } from '../game/events/SeasonalEvent';
+import { trackGameEvent } from '../services/analytics';
 
 export function useGameEngine() {
   const {
@@ -78,6 +79,7 @@ export function useGameEngine() {
 
     if (gameState.status === 'won') {
       const stars = getStars();
+      trackGameEvent({ type: 'level_complete', level: levelConfig.levelNumber, score: gameState.score, stars });
       const coinMult = getCoinMultiplier();
       const xpMult = getXPMultiplier();
 
@@ -206,6 +208,7 @@ export function useGameEngine() {
         }, 2000);
       }
     } else if (gameState.status === 'lost') {
+      trackGameEvent({ type: 'level_fail', level: levelConfig.levelNumber, score: gameState.score });
       if (isZen) {
         recordZenGame(gameState.score, gameState.linesCleared, gameState.combo ?? 0);
         const zenXpMult = getXPMultiplier();

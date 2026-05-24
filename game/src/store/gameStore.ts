@@ -18,6 +18,7 @@ import { SeededRandom } from '../utils/seededRandom';
 import { ScoreEvent, scorePlacement } from '../game/engine/Scoring';
 import { PowerUpType, applyBomb, applyRowClear, applyColorClear } from '../game/powerups/PowerUpManager';
 import { isGameOver } from '../game/engine/GameOver';
+import { trackGameEvent } from '../services/analytics';
 
 interface GameStore {
   // State
@@ -77,6 +78,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const rng = new SeededRandom(config.seed);
     const gameState = initGame(config);
     set({ gameState, levelConfig: config, rng, selectedPieceIndex: null, undoSnapshot: null, undoUsed: false, heldPiece: null });
+    trackGameEvent({ type: 'level_start', level: config.levelNumber });
   },
 
   selectPiece: (index: number | null) => {

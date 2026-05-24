@@ -8,6 +8,7 @@
 
 import { usePlayerStore } from '../store/playerStore';
 import Constants from 'expo-constants';
+import { trackGameEvent } from './analytics';
 
 // Detect if running in Expo Go (no native ad support)
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -124,6 +125,7 @@ export function canShowRewarded(): boolean {
 /** Record that a rewarded ad was shown */
 export function onRewardedShown(): void {
   rewardedCount++;
+  trackGameEvent({ type: 'ad_watched', adType: 'rewarded' });
 }
 
 /**
@@ -199,6 +201,7 @@ export async function showInterstitialAd(): Promise<boolean> {
   try {
     if (preloadedInterstitial.loaded) {
       preloadedInterstitial.show();
+      trackGameEvent({ type: 'ad_watched', adType: 'interstitial' });
       return true;
     }
     return false;
