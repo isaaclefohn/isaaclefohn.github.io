@@ -26,7 +26,6 @@ import { getComebackReward, ComebackReward } from '../game/rewards/ComebackBonus
 import { ComebackBonusModal } from '../components/ComebackBonusModal';
 import { getStreakMilestone, getDailyStreakBonus, StreakMilestone } from '../game/rewards/StreakRewards';
 import { StreakMilestoneModal } from '../components/StreakMilestoneModal';
-import { LivesDisplay } from '../components/LivesDisplay';
 import { DailyQuestsCard } from '../components/DailyQuestsCard';
 import { StickerAlbumModal } from '../components/StickerAlbumModal';
 import { checkStickerUnlocks } from '../game/systems/StickerAlbum';
@@ -291,18 +290,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   }))).current;
 
   useEffect(() => {
-    // Main entrance sequence
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(titleOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-        Animated.spring(titleTranslate, { toValue: 0, useNativeDriver: true, tension: 60, friction: 8 }),
-      ]),
-      Animated.spring(blastScale, { toValue: 1, useNativeDriver: true, tension: 80, friction: 6 }),
-      Animated.timing(statsOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.parallel([
-        Animated.timing(buttonsOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.spring(buttonsTranslate, { toValue: 0, useNativeDriver: true, tension: 50, friction: 9 }),
-      ]),
+    // Main entrance — run as independent, staggered animations (via per-animation
+    // `delay`) rather than one Animated.sequence. In a sequence, a spring that
+    // never fires its completion callback (a react-native-web JS-fallback edge
+    // case) blocks every later step, leaving stats/buttons stuck at opacity 0.
+    // Parallel + delay keeps the staggered feel while making each fade-in
+    // self-contained, so content can never get stuck invisible.
+    Animated.parallel([
+      Animated.timing(titleOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.spring(titleTranslate, { toValue: 0, useNativeDriver: true, tension: 60, friction: 8 }),
+      Animated.spring(blastScale, { toValue: 1, delay: 300, useNativeDriver: true, tension: 80, friction: 6 }),
+      Animated.timing(statsOpacity, { toValue: 1, delay: 500, duration: 300, useNativeDriver: true }),
+      Animated.timing(buttonsOpacity, { toValue: 1, delay: 700, duration: 300, useNativeDriver: true }),
+      Animated.spring(buttonsTranslate, { toValue: 0, delay: 700, useNativeDriver: true, tension: 50, friction: 9 }),
     ]).start();
 
     // Animated title blocks pop in with stagger
@@ -428,11 +428,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             Drop • Clear • Climb
           </Animated.Text>
         </View>
-
-        {/* Lives display */}
-        <Animated.View style={[styles.livesRow, { opacity: statsOpacity }]}>
-          <LivesDisplay />
-        </Animated.View>
 
         {/* Skill Rating badge */}
         {isFeatureUnlocked('skill_rating', highestLevel) && (

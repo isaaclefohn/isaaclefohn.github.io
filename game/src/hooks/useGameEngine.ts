@@ -204,7 +204,7 @@ export function useGameEngine() {
       recordCompletionForRating().catch(() => {});
       if (stars === 3 && !isWeekly && !isDaily) {
         setTimeout(() => {
-          maybePromptRating(levelConfig.levelNumber).catch(() => {});
+          maybePromptRating(Object.keys(levelStars).length).catch(() => {});
         }, 2000);
       }
     } else if (gameState.status === 'lost') {
