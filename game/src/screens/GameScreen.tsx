@@ -671,6 +671,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         bestCombo: gameState.combo ?? 0,
         piecesPlaced: gameState.piecesPlaced,
         streak: dailyPuzzleStreak,
+        chromaticClears: gameState.chromaticClears,
         scoreFraction: Math.min(1, gameState.score / threeStar),
       });
     } else if (isEndless) {
@@ -790,6 +791,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       <ScoreDisplay
         score={gameState.score}
         combo={gameState.combo}
+        chromaticClears={gameState.chromaticClears}
         objective={isEndless ? { type: 'score', target: gameState.score + 1000 } : gameState.objective}
         level={isEndless ? 0 : gameState.level}
         stars={stars}

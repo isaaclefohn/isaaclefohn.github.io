@@ -16,34 +16,24 @@ interface TutorialStep {
 
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    title: 'Welcome!',
-    message: 'Place blocks on the board to fill rows and columns. Let\'s learn the basics!',
-    position: 'center',
-  },
-  {
-    title: 'Select a Piece',
-    message: 'Tap a piece at the bottom to select it, then tap the board to place it. Or drag it directly!',
+    title: 'Place a Piece',
+    message: 'Drag a piece from the tray onto the board (or tap it, then tap a spot).',
     position: 'bottom',
   },
   {
     title: 'Clear Lines',
-    message: 'Fill an entire row or column to clear it and earn points. Clear multiple at once for combos!',
+    message: 'Fill a whole row or column to clear it and score. Clear several at once for combos!',
     position: 'center',
   },
   {
-    title: 'Rotate & Swap',
-    message: 'Tap a selected piece again to rotate it. Use the Swap button to get new pieces.',
-    position: 'bottom',
+    title: 'Chroma Bonus',
+    message: 'Clear a line that is ALL ONE COLOR for a big Chroma bonus — the signature move. Plan your colors!',
+    position: 'center',
   },
   {
     title: 'Power-Ups',
-    message: 'Use Bombs, Row Clears, and Color Clears when you\'re stuck. Earn more by completing levels!',
-    position: 'center',
-  },
-  {
-    title: 'You\'re Ready!',
-    message: 'Reach the target score to complete each level. Earn up to 3 stars for high scores. Good luck!',
-    position: 'center',
+    message: 'Stuck? Use Bombs, Row Clears, and Color Clears. Reach the target score to win — up to 3 stars.',
+    position: 'bottom',
   },
 ];
 

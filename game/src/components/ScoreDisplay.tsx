@@ -12,6 +12,7 @@ import { formatScore } from '../utils/formatters';
 interface ScoreDisplayProps {
   score: number;
   combo: number;
+  chromaticClears?: number;
   objective: { type: 'score'; target: number };
   level: number;
   stars: 0 | 1 | 2 | 3;
@@ -20,6 +21,7 @@ interface ScoreDisplayProps {
 export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   score,
   combo,
+  chromaticClears = 0,
   objective,
   level,
   stars,
@@ -100,6 +102,13 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             <Text style={styles.comboText}>{combo}x COMBO</Text>
           </View>
         </Animated.View>
+      )}
+
+      {/* Chromatic clears — the signature single-color-line bonus */}
+      {chromaticClears > 0 && (
+        <View style={styles.chromaChip}>
+          <Text style={styles.chromaText}>🌈 {chromaticClears} CHROMATIC</Text>
+        </View>
       )}
 
       {/* Progress bar with star milestones */}
@@ -210,6 +219,21 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: COLORS.accentGold,
     letterSpacing: 1.5,
+  },
+  chromaChip: {
+    marginTop: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: RADII.round,
+    backgroundColor: `${COLORS.info}1A`,
+    borderWidth: 1,
+    borderColor: `${COLORS.info}55`,
+  },
+  chromaText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: COLORS.info,
+    letterSpacing: 1,
   },
   progressContainer: {
     width: '100%',

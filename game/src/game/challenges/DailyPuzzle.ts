@@ -68,6 +68,9 @@ export function getDailyPuzzleConfig(date: Date = new Date()): LevelConfig {
     // (including the unorthodox pentominoes) is in rotation.
     piecePool: [...PIECE_POOLS.medium, ...PIECE_POOLS.hard],
     seed,
+    // Limit the palette so a single-color (chromatic) line is achievable — the
+    // daily is the most-shared surface, so the signature hook should feature here.
+    paletteSize: 5,
   };
 }
 
@@ -130,6 +133,8 @@ export interface DailyShareCardInput {
   bestCombo: number;
   piecesPlaced: number;
   streak: number;
+  /** Single-color line clears this run — the signature Chroma move. */
+  chromaticClears: number;
   /** Fraction of the 3-star threshold the player achieved, 0-1. */
   scoreFraction: number;
 }
@@ -167,6 +172,7 @@ export function buildDailyShareCard(input: DailyShareCardInput): string {
   const stats: string[] = [];
   if (input.streak > 1) stats.push(`🔥 ${input.streak}-day streak`);
   stats.push(`${input.linesCleared} lines`);
+  if (input.chromaticClears > 0) stats.push(`🌈 ${input.chromaticClears} chromatic`);
   if (input.bestCombo > 1) stats.push(`x${input.bestCombo} combo`);
   lines.push(stats.join(' · '));
 

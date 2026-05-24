@@ -87,6 +87,7 @@ export const DailyStatsModal: React.FC<DailyStatsModalProps> = ({ visible, onClo
       bestCombo: 0,
       piecesPlaced: 0,
       streak: dailyPuzzleStreak,
+      chromaticClears: 0,
       scoreFraction: Math.min(1, dailyPuzzleLastPlayedScore / 8000),
     });
     try {
