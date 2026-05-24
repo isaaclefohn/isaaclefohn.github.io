@@ -96,7 +96,10 @@ const TITLE_BLOCKS = [
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, piggyBankCoins, lastGiftDate, gamesPlayedToday, claimGift, lastPlayDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, addCoins, lastDealClaimed, rouletteLastDate, dailyPuzzleLastPlayedId, dailyPuzzleLastPlayedScore, dailyPuzzleStreak } = usePlayerStore();
   const { tutorialCompleted, completeTutorial, notificationsEnabled, comebackShownDate, setComebackShownDate } = useSettingsStore();
-  const [showTutorial, setShowTutorial] = useState(!tutorialCompleted);
+  // Onboarding is taught in-context on the game board (TutorialOverlay on
+  // level 1), so we don't front-load a modal here. Kept for a future manual
+  // "How to play" entry point; never auto-shown to first-timers.
+  const [showTutorial, setShowTutorial] = useState(false);
   const [showDailyReward, setShowDailyReward] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -201,14 +204,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const today = new Date().toISOString().split('T')[0];
   const canSpin = lastSpinDate !== today;
 
-  // Show daily reward modal on first visit each day
+  // Show daily reward modal on first visit each day — but not before a brand-new
+  // player has finished the in-game tutorial (don't interrupt their first session).
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
-    if (dailyRewardLastClaimed !== today && !showTutorial) {
+    if (dailyRewardLastClaimed !== today && tutorialCompleted) {
       const timer = setTimeout(() => setShowDailyReward(true), 800);
       return () => clearTimeout(timer);
     }
-  }, [dailyRewardLastClaimed, showTutorial]);
+  }, [dailyRewardLastClaimed, tutorialCompleted]);
 
   // Check achievements, stickers, notifications, and gift box on screen load
   useEffect(() => {
