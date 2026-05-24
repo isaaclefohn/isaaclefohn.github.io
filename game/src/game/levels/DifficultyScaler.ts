@@ -103,6 +103,14 @@ export function getDifficultyParams(levelNumber: number): DifficultyParams {
   };
 }
 
+/** Distinct colors per level — fewer early so the chromatic clear is learnable,
+ *  more later for a higher skill ceiling (kept <= 6 so the hook never dies). */
+function getPaletteSize(levelNumber: number): number {
+  if (levelNumber <= 20) return 4;
+  if (levelNumber <= 100) return 5;
+  return 6;
+}
+
 /** Generate a complete LevelConfig from a level number */
 export function generateLevelConfig(levelNumber: number): LevelConfig {
   const params = getDifficultyParams(levelNumber);
@@ -115,5 +123,6 @@ export function generateLevelConfig(levelNumber: number): LevelConfig {
     piecePool: params.piecePool,
     starThresholds: params.starThresholds,
     seed,
+    paletteSize: getPaletteSize(levelNumber),
   };
 }

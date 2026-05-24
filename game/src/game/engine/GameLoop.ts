@@ -38,6 +38,10 @@ export interface GameState {
   lastPlacedCells: { row: number; col: number }[];
   /** Number of piece swaps used this game */
   swapsUsed: number;
+  /** Distinct block colors in play this level (drives chromatic achievability) */
+  paletteSize: number;
+  /** Running count of single-color (chromatic) line clears this game */
+  chromaticClears: number;
 }
 
 export interface LevelConfig {
@@ -47,13 +51,15 @@ export interface LevelConfig {
   piecePool: PieceType[];
   starThresholds: [number, number, number];
   seed: number;
+  /** Distinct block colors this level (<= 7). Fewer = chromatic clears achievable. */
+  paletteSize?: number;
 }
 
 /** Initialize a new game state for a given level configuration */
 export function initGame(config: LevelConfig): GameState {
   const rng = new SeededRandom(config.seed);
   const grid = createGrid(config.gridSize);
-  const availablePieces = generatePieceSet(rng, config.piecePool);
+  const availablePieces = generatePieceSet(rng, config.piecePool, config.paletteSize);
 
   return {
     grid,
@@ -72,15 +78,22 @@ export function initGame(config: LevelConfig): GameState {
     lastClearedCols: [],
     lastPlacedCells: [],
     swapsUsed: 0,
+    paletteSize: config.paletteSize ?? COLORS.blocks.length,
+    chromaticClears: 0,
   };
 }
 
 /** Generate a set of 3 random pieces from the pool */
-export function generatePieceSet(rng: SeededRandom, pool: PieceType[]): Piece[] {
+export function generatePieceSet(rng: SeededRandom, pool: PieceType[], paletteSize?: number): Piece[] {
+  // Limiting the per-level palette is what makes a single-color ("chromatic")
+  // line achievable by planning instead of luck — the core Chroma Drop hook.
+  // nextInt consumes one RNG draw regardless of range, so piece types/positions
+  // stay identical seed-for-seed; only the color values compress.
+  const maxColor = Math.min(paletteSize ?? COLORS.blocks.length, COLORS.blocks.length);
   const pieces: Piece[] = [];
   for (let i = 0; i < PIECES_PER_TURN; i++) {
     const type = rng.pick(pool);
-    const colorIndex = rng.nextInt(1, COLORS.blocks.length);
+    const colorIndex = rng.nextInt(1, maxColor);
     pieces.push(createPiece(type, colorIndex));
   }
   return pieces;
@@ -141,7 +154,7 @@ export function processTurn(
   // Check if all 3 pieces have been placed — generate new set
   const remainingPieces = newAvailable.filter((p): p is Piece => p !== null);
   if (remainingPieces.length === 0) {
-    const newSet = generatePieceSet(rng, piecePool);
+    const newSet = generatePieceSet(rng, piecePool, state.paletteSize);
     // Check for game over with the new set (plus any held piece)
     const gameOverPool = heldPiece ? [...newSet, heldPiece] : newSet;
     const gameOver = isGameOver(result.grid, gameOverPool);
@@ -156,6 +169,7 @@ export function processTurn(
       piecesPlaced: newPiecesPlaced,
       linesCleared: newLinesCleared,
       availablePieces: newSet,
+      chromaticClears: state.chromaticClears + scoreEvent.chromaticClears,
       status: won ? 'won' : gameOver ? 'lost' : 'playing',
       lastScoreEvent: scoreEvent,
       lastClearedRows: result.clearedRows,
@@ -177,6 +191,7 @@ export function processTurn(
     piecesPlaced: newPiecesPlaced,
     linesCleared: newLinesCleared,
     availablePieces: newAvailable,
+    chromaticClears: state.chromaticClears + scoreEvent.chromaticClears,
     status: won ? 'won' : gameOver ? 'lost' : 'playing',
     lastScoreEvent: scoreEvent,
     lastClearedRows: result.clearedRows,
