@@ -1,33 +1,36 @@
 /**
- * Rate limiting middleware using Upstash Redis.
- * To be used with Vercel API routes.
+ * Upstash Redis client + rate limiters for the API.
+ * Everything is lazily constructed so importing never throws when the env
+ * vars are absent (the endpoints degrade to a 503 instead of crashing).
  */
 
-// TODO: Uncomment when Upstash is configured
-// import { Ratelimit } from '@upstash/ratelimit';
-// import { Redis } from '@upstash/redis';
-//
-// const redis = new Redis({
-//   url: process.env.UPSTASH_REDIS_URL!,
-//   token: process.env.UPSTASH_REDIS_TOKEN!,
-// });
-//
-// export const generalLimit = new Ratelimit({
-//   redis,
-//   limiter: Ratelimit.slidingWindow(60, '1 m'),
-//   analytics: true,
-// });
-//
-// export const writeLimit = new Ratelimit({
-//   redis,
-//   limiter: Ratelimit.slidingWindow(10, '1 m'),
-//   analytics: true,
-// });
-//
-// export const receiptLimit = new Ratelimit({
-//   redis,
-//   limiter: Ratelimit.slidingWindow(5, '1 m'),
-//   analytics: true,
-// });
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
-export {};
+let redis: Redis | null = null;
+
+/** Shared Redis client (reads UPSTASH_REDIS_REST_URL / _TOKEN from env). */
+export function getRedis(): Redis | null {
+  if (redis) return redis;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  redis = new Redis({ url, token });
+  return redis;
+}
+
+let writeLimiter: Ratelimit | null = null;
+
+/** Rate limiter for authenticated writes (e.g. score submits): 10 / minute. */
+export function getWriteLimit(): Ratelimit | null {
+  const r = getRedis();
+  if (!r) return null;
+  if (!writeLimiter) {
+    writeLimiter = new Ratelimit({
+      redis: r,
+      limiter: Ratelimit.slidingWindow(10, '1 m'),
+      prefix: 'rl:write',
+    });
+  }
+  return writeLimiter;
+}
