@@ -23,6 +23,8 @@ export interface ScoreEvent {
   linesCleared: number;
   /** Number of chromatic (single-color) lines included in this clear */
   chromaticClears: number;
+  /** Color index (1-7) of each chromatic line, so the UI can celebrate in-hue */
+  chromaticColors: number[];
   /** Breakdown of how points were earned */
   breakdown: {
     placementBonus: number;
@@ -62,6 +64,7 @@ export function scorePlacement(cellCount: number): ScoreEvent {
     perfectClear: false,
     linesCleared: 0,
     chromaticClears: 0,
+    chromaticColors: [],
     breakdown: {
       placementBonus,
       clearBonus: 0,
@@ -80,6 +83,7 @@ export function scoreClear(
   currentCombo: number,
   isPerfectClear: boolean = false,
   chromaticClears: number = 0,
+  chromaticColors: number[] = [],
 ): ScoreEvent {
   const newCombo = currentCombo + 1;
   const multiplierIndex = Math.min(newCombo - 1, COMBO_MULTIPLIERS.length - 1);
@@ -109,6 +113,7 @@ export function scoreClear(
     perfectClear: isPerfectClear,
     linesCleared,
     chromaticClears,
+    chromaticColors,
     breakdown: {
       placementBonus: 0,
       clearBonus,

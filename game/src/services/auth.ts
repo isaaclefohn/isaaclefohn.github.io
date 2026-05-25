@@ -31,7 +31,10 @@ export async function signInAnonymously(): Promise<AuthState> {
       isAuthenticated: true,
     };
   } catch (error) {
-    console.error('Anonymous sign-in failed:', error);
+    // Expected when anonymous sign-ins are disabled in the Supabase project (or
+    // the device is offline). Degrade to local-only mode instead of crashing,
+    // and warn rather than error so this doesn't flood Sentry as a real failure.
+    console.warn('Anonymous sign-in unavailable:', (error as Error)?.message ?? error);
     return { userId: null, isAnonymous: true, isAuthenticated: false };
   }
 }

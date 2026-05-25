@@ -136,6 +136,7 @@ export function processTurn(
       state.combo,
       result.perfectClear,
       result.chromaticClears,
+      result.chromaticColors,
     );
     newCombo = scoreEvent.combo;
   } else {

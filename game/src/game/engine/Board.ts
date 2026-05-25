@@ -96,47 +96,42 @@ export function findFullLines(grid: Grid): { rows: number[]; cols: number[] } {
 }
 
 /**
- * Count "chromatic" clears — rows/cols where every filled cell shares the
- * same color. This is a Chroma Drop-exclusive mechanic: it turns the
- * color palette into a scoring lever, so players are rewarded for planning
- * color matches rather than just clearing lines at random.
+ * Find "chromatic" clears — rows/cols where every filled cell shares the same
+ * color — and return the color index (1-7) of each. This is a Chroma Drop
+ * exclusive mechanic: it turns the color palette into a scoring lever, so
+ * players are rewarded for planning color matches rather than clearing at
+ * random. Returning the colors (not just a count) lets the UI celebrate a
+ * chromatic clear in the very hue the player matched.
  */
+export function getChromaticColors(
+  grid: Grid,
+  rows: number[],
+  cols: number[],
+): number[] {
+  const size = grid.length;
+  const colors: number[] = [];
+  const scanLine = (cells: number[]) => {
+    let color = -1;
+    for (const v of cells) {
+      if (v === 0) continue;
+      if (color === -1) color = v;
+      else if (v !== color) return; // mixed colors — not chromatic
+    }
+    if (color !== -1) colors.push(color);
+  };
+  for (const r of rows) scanLine(grid[r]);
+  for (const c of cols) scanLine(grid.map((row) => row[c]));
+  return colors;
+}
+
+/** Count chromatic (single-color) line clears. Thin wrapper over
+ *  getChromaticColors for callers that only need the count. */
 export function countChromaticClears(
   grid: Grid,
   rows: number[],
   cols: number[],
 ): number {
-  const size = grid.length;
-  let chromatic = 0;
-  for (const r of rows) {
-    let color = -1;
-    let monochrome = true;
-    for (let c = 0; c < size; c++) {
-      const v = grid[r][c];
-      if (v === 0) continue;
-      if (color === -1) color = v;
-      else if (v !== color) {
-        monochrome = false;
-        break;
-      }
-    }
-    if (monochrome && color !== -1) chromatic++;
-  }
-  for (const c of cols) {
-    let color = -1;
-    let monochrome = true;
-    for (let r = 0; r < size; r++) {
-      const v = grid[r][c];
-      if (v === 0) continue;
-      if (color === -1) color = v;
-      else if (v !== color) {
-        monochrome = false;
-        break;
-      }
-    }
-    if (monochrome && color !== -1) chromatic++;
-  }
-  return chromatic;
+  return getChromaticColors(grid, rows, cols).length;
 }
 
 /** Clear the given rows and columns, returning the new grid and count of cells cleared */
@@ -214,6 +209,8 @@ export interface PlacementResult {
   cascadeCount: number;
   /** Number of cleared lines where every filled cell shared the same color */
   chromaticClears: number;
+  /** Color index (1-7) of each chromatic line, so the UI can celebrate in-hue */
+  chromaticColors: number[];
 }
 
 export function executePlacement(
@@ -230,15 +227,18 @@ export function executePlacement(
   let allClearedRows: number[] = [];
   let allClearedCols: number[] = [];
   let cascadeCount = 0;
-  let totalChromaticClears = 0;
+  let totalChromaticColors: number[] = [];
 
   // Clear + gravity cascade loop
   while (true) {
     const { rows, cols } = findFullLines(currentGrid);
     if (rows.length === 0 && cols.length === 0) break;
 
-    // Count chromatic lines BEFORE clearing (need the colors still in grid)
-    totalChromaticClears += countChromaticClears(currentGrid, rows, cols);
+    // Capture chromatic colors BEFORE clearing (need the colors still in grid)
+    totalChromaticColors = [
+      ...totalChromaticColors,
+      ...getChromaticColors(currentGrid, rows, cols),
+    ];
 
     const result = clearLines(currentGrid, rows, cols);
     totalLinesCleared += rows.length + cols.length;
@@ -268,6 +268,7 @@ export function executePlacement(
       perfectClear: false,
       cascadeCount: 0,
       chromaticClears: 0,
+      chromaticColors: [],
     };
   }
 
@@ -281,7 +282,8 @@ export function executePlacement(
     clearedCols: allClearedCols,
     perfectClear: isPerfectClear,
     cascadeCount: actualCascades,
-    chromaticClears: totalChromaticClears,
+    chromaticClears: totalChromaticColors.length,
+    chromaticColors: totalChromaticColors,
   };
 }
 

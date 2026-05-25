@@ -117,7 +117,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     continueGame,
   } = useGameEngine();
 
-  const { playSound, playPlacement } = useSound();
+  const { playSound, playPlacement, playHaptic } = useSound();
   const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak } = usePlayerStore(useShallow((s) => ({
     powerUps: s.powerUps, usePowerUp: s.usePowerUp, coins: s.coins, gems: s.gems,
     addCoins: s.addCoins, addGems: s.addGems, addPowerUp: s.addPowerUp, spendGems: s.spendGems,
@@ -351,16 +351,24 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         setTimeout(() => setShowConfetti(false), 2500);
         setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.chromaticClears > 0) {
-        // Chromatic clear — our unique mechanic
+        // Chromatic clear — our signature mechanic. Celebrate IN the color the
+        // player matched: a single-color clear bursts in that exact hue, while
+        // clearing multiple different colors at once earns a gold "RAINBOW!".
+        const distinctColors = [...new Set(event.chromaticColors ?? [])];
+        const isRainbow = distinctColors.length >= 2;
+        const chromaColor = isRainbow
+          ? COLORS.accentGold
+          : COLORS.blocks[(distinctColors[0] ?? 1) - 1];
         playSound('combo');
+        if (isRainbow) playHaptic('success'); // extra pulse for the rare multi-color clear
         setShowComboBanner(true);
-        setClearFlashColor(COLORS.accent);
+        setClearFlashColor(chromaColor);
         setShowClearFlash(true);
         shakeBoard(1.5 + event.chromaticClears * 0.5);
-        setHypeText(event.chromaticClears >= 2 ? 'RAINBOW!' : 'CHROMATIC!');
-        setHypeColor(COLORS.accent);
+        setHypeText(isRainbow ? 'RAINBOW!' : 'CHROMATIC!');
+        setHypeColor(chromaColor);
         setShowHype(true);
-        setBurstColor(COLORS.accent);
+        setBurstColor(chromaColor);
         setShowBurst(true);
         setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.linesCleared >= 3) {
