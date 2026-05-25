@@ -17,7 +17,8 @@ import {
 import { Button } from '../components/common/Button';
 import { GameIcon, IconName } from '../components/GameIcon';
 import { fetchLeaderboard, LeaderboardEntry } from '../services/leaderboard';
-import { getWeekId, getTodayId } from '../utils/leaderboardIds';
+import { getWeekId } from '../utils/leaderboardIds';
+import { getDailyPuzzleId } from '../game/challenges/DailyPuzzle';
 import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -89,7 +90,8 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
 
   const loadLeaderboard = useCallback(async () => {
     setLoading(true);
-    const id = activeTab === 'weekly' ? getWeekId() : getTodayId();
+    // Daily tab reads the current daily-puzzle board (same id the submit uses).
+    const id = activeTab === 'weekly' ? getWeekId() : getDailyPuzzleId();
     const data = await fetchLeaderboard(activeTab, id, 50);
     setEntries(data);
     setLoading(false);

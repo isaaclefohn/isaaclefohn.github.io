@@ -5,7 +5,8 @@
 
 import { getAccessToken } from './auth';
 import { syncDisplayName } from './playerProfile';
-import { getWeekId, getTodayId } from '../utils/leaderboardIds';
+import { getWeekId } from '../utils/leaderboardIds';
+import { getDailyPuzzleId } from '../game/challenges/DailyPuzzle';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
 
@@ -92,7 +93,10 @@ export function boardsForResult(input: GameResultInput): { type: LeaderboardType
   const boards: { type: LeaderboardType; id: string }[] = [
     { type: 'weekly', id: getWeekId() },
   ];
-  if (input.isDaily) boards.push({ type: 'daily', id: getTodayId() });
+  // Key the daily board by the PUZZLE id (not "today"), so everyone who played
+  // the same fixed-seed daily puzzle competes on the same board — fair by
+  // construction, even across timezones / the UTC-vs-local midnight boundary.
+  if (input.isDaily) boards.push({ type: 'daily', id: getDailyPuzzleId() });
   return boards;
 }
 

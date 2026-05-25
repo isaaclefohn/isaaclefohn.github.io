@@ -18,7 +18,8 @@ export function getWeekId(date: Date = new Date()): string {
   return `${date.getUTCFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
 }
 
-/** Calendar day identifier, e.g. "2026-05-24". */
-export function getTodayId(date: Date = new Date()): string {
-  return date.toISOString().split('T')[0];
-}
+// NOTE: the daily leaderboard board is keyed by the DAILY PUZZLE id
+// (getDailyPuzzleId in game/challenges/DailyPuzzle), NOT a generic "today"
+// string — so the board always matches the exact fixed-seed puzzle players
+// ran. Don't reintroduce a separate today-id here; it would drift from the
+// puzzle's local-midnight day boundary and make the board unfair.
