@@ -88,6 +88,28 @@ export async function signOut(): Promise<void> {
   }
 }
 
+/** Ensure the player has a session, signing in anonymously if needed.
+ *  Called once at app boot so score submission always has a JWT to send.
+ *  No-ops gracefully (returns unauthenticated) when Supabase isn't configured. */
+export async function ensureSession(): Promise<AuthState> {
+  const current = await getCurrentAuth();
+  if (current.isAuthenticated) return current;
+  return signInAnonymously();
+}
+
+/** Return the current session's JWT access token, or null.
+ *  This is the only trustworthy proof of identity the leaderboard API accepts. */
+export async function getAccessToken(): Promise<string | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Get current auth state */
 export async function getCurrentAuth(): Promise<AuthState> {
   const supabase = getSupabase();

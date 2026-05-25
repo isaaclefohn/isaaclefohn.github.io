@@ -60,6 +60,7 @@ import { formatScore } from '../utils/formatters';
 import { calculateCoinReward } from '../game/engine/Scoring';
 import { canShowRewarded, onLevelCompleted, showRewardedAd, showInterstitialAd, AD_REWARDS } from '../services/ads';
 import { createChallenge, shareChallenge } from '../services/challenges';
+import { reportGameResult } from '../services/leaderboard';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -238,6 +239,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
 
   // Handle win/loss
   useEffect(() => {
+    // Submit the final score to the leaderboard on any game end (win or loss).
+    // Best-effort + fire-and-forget; the service no-ops without a session/API.
+    if (gameState?.status === 'won' || gameState?.status === 'lost') {
+      void reportGameResult({
+        score: gameState.score,
+        isDaily,
+        isEndless,
+        level,
+        displayName,
+      });
+    }
     if (gameState?.status === 'won') {
       playSound('levelWin');
       setShowConfetti(true);

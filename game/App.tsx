@@ -11,6 +11,7 @@ import { BrandSplash } from './src/components/BrandSplash';
 import { initializeAds } from './src/services/ads';
 import { initSentry, initAnalytics } from './src/services/analytics';
 import { initializePurchases } from './src/services/purchases';
+import { ensureSession } from './src/services/auth';
 
 // Initialize Sentry as early as possible so startup errors are captured.
 initSentry();
@@ -22,6 +23,9 @@ export default function App() {
     initAnalytics();
     initializeAds();
     initializePurchases();
+    // Establish an (anonymous) session so leaderboard submits have a JWT.
+    // Fire-and-forget: no-ops when Supabase/anon-auth isn't available.
+    void ensureSession();
   }, []);
 
   return (

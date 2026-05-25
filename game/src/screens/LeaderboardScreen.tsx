@@ -17,6 +17,7 @@ import {
 import { Button } from '../components/common/Button';
 import { GameIcon, IconName } from '../components/GameIcon';
 import { fetchLeaderboard, LeaderboardEntry } from '../services/leaderboard';
+import { getWeekId, getTodayId } from '../utils/leaderboardIds';
 import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -88,10 +89,7 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
 
   const loadLeaderboard = useCallback(async () => {
     setLoading(true);
-    const today = new Date().toISOString().split('T')[0];
-    const weekId = getWeekId();
-
-    const id = activeTab === 'weekly' ? weekId : today;
+    const id = activeTab === 'weekly' ? getWeekId() : getTodayId();
     const data = await fetchLeaderboard(activeTab, id, 50);
     setEntries(data);
     setLoading(false);
@@ -214,15 +212,6 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
     </SafeAreaView>
   );
 };
-
-/** Get a week identifier string (year-week) */
-function getWeekId(): string {
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86400000);
-  const weekNumber = Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
-  return `${now.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
-}
 
 const styles = StyleSheet.create({
   container: {

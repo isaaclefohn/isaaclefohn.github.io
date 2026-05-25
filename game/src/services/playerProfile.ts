@@ -58,6 +58,20 @@ export async function updateProfile(
   }
 }
 
+/** Push the player's chosen display name to their cloud profile so it shows on
+ *  leaderboards. Resolves the user from the current session (best-effort). */
+export async function syncDisplayName(name: string): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase || !name) return;
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id;
+    if (uid) await updateProfile(uid, { display_name: name });
+  } catch {
+    // best-effort; ignore
+  }
+}
+
 /** Sync local player state to cloud (merge strategy: take the higher value) */
 export async function syncProfile(
   userId: string,
