@@ -28,9 +28,12 @@ interface BoardEffectsProps {
   clearedCols: number[];
   /** Board fill ratio (0-1) for danger state */
   fillRatio: number;
-  /** Rows/cols one cell from clearing */
+  /** Rows/cols one cell from clearing (generic, mixed colors) */
   nearClearRows?: number[];
   nearClearCols?: number[];
+  /** Rows/cols one matching-color cell from a CHROMATIC clear, with that color */
+  nearChromaticRows?: { index: number; color: number }[];
+  nearChromaticCols?: { index: number; color: number }[];
   /** Current combo level for edge glow */
   combo: number;
 }
@@ -375,6 +378,75 @@ const NearClearHint: React.FC<{ rows: number[]; cols: number[]; gridSize: number
   );
 };
 
+/** Pulsing highlight on rows/cols one matching-color cell from a CHROMATIC
+ *  clear — tinted the line's own color to teach "complete this color here".
+ *  Slightly stronger than the generic gold near-clear hint so it reads as the
+ *  special, higher-value opportunity. */
+const NearChromaticHint: React.FC<{
+  rows: { index: number; color: number }[];
+  cols: { index: number; color: number }[];
+  gridSize: number;
+}> = ({ rows, cols, gridSize }) => {
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (rows.length === 0 && cols.length === 0) {
+      pulse.setValue(0);
+      return;
+    }
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 650, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 650, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [rows.length, cols.length, pulse]);
+
+  if (rows.length === 0 && cols.length === 0) return null;
+
+  const cellTotal = CELL_SIZE + CELL_GAP;
+  const totalSize = gridSize * cellTotal + CELL_GAP;
+  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.14, 0.4] });
+  const hex = (ci: number) => COLORS.blocks[(ci - 1) % COLORS.blocks.length];
+
+  return (
+    <>
+      {rows.map(({ index: r, color }) => (
+        <Animated.View
+          key={`xcr-${r}`}
+          style={{
+            position: 'absolute',
+            top: CELL_GAP + r * cellTotal - 1,
+            left: CELL_GAP,
+            width: totalSize - CELL_GAP * 2,
+            height: CELL_SIZE + 2,
+            borderRadius: CELL_RADIUS,
+            backgroundColor: hex(color),
+            opacity,
+          }}
+        />
+      ))}
+      {cols.map(({ index: c, color }) => (
+        <Animated.View
+          key={`xcc-${c}`}
+          style={{
+            position: 'absolute',
+            left: CELL_GAP + c * cellTotal - 1,
+            top: CELL_GAP,
+            height: totalSize - CELL_GAP * 2,
+            width: CELL_SIZE + 2,
+            borderRadius: CELL_RADIUS,
+            backgroundColor: hex(color),
+            opacity,
+          }}
+        />
+      ))}
+    </>
+  );
+};
+
 export const BoardEffects: React.FC<BoardEffectsProps> = ({
   gridSize,
   placedCells,
@@ -384,6 +456,8 @@ export const BoardEffects: React.FC<BoardEffectsProps> = ({
   combo,
   nearClearRows = [],
   nearClearCols = [],
+  nearChromaticRows = [],
+  nearChromaticCols = [],
 }) => {
   const { reducedMotion } = useSettingsStore();
   const totalSize = gridSize * (CELL_SIZE + CELL_GAP) + CELL_GAP;
@@ -393,6 +467,7 @@ export const BoardEffects: React.FC<BoardEffectsProps> = ({
   return (
     <View style={[styles.container, { width: totalSize, height: totalSize }]} pointerEvents="none">
       <NearClearHint rows={nearClearRows} cols={nearClearCols} gridSize={gridSize} />
+      <NearChromaticHint rows={nearChromaticRows} cols={nearChromaticCols} gridSize={gridSize} />
       <PlacementSquish cells={placedCells} />
       <ClearSweep rows={clearedRows} cols={clearedCols} gridSize={gridSize} />
       <DangerBorder fillRatio={fillRatio} gridSize={gridSize} />

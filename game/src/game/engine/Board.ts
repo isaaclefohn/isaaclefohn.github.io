@@ -336,6 +336,42 @@ export function getNearClearLines(grid: Grid): { rows: number[]; cols: number[] 
   return { rows, cols };
 }
 
+/**
+ * Find rows/cols that are exactly one cell from a CHROMATIC clear: one empty
+ * cell, and every filled cell shares a single color. Returns each line with
+ * that color so the UI can nudge the player ("match this color here for a
+ * chromatic bonus") — teaching the signature mechanic before it happens.
+ */
+export function getNearChromaticLines(grid: Grid): {
+  rows: { index: number; color: number }[];
+  cols: { index: number; color: number }[];
+} {
+  const size = grid.length;
+  const rows: { index: number; color: number }[] = [];
+  const cols: { index: number; color: number }[] = [];
+
+  const scan = (cells: number[]): number | null => {
+    let empty = 0;
+    let color = -1;
+    for (const v of cells) {
+      if (v === 0) { empty++; continue; }
+      if (color === -1) color = v;
+      else if (v !== color) return null; // mixed colors
+    }
+    return empty === 1 && color !== -1 ? color : null;
+  };
+
+  for (let r = 0; r < size; r++) {
+    const color = scan(grid[r]);
+    if (color !== null) rows.push({ index: r, color });
+  }
+  for (let c = 0; c < size; c++) {
+    const color = scan(grid.map((row) => row[c]));
+    if (color !== null) cols.push({ index: c, color });
+  }
+  return { rows, cols };
+}
+
 /** Find the best placement for a piece on the grid.
  *  Scores by: lines cleared > cells adjacent to filled > lower row (prefer bottom).
  *  Returns null if no placement exists. */

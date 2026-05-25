@@ -8,7 +8,7 @@ import { View, StyleSheet, LayoutChangeEvent } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { BoardRenderer } from '../game/rendering/BoardRenderer';
 import { BoardEffects } from './BoardEffects';
-import { Grid, canPlace, countFilledCells, getNearClearLines } from '../game/engine/Board';
+import { Grid, canPlace, countFilledCells, getNearClearLines, getNearChromaticLines } from '../game/engine/Board';
 import { Piece, getPieceCentroid } from '../game/engine/Piece';
 import { CELL_SIZE, CELL_GAP, COLORS } from '../utils/constants';
 import { useSettingsStore } from '../store/settingsStore';
@@ -52,8 +52,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const filledCells = countFilledCells(grid);
   const fillRatio = filledCells / totalCells;
 
-  // Find near-clear lines
+  // Find near-clear lines, and the subset that are near-CHROMATIC (one matching
+  // color from a single-color clear). A near-chromatic line is shown in its own
+  // color; we exclude it from the generic gold hint so each line reads as one
+  // thing: gold = "almost a clear", colored = "almost a chromatic clear".
   const nearClear = useMemo(() => getNearClearLines(grid), [grid]);
+  const nearChromatic = useMemo(() => getNearChromaticLines(grid), [grid]);
+  const genericNearClear = useMemo(() => {
+    const chromaRows = new Set(nearChromatic.rows.map((r) => r.index));
+    const chromaCols = new Set(nearChromatic.cols.map((c) => c.index));
+    return {
+      rows: nearClear.rows.filter((r) => !chromaRows.has(r)),
+      cols: nearClear.cols.filter((c) => !chromaCols.has(c)),
+    };
+  }, [nearClear, nearChromatic]);
 
   const handleLayout = useCallback((_event: LayoutChangeEvent) => {
     boardRef.current?.measureInWindow((px, py, width, height) => {
@@ -102,8 +114,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             clearedCols={clearedCols}
             fillRatio={fillRatio}
             combo={combo}
-            nearClearRows={nearClear.rows}
-            nearClearCols={nearClear.cols}
+            nearClearRows={genericNearClear.rows}
+            nearClearCols={genericNearClear.cols}
+            nearChromaticRows={nearChromatic.rows}
+            nearChromaticCols={nearChromatic.cols}
           />
         </View>
       </GestureDetector>

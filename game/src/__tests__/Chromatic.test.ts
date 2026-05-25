@@ -1,4 +1,4 @@
-import { getChromaticColors, countChromaticClears, type Grid } from '../game/engine/Board';
+import { getChromaticColors, countChromaticClears, getNearChromaticLines, type Grid } from '../game/engine/Board';
 
 describe('chromatic color capture (signature mechanic)', () => {
   it('returns the color index of a single-color full row', () => {
@@ -43,5 +43,49 @@ describe('chromatic color capture (signature mechanic)', () => {
     ];
     const colors = getChromaticColors(grid, [0, 1], []);
     expect(new Set(colors)).toEqual(new Set([1, 6]));
+  });
+});
+
+describe('near-chromatic detection (teaching cue)', () => {
+  it('flags a row that is one matching-color piece from a chromatic clear', () => {
+    const grid: Grid = [
+      [4, 4, 4, 0], // one empty, all green(4) -> near-chromatic
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ];
+    const { rows, cols } = getNearChromaticLines(grid);
+    expect(rows).toEqual([{ index: 0, color: 4 }]);
+    expect(cols).toEqual([]);
+  });
+
+  it('does not flag a one-empty row whose filled cells are mixed colors', () => {
+    const grid: Grid = [
+      [4, 4, 5, 0], // one empty but mixed -> not near-chromatic
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ];
+    expect(getNearChromaticLines(grid).rows).toEqual([]);
+  });
+
+  it('does not flag an already-full line (that is a clear, not a near)', () => {
+    const grid: Grid = [
+      [4, 4, 4, 4], // full -> already a chromatic clear, not "near"
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ];
+    expect(getNearChromaticLines(grid).rows).toEqual([]);
+  });
+
+  it('flags a near-chromatic column with its color', () => {
+    const grid: Grid = [
+      [6, 0, 0, 0],
+      [6, 0, 0, 0],
+      [6, 0, 0, 0],
+      [0, 0, 0, 0], // col 0 has one empty, all purple(6)
+    ];
+    expect(getNearChromaticLines(grid).cols).toEqual([{ index: 0, color: 6 }]);
   });
 });
