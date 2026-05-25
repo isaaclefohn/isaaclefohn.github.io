@@ -95,7 +95,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showDailyStats, setShowDailyStats] = useState(false);
   const [showRewardsHub, setShowRewardsHub] = useState(false);
   const [showCompeteHub, setShowCompeteHub] = useState(false);
-  const [showShopHub, setShowShopHub] = useState(false);
   const [showMoreHub, setShowMoreHub] = useState(false);
   const freeChestLastClaimedAt = usePlayerStore((s) => s.freeChestLastClaimedAt);
   const [nowTick, setNowTick] = useState(Date.now());
@@ -521,7 +520,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               </View>
               <Text style={styles.hubButtonLabel}>Compete</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.hubButton} onPress={() => setShowShopHub(true)}>
+            <TouchableOpacity style={styles.hubButton} onPress={() => navigation.navigate('Shop')}>
               <View style={[styles.hubIconWrap, { backgroundColor: `${COLORS.accent}15` }]}>
                 <GameIcon name="shop" size={20} color={COLORS.accent} />
                 {vipActive && <View style={[styles.hubDot, { backgroundColor: '#FACC15' }]} />}
@@ -712,11 +711,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         )}
       </HubMenuModal>
 
-      <HubMenuModal visible={showShopHub} onClose={() => setShowShopHub(false)} title="SHOP & VIP" accent={COLORS.accent}>
-        {isFeatureUnlocked('shop', highestLevel) && (
-          <FeatureTile icon="shop" label="Shop" onPress={() => { setShowShopHub(false); navigation.navigate('Shop'); }} accent={COLORS.accent} />
-        )}
-      </HubMenuModal>
 
       <HubMenuModal visible={showMoreHub} onClose={() => setShowMoreHub(false)} title="MORE" accent="#A78BFA">
         {isBossRushUnlocked(highestLevel) && (
