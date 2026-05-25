@@ -9,7 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { BrandSplash } from './src/components/BrandSplash';
 import { initializeAds } from './src/services/ads';
-import { initSentry } from './src/services/analytics';
+import { initSentry, initAnalytics } from './src/services/analytics';
 import { initializePurchases } from './src/services/purchases';
 
 // Initialize Sentry as early as possible so startup errors are captured.
@@ -19,6 +19,7 @@ export default function App() {
   const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
+    initAnalytics();
     initializeAds();
     initializePurchases();
   }, []);

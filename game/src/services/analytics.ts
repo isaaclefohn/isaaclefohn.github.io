@@ -6,9 +6,16 @@
  */
 
 import Constants from 'expo-constants';
+import { initPostHog, capturePostHog, setPostHogUser } from './analyticsPostHog';
 
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
 const isExpoGo = Constants.appOwnership === 'expo';
+
+/** Load the PostHog anonymous id at startup (called from App.tsx). The shared
+ *  logic lives in analyticsPostHog so the web facade stays in lockstep. */
+export async function initAnalytics(): Promise<void> {
+  await initPostHog();
+}
 
 // Lazily load Sentry to avoid crashing Expo Go (native module not bundled).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,6 +60,7 @@ export function trackEvent(name: string, data?: Record<string, unknown>): void {
   if (__DEV__) {
     console.log(`[Analytics] ${name}`, data ?? '');
   }
+  capturePostHog(name, data);
   loadSentry();
   if (Sentry) {
     try {
@@ -102,6 +110,7 @@ export function reportError(error: Error, context?: Record<string, unknown>): vo
 /** Set user context for error tracking */
 export function setUser(userId: string | null): void {
   if (userId) {
+    setPostHogUser(userId);
     trackEvent('user_identified', { userId });
   }
   loadSentry();
