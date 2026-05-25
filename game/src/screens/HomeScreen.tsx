@@ -13,60 +13,38 @@ import { DailyRewardModal } from '../components/DailyRewardModal';
 import { AchievementModal } from '../components/AchievementModal';
 import { StatsModal } from '../components/StatsModal';
 import { LuckySpinModal } from '../components/LuckySpinModal';
-import { PiggyBankModal } from '../components/PiggyBankModal';
-import { GiftBoxModal } from '../components/GiftBoxModal';
 import { PlayerProfileCard } from '../components/PlayerProfileCard';
 import { GameIcon } from '../components/GameIcon';
 import { EventBanner } from '../components/EventBanner';
 import { FeatureTile } from '../components/FeatureTile';
 import { isFeatureUnlocked, getNextUnlock } from '../game/progression/FeatureGating';
-import { shouldShowGift, generateGiftBox, GiftBox } from '../game/rewards/GiftBox';
 import { getActiveSeasonalTheme } from '../game/themes/SeasonalThemes';
-import { getComebackReward, ComebackReward } from '../game/rewards/ComebackBonus';
-import { ComebackBonusModal } from '../components/ComebackBonusModal';
-import { getStreakMilestone, getDailyStreakBonus, StreakMilestone } from '../game/rewards/StreakRewards';
-import { StreakMilestoneModal } from '../components/StreakMilestoneModal';
 import { DailyQuestsCard } from '../components/DailyQuestsCard';
 import { StickerAlbumModal } from '../components/StickerAlbumModal';
 import { checkStickerUnlocks } from '../game/systems/StickerAlbum';
 import { SkillRatingDisplay } from '../components/SkillRatingDisplay';
 import { AchievementShowcase } from '../components/AchievementShowcase';
-import { OfflineRewardModal } from '../components/OfflineRewardModal';
-import { LoginCalendarModal } from '../components/LoginCalendarModal';
-import { DailyDealModal } from '../components/DailyDealModal';
-import { getTodaysDeal, getTodayDealKey, isDealClaimed } from '../game/rewards/DailyDeal';
 import { BossRushModal } from '../components/BossRushModal';
 import { isBossRushUnlocked } from '../game/modes/BossRush';
-import { TreasureHuntModal } from '../components/TreasureHuntModal';
 import { LeaderboardModal } from '../components/LeaderboardModal';
-import { PIECES_REQUIRED } from '../game/rewards/TreasureHunt';
 import { TournamentModal } from '../components/TournamentModal';
 import { getHighestTier } from '../game/modes/Tournament';
 import { InboxModal } from '../components/InboxModal';
-import { VIPModal } from '../components/VIPModal';
 import { QuestChainModal } from '../components/QuestChainModal';
 import { PowerUpFusionModal } from '../components/PowerUpFusionModal';
 import { SeasonalEventModal } from '../components/SeasonalEventModal';
 import { HubMenuModal } from '../components/HubMenuModal';
 import { getActiveEvent } from '../game/events/SeasonalEvent';
-import { MysteryShopModal } from '../components/MysteryShopModal';
 import { BlockMasteryModal } from '../components/BlockMasteryModal';
-import { DailyRouletteModal } from '../components/DailyRouletteModal';
 import { hasSpunToday } from '../game/challenges/DailyRoulette';
 import { getDailyPuzzleId, getDailyPuzzleLabel, formatCountdown, getMsUntilNextPuzzle } from '../game/challenges/DailyPuzzle';
 import { DailyStatsModal } from '../components/DailyStatsModal';
-import { StarterPackModal } from '../components/StarterPackModal';
-import { FlashOfferModal } from '../components/FlashOfferModal';
-import { FreeChestModal } from '../components/FreeChestModal';
 import { isFreeChestReady, getFreeChestTimeRemaining } from '../game/rewards/FreeChest';
 import {
-  isStarterPackAvailable,
   STARTER_PACK_UNLOCK_LEVEL,
 } from '../game/monetization/StarterPack';
-import { getCurrentFlashOffer } from '../game/monetization/LimitedOffers';
 import { getUnclaimedCount, generateWelcomeMessage } from '../game/systems/Inbox';
 import { isVIPActive } from '../game/systems/VIPMembership';
-import { calculateOfflineReward, OfflineReward } from '../game/rewards/OfflineRewards';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetentionNotifications, clearBadge } from '../services/notifications';
@@ -93,8 +71,8 @@ const TITLE_BLOCKS = [
 ];
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, piggyBankCoins, lastGiftDate, gamesPlayedToday, claimGift, lastPlayDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, addCoins, lastDealClaimed, rouletteLastDate, dailyPuzzleLastPlayedId, dailyPuzzleLastPlayedScore, dailyPuzzleStreak } = usePlayerStore();
-  const { tutorialCompleted, completeTutorial, notificationsEnabled, comebackShownDate, setComebackShownDate } = useSettingsStore();
+  const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, rouletteLastDate, dailyPuzzleLastPlayedId, dailyPuzzleLastPlayedScore, dailyPuzzleStreak } = usePlayerStore();
+  const { tutorialCompleted, completeTutorial, notificationsEnabled } = useSettingsStore();
   // Onboarding is taught in-context on the game board (TutorialOverlay on
   // level 1), so we don't front-load a modal here. Kept for a future manual
   // "How to play" entry point; never auto-shown to first-timers.
@@ -103,35 +81,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showSpin, setShowSpin] = useState(false);
-  const [showPiggyBank, setShowPiggyBank] = useState(false);
-  const [showGiftBox, setShowGiftBox] = useState(false);
-  const [currentGift, setCurrentGift] = useState<GiftBox | null>(null);
   const [showProfile, setShowProfile] = useState(false);
-  const [showComeback, setShowComeback] = useState(false);
-  const [comebackReward, setComebackReward] = useState<ComebackReward | null>(null);
-  const [showStreakMilestone, setShowStreakMilestone] = useState(false);
-  const [streakMilestone, setStreakMilestone] = useState<StreakMilestone | null>(null);
   const [showAlbum, setShowAlbum] = useState(false);
   const [showShowcase, setShowShowcase] = useState(false);
-  const [showOfflineReward, setShowOfflineReward] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [showDailyDeal, setShowDailyDeal] = useState(false);
   const [showBossRush, setShowBossRush] = useState(false);
-  const [showTreasure, setShowTreasure] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showTournament, setShowTournament] = useState(false);
   const [showInbox, setShowInbox] = useState(false);
-  const [showVIP, setShowVIP] = useState(false);
   const [showQuestChains, setShowQuestChains] = useState(false);
   const [showFusion, setShowFusion] = useState(false);
   const [showSeasonalEvent, setShowSeasonalEvent] = useState(false);
-  const [showMysteryShop, setShowMysteryShop] = useState(false);
   const [showBlockMastery, setShowBlockMastery] = useState(false);
-  const [showDailyRoulette, setShowDailyRoulette] = useState(false);
   const [showDailyStats, setShowDailyStats] = useState(false);
-  const [showStarterPack, setShowStarterPack] = useState(false);
-  const [showFlashOffer, setShowFlashOffer] = useState(false);
-  const [showFreeChest, setShowFreeChest] = useState(false);
   const [showRewardsHub, setShowRewardsHub] = useState(false);
   const [showCompeteHub, setShowCompeteHub] = useState(false);
   const [showShopHub, setShowShopHub] = useState(false);
@@ -153,17 +114,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const starterPackUnlockedAt = usePlayerStore((s) => s.starterPackUnlockedAt);
   const starterPackClaimed = usePlayerStore((s) => s.starterPackClaimed);
   const unlockStarterPack = usePlayerStore((s) => s.unlockStarterPack);
-  const starterPackVisible = isStarterPackAvailable(
-    starterPackUnlockedAt,
-    starterPackClaimed,
-    highestLevel,
-  );
-  const currentFlashOffer = getCurrentFlashOffer();
   const rouletteAvailable = !hasSpunToday(
     rouletteLastDate,
     new Date().toISOString().split('T')[0],
   );
-  const treasureMapPieces = usePlayerStore((s) => s.treasureMapPieces);
   const activeTournament = usePlayerStore((s) => s.activeTournament);
   const inboxMessages = usePlayerStore((s) => s.inboxMessages);
   const inboxClaimed = usePlayerStore((s) => s.inboxClaimed);
@@ -196,7 +150,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       unlockStarterPack();
     }
   }, [highestLevel, starterPackUnlockedAt, starterPackClaimed, unlockStarterPack]);
-  const [offlineReward, setOfflineReward] = useState<OfflineReward | null>(null);
 
   const seasonalTheme = getActiveSeasonalTheme();
 
@@ -213,7 +166,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   }, [dailyRewardLastClaimed, tutorialCompleted]);
 
-  // Check achievements, stickers, notifications, and gift box on screen load
+  // Check achievements, stickers, and notifications on screen load.
+  // (Reward-popup auto-triggers — gift box, streak milestone, comeback,
+  // offline reward — were removed to reduce offer spam on home.)
   useEffect(() => {
     checkAchievements();
     // Check for new sticker unlocks
@@ -232,42 +187,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         scheduleStreakReminder(currentStreak).catch(() => {});
       }
       scheduleRetentionNotifications().catch(() => {});
-    }
-    // Check for gift box eligibility
-    if (shouldShowGift(highestLevel, gamesPlayedToday, lastGiftDate)) {
-      const gift = generateGiftBox(highestLevel);
-      setCurrentGift(gift);
-      const timer = setTimeout(() => setShowGiftBox(true), 1500);
-      return () => clearTimeout(timer);
-    }
-    // Check for streak milestone
-    const milestone = getStreakMilestone(currentStreak);
-    if (milestone) {
-      setStreakMilestone(milestone);
-      const timer = setTimeout(() => setShowStreakMilestone(true), 1200);
-      return () => clearTimeout(timer);
-    }
-    // Check for comeback bonus (player returning after 2+ days)
-    const today = new Date().toISOString().split('T')[0];
-    if (comebackShownDate !== today) {
-      const reward = getComebackReward(lastPlayDate);
-      if (reward) {
-        setComebackReward(reward);
-        const timer = setTimeout(() => setShowComeback(true), 2000);
-        setComebackShownDate(today);
-        return () => clearTimeout(timer);
-      }
-    }
-    // Check for offline/idle rewards (>30 min away)
-    if (lastPlayDate) {
-      const lastPlayMs = new Date(lastPlayDate).getTime();
-      const nowMs = Date.now();
-      const reward = calculateOfflineReward(lastPlayMs, nowMs, highestLevel);
-      if (reward) {
-        setOfflineReward(reward);
-        const timer = setTimeout(() => setShowOfflineReward(true), 2500);
-        return () => clearTimeout(timer);
-      }
     }
   }, []);
 
@@ -581,94 +500,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             )}
           </View>
 
-          {/* Promotional banner — show ONLY the highest-priority active
-              offer at a time. Stacking Starter Pack + Flash Offer + Daily
-              Deal simultaneously made the home screen feel like slot-
-              machine spam. Priority: Starter Pack (one-time, new players)
-              > Flash Offer (rotating limited deal) > Daily Deal. */}
-          {(() => {
-            const shopUnlocked = isFeatureUnlocked('shop', highestLevel);
-            if (starterPackVisible) {
-              return (
-                <TouchableOpacity
-                  style={styles.starterBanner}
-                  onPress={() => setShowStarterPack(true)}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.dealBannerLeft}>
-                    <GameIcon name="gift" size={22} color={COLORS.accent} />
-                    <View>
-                      <Text style={styles.starterBannerTitle}>Starter Pack — 88% OFF</Text>
-                      <Text style={styles.dealBannerSub}>One-time offer. Tap to claim!</Text>
-                    </View>
-                  </View>
-                  <View style={styles.starterBannerArrow}>
-                    <Text style={styles.dealBannerArrowText}>›</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            }
-            if (shopUnlocked && currentFlashOffer) {
-              return (
-                <TouchableOpacity
-                  style={styles.flashBanner}
-                  onPress={() => setShowFlashOffer(true)}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.dealBannerLeft}>
-                    <GameIcon
-                      name={currentFlashOffer.icon as any}
-                      size={22}
-                      color={currentFlashOffer.accentColor}
-                    />
-                    <View>
-                      <Text
-                        style={[styles.flashBannerTitle, { color: currentFlashOffer.accentColor }]}
-                      >
-                        {currentFlashOffer.name} — {currentFlashOffer.discount}% off
-                      </Text>
-                      <Text style={styles.dealBannerSub}>Flash offer ends soon</Text>
-                    </View>
-                  </View>
-                  <View
-                    style={[
-                      styles.flashBannerArrow,
-                      { backgroundColor: `${currentFlashOffer.accentColor}30` },
-                    ]}
-                  >
-                    <Text
-                      style={[styles.dealBannerArrowText, { color: currentFlashOffer.accentColor }]}
-                    >
-                      ›
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            }
-            if (shopUnlocked && !isDealClaimed(lastDealClaimed)) {
-              return (
-                <TouchableOpacity
-                  style={styles.dealBanner}
-                  onPress={() => setShowDailyDeal(true)}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.dealBannerLeft}>
-                    <GameIcon name="gift" size={22} color={COLORS.accentGold} />
-                    <View>
-                      <Text style={styles.dealBannerTitle}>Daily Deal</Text>
-                      <Text style={styles.dealBannerSub}>
-                        {getTodaysDeal().name} — {getTodaysDeal().discountPercent}% off
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.dealBannerArrow}>
-                    <Text style={styles.dealBannerArrowText}>›</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            }
-            return null;
-          })()}
+          {/* Promotional offer banners removed — were creating offer spam. */}
 
           {/* Live event banners */}
           <EventBanner />
@@ -775,51 +607,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         onClose={() => setShowSpin(false)}
       />
 
-      {/* Piggy Bank modal */}
-      <PiggyBankModal
-        visible={showPiggyBank}
-        onClose={() => setShowPiggyBank(false)}
-      />
-
-      {/* Gift Box modal */}
-      <GiftBoxModal
-        visible={showGiftBox}
-        gift={currentGift}
-        onClose={() => {
-          setShowGiftBox(false);
-          claimGift();
-        }}
-      />
-
       {/* Player Profile modal */}
       <PlayerProfileCard
         visible={showProfile}
         onClose={() => setShowProfile(false)}
       />
 
-      {/* Comeback Bonus modal */}
-      <ComebackBonusModal
-        visible={showComeback}
-        reward={comebackReward}
-        onClose={() => setShowComeback(false)}
-      />
-
       {/* Sticker Album modal */}
       <StickerAlbumModal
         visible={showAlbum}
         onClose={() => setShowAlbum(false)}
-      />
-
-      {/* Login calendar modal */}
-      <LoginCalendarModal
-        visible={showCalendar}
-        onClose={() => setShowCalendar(false)}
-      />
-
-      {/* Daily deal modal */}
-      <DailyDealModal
-        visible={showDailyDeal}
-        onClose={() => setShowDailyDeal(false)}
       />
 
       {/* Boss Rush modal */}
@@ -831,12 +628,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           // Start with the first boss level
           navigation.navigate('Game', { level: 25 });
         }}
-      />
-
-      {/* Treasure Hunt modal */}
-      <TreasureHuntModal
-        visible={showTreasure}
-        onClose={() => setShowTreasure(false)}
       />
 
       {/* Leaderboard modal */}
@@ -857,12 +648,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         onClose={() => setShowInbox(false)}
       />
 
-      {/* VIP modal */}
-      <VIPModal
-        visible={showVIP}
-        onClose={() => setShowVIP(false)}
-      />
-
       {/* Quest Chains modal */}
       <QuestChainModal
         visible={showQuestChains}
@@ -881,22 +666,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         onClose={() => setShowSeasonalEvent(false)}
       />
 
-      {/* Mystery Shop modal */}
-      <MysteryShopModal
-        visible={showMysteryShop}
-        onClose={() => setShowMysteryShop(false)}
-      />
-
       {/* Block Mastery modal */}
       <BlockMasteryModal
         visible={showBlockMastery}
         onClose={() => setShowBlockMastery(false)}
-      />
-
-      {/* Daily Roulette modal */}
-      <DailyRouletteModal
-        visible={showDailyRoulette}
-        onClose={() => setShowDailyRoulette(false)}
       />
 
       {/* Daily Puzzle stats modal */}
@@ -905,57 +678,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         onClose={() => setShowDailyStats(false)}
       />
 
-      {/* Offline reward modal */}
-      <OfflineRewardModal
-        visible={showOfflineReward}
-        reward={offlineReward}
-        onClaim={() => {
-          if (offlineReward) {
-            addCoins(offlineReward.coins);
-          }
-          setShowOfflineReward(false);
-        }}
-      />
-
       {/* Achievement Showcase modal */}
       <AchievementShowcase
         visible={showShowcase}
         onClose={() => setShowShowcase(false)}
       />
 
-      {/* Streak Milestone modal */}
-      <StreakMilestoneModal
-        visible={showStreakMilestone}
-        milestone={streakMilestone}
-        onClose={() => setShowStreakMilestone(false)}
-      />
-
-      {/* Starter Pack monetization modal */}
-      <StarterPackModal
-        visible={showStarterPack}
-        onClose={() => setShowStarterPack(false)}
-      />
-
-      {/* Flash Offer monetization modal */}
-      <FlashOfferModal
-        visible={showFlashOffer}
-        onClose={() => setShowFlashOffer(false)}
-      />
-
-      {/* Free Chest retention modal */}
-      <FreeChestModal
-        visible={showFreeChest}
-        onClose={() => setShowFreeChest(false)}
-      />
-
       {/* ── Hub Sub-Menus ──────────────────────────────── */}
       <HubMenuModal visible={showRewardsHub} onClose={() => setShowRewardsHub(false)} title="REWARDS" accent={COLORS.accentGold}>
-        <FeatureTile icon="gift" label={freeChestReady ? 'Open!' : 'Free Chest'} onPress={() => { setShowRewardsHub(false); setShowFreeChest(true); }} accent={COLORS.accentGold} active={freeChestReady} />
         {isFeatureUnlocked('lucky_spin', highestLevel) && (
           <FeatureTile icon="star" label={canSpin ? 'Spin!' : 'Lucky Spin'} onPress={() => { setShowRewardsHub(false); setShowSpin(true); }} accent="#FACC15" active={canSpin} />
         )}
-        <FeatureTile icon="target" label={rouletteAvailable ? 'Spin Now' : 'Roulette'} onPress={() => { setShowRewardsHub(false); setShowDailyRoulette(true); }} accent="#A78BFA" active={rouletteAvailable} />
-        <FeatureTile icon="calendar" label="Calendar" onPress={() => { setShowRewardsHub(false); setShowCalendar(true); }} accent={COLORS.info} />
         {isFeatureUnlocked('daily_challenge', highestLevel) && (
           <FeatureTile icon="fire" label="Daily Quests" onPress={() => { setShowRewardsHub(false); navigation.navigate('DailyChallenge'); }} accent="#FB923C" />
         )}
@@ -983,19 +716,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         {isFeatureUnlocked('shop', highestLevel) && (
           <FeatureTile icon="shop" label="Shop" onPress={() => { setShowShopHub(false); navigation.navigate('Shop'); }} accent={COLORS.accent} />
         )}
-        <FeatureTile icon="crown" label={vipActive ? 'VIP Active' : 'Go VIP'} onPress={() => { setShowShopHub(false); setShowVIP(true); }} accent="#FACC15" active={vipActive} />
-        {isFeatureUnlocked('piggy_bank', highestLevel) && (
-          <FeatureTile icon="coin" label={piggyBankCoins > 0 ? `Bank (${formatCompact(piggyBankCoins)})` : 'Piggy Bank'} onPress={() => { setShowShopHub(false); setShowPiggyBank(true); }} accent="#34D399" active={piggyBankCoins >= 100} />
-        )}
-        <FeatureTile icon="gem" label="Mystery" onPress={() => { setShowShopHub(false); setShowMysteryShop(true); }} accent="#C084FC" />
       </HubMenuModal>
 
       <HubMenuModal visible={showMoreHub} onClose={() => setShowMoreHub(false)} title="MORE" accent="#A78BFA">
         {isBossRushUnlocked(highestLevel) && (
           <FeatureTile icon="bomb" label="Boss Rush" onPress={() => { setShowMoreHub(false); setShowBossRush(true); }} accent="#EF4444" />
-        )}
-        {isFeatureUnlocked('shop', highestLevel) && (
-          <FeatureTile icon="map" label={treasureMapPieces >= PIECES_REQUIRED ? 'Dig!' : `Map ${Math.min(treasureMapPieces, PIECES_REQUIRED)}/${PIECES_REQUIRED}`} onPress={() => { setShowMoreHub(false); setShowTreasure(true); }} accent="#22C55E" active={treasureMapPieces >= PIECES_REQUIRED} />
         )}
         <FeatureTile icon="fire" label="Mastery" onPress={() => { setShowMoreHub(false); setShowBlockMastery(true); }} accent="#FB923C" />
         {isFeatureUnlocked('power_ups', highestLevel) && (
