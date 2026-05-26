@@ -13,6 +13,7 @@ import { DailyRewardModal } from '../components/DailyRewardModal';
 import { AchievementModal } from '../components/AchievementModal';
 import { StatsModal } from '../components/StatsModal';
 import { LuckySpinModal } from '../components/LuckySpinModal';
+import { FloatingDelta, useIncreaseDelta } from '../components/CurrencyDelta';
 import { PlayerProfileCard } from '../components/PlayerProfileCard';
 import { GameIcon } from '../components/GameIcon';
 import { EventBanner } from '../components/EventBanner';
@@ -73,6 +74,10 @@ const TITLE_BLOCKS = [
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { highestLevel, coins, gems, totalScore, currentStreak, streakShields, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, rouletteLastDate, dailyPuzzleLastPlayedId, dailyPuzzleLastPlayedScore, dailyPuzzleStreak } = usePlayerStore();
   const { tutorialCompleted, completeTutorial, notificationsEnabled } = useSettingsStore();
+  // Floating "+N" indicators for the COINS / GEMS stat chips — the
+  // dopamine moment when the daily reward + wheel land back here.
+  const coinDelta = useIncreaseDelta(coins);
+  const gemDelta = useIncreaseDelta(gems);
   // Onboarding is taught in-context on the game board (TutorialOverlay on
   // level 1), so we don't front-load a modal here. Kept for a future manual
   // "How to play" entry point; never auto-shown to first-timers.
@@ -356,12 +361,30 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <GameIcon name="coin" size={20} />
             <Text style={styles.statValue}>{formatCompact(coins)}</Text>
             <Text style={styles.statLabel}>COINS</Text>
+            {coinDelta.seq > 0 && (
+              <FloatingDelta
+                key={`coin-${coinDelta.seq}`}
+                amount={coinDelta.delta}
+                color={COLORS.accentGold}
+                topOffset={-10}
+                floatDistance={30}
+              />
+            )}
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <GameIcon name="gem" size={20} />
             <Text style={styles.statValue}>{formatCompact(gems)}</Text>
             <Text style={styles.statLabel}>GEMS</Text>
+            {gemDelta.seq > 0 && (
+              <FloatingDelta
+                key={`gem-${gemDelta.seq}`}
+                amount={gemDelta.delta}
+                color="#C084FC"
+                topOffset={-10}
+                floatDistance={30}
+              />
+            )}
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
@@ -838,6 +861,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     gap: 3,
+    position: 'relative',
   },
   statValue: {
     fontSize: 17,
