@@ -8,12 +8,17 @@
   "contentRating": "4+",
   "pricing": "Free",
   "inAppPurchases": [
-    { "id": "com.isaaclefohn.chromadrop.coins500", "name": "500 Coins", "price": "$0.99" },
-    { "id": "com.isaaclefohn.chromadrop.coins2500", "name": "2,500 Coins", "price": "$3.99" },
-    { "id": "com.isaaclefohn.chromadrop.coins10000", "name": "10,000 Coins", "price": "$9.99" },
-    { "id": "com.isaaclefohn.chromadrop.gems100", "name": "100 Gems", "price": "$1.99" },
-    { "id": "com.isaaclefohn.chromadrop.gems500", "name": "500 Gems", "price": "$7.99" },
-    { "id": "com.isaaclefohn.chromadrop.starter_pack", "name": "Starter Pack", "price": "$4.99" },
-    { "id": "com.isaaclefohn.chromadrop.remove_ads", "name": "Remove Ads", "price": "$2.99" }
+    { "id": "com.isaaclefohn.chromadrop.coins500",      "name": "Coin Pouch",     "price": "$0.99",  "type": "consumable" },
+    { "id": "com.isaaclefohn.chromadrop.coins2500",     "name": "Coin Chest",     "price": "$3.99",  "type": "consumable" },
+    { "id": "com.isaaclefohn.chromadrop.coins10000",    "name": "Coin Vault",     "price": "$9.99",  "type": "consumable" },
+    { "id": "com.isaaclefohn.chromadrop.coins50000",    "name": "Coin Treasury",  "price": "$39.99", "type": "consumable" },
+    { "id": "com.isaaclefohn.chromadrop.gems100",       "name": "Gem Shard",      "price": "$1.99",  "type": "consumable" },
+    { "id": "com.isaaclefohn.chromadrop.gems500",       "name": "Gem Trove",      "price": "$7.99",  "type": "consumable" },
+    { "id": "com.isaaclefohn.chromadrop.gems1500",      "name": "Gem Hoard",      "price": "$19.99", "type": "consumable" },
+    { "id": "com.isaaclefohn.chromadrop.starter_pack",  "name": "Starter Pack",   "price": "$4.99",  "type": "non_consumable" },
+    { "id": "com.isaaclefohn.chromadrop.power_bundle",  "name": "Power Bundle",   "price": "$6.99",  "type": "consumable" },
+    { "id": "com.isaaclefohn.chromadrop.mega_bundle",   "name": "Mega Bundle",    "price": "$24.99", "type": "consumable" },
+    { "id": "com.isaaclefohn.chromadrop.remove_ads",    "name": "Remove Ads",     "price": "$2.99",  "type": "non_consumable" },
+    { "id": "com.isaaclefohn.chromadrop.vip_pass",      "name": "VIP Pass",       "price": "$9.99",  "type": "non_consumable" }
   ]
 }

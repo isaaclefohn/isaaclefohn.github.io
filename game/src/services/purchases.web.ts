@@ -33,7 +33,7 @@ export const PRODUCTS: Product[] = [
   { id: 'com.isaaclefohn.chromadrop.starter_pack', title: 'Starter Pack', description: 'No ads + 2,000 coins, 200 gems, 3x each power-up', price: '$4.99', type: 'non_consumable', reward: { type: 'bundle', amount: 1, bonus: { coins: 2000, gems: 200, bomb: 3, rowClear: 3, colorClear: 3, adFree: 1 } }, badge: 'starter' },
   { id: 'com.isaaclefohn.chromadrop.power_bundle', title: 'Power Bundle', description: '10x Bomb, 10x Row Clear, 10x Color Swap', price: '$6.99', type: 'consumable', reward: { type: 'bundle', amount: 1, bonus: { bomb: 10, rowClear: 10, colorClear: 10 } } },
   { id: 'com.isaaclefohn.chromadrop.mega_bundle', title: 'Mega Bundle', description: '25,000 coins, 1,000 gems, 15x each power-up', price: '$24.99', type: 'consumable', reward: { type: 'bundle', amount: 1, bonus: { coins: 25000, gems: 1000, bomb: 15, rowClear: 15, colorClear: 15 } }, badge: 'best_value' },
-  { id: 'com.isaaclefohn.chromadrop.adfree', title: 'Remove Ads', description: 'Permanently remove all ads', price: '$3.99', type: 'non_consumable', reward: { type: 'ad_free', amount: 1 } },
+  { id: 'com.isaaclefohn.chromadrop.remove_ads', title: 'Remove Ads', description: 'Permanently remove all ads', price: '$2.99', type: 'non_consumable', reward: { type: 'ad_free', amount: 1 } },
   { id: 'com.isaaclefohn.chromadrop.vip_pass', title: 'VIP Pass', description: 'No ads + 2x daily rewards + exclusive VIP theme', price: '$9.99', type: 'non_consumable', reward: { type: 'vip', amount: 1, bonus: { coins: 5000, gems: 500 } }, badge: 'popular' },
 ];
 

@@ -253,7 +253,11 @@ export const PRODUCTS: Product[] = [
   // without the brand to back it. Volume from the lower anchor more
   // than offsets per-unit revenue at our audience scale.
   {
-    id: 'com.isaaclefohn.chromadrop.adfree',
+    // Product ID must match what the server expects (see
+    // `api/src/validate-receipt.ts`) and what App Store Connect will
+    // accept once Apple Developer enrollment lands. Server + metadata
+    // both use `remove_ads`, so the client matches.
+    id: 'com.isaaclefohn.chromadrop.remove_ads',
     title: 'Remove Ads',
     description: 'Permanently remove all ads',
     price: '$2.99',
