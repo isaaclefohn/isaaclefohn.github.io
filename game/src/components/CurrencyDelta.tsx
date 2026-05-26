@@ -10,6 +10,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet } from 'react-native';
+import { useSound } from '../hooks/useSound';
 
 interface FloatingDeltaProps {
   amount: number;
@@ -20,6 +21,17 @@ interface FloatingDeltaProps {
   floatDistance?: number;
 }
 
+/** Map gain size to haptic intensity. A +15 coin tap should not feel the
+ *  same as a +100 jackpot — variable-reward principle applied to the
+ *  tactile channel. Thresholds tuned around the in-app reward economy:
+ *  daily wheel common = ~15, jackpot = +100, level-complete bonuses
+ *  scale into the hundreds. */
+function intensityFor(amount: number): 'light' | 'medium' | 'heavy' {
+  if (amount >= 75) return 'heavy';
+  if (amount >= 25) return 'medium';
+  return 'light';
+}
+
 export const FloatingDelta: React.FC<FloatingDeltaProps> = ({
   amount,
   color,
@@ -28,8 +40,14 @@ export const FloatingDelta: React.FC<FloatingDeltaProps> = ({
 }) => {
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const { playHaptic } = useSound();
 
   useEffect(() => {
+    // Tactile gain pairs with visual gain. The component re-mounts via
+    // the `seq` key in the parent on every new increase, so this useEffect
+    // fires exactly once per actual gain — no debounce needed.
+    playHaptic(intensityFor(amount)).catch(() => {});
+
     Animated.parallel([
       Animated.sequence([
         Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: true }),
@@ -48,7 +66,11 @@ export const FloatingDelta: React.FC<FloatingDeltaProps> = ({
         useNativeDriver: true,
       }),
     ]).start();
-  }, [opacity, translateY, floatDistance]);
+    // playHaptic identity changes per render of the parent, so excluding
+    // it from deps keeps the effect from refiring spuriously — the mount
+    // moment is the only event we care about.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opacity, translateY, floatDistance, amount]);
 
   return (
     <Animated.Text
