@@ -49,6 +49,7 @@ import { isVIPActive } from '../game/systems/VIPMembership';
 import { FloatingParticles } from '../components/animations/FloatingParticles';
 import { ScreenVignette } from '../components/animations/ScreenVignette';
 import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetentionNotifications, clearBadge } from '../services/notifications';
+import { maybePromptForStreakDay7 } from '../services/appRating';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatCompact } from '../utils/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -201,6 +202,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           scheduleStreakReminder(currentStreak).catch(() => {});
         }
         scheduleRetentionNotifications().catch(() => {});
+      }
+      // Rating-prompt Slot 2 (streak_day_7) per the 2026-06 growth
+      // plan: streak just crossed 7 days with the shield intact = the
+      // single strongest "this app stuck for me" signal the engine
+      // can produce. The service re-validates all gates internally
+      // (slot not already fired, 30-day cooldown, 3-cap), so this
+      // is safe to call on every home open while the condition holds.
+      if (currentStreak >= 7 && streakShields > 0) {
+        // Small delay so the prompt doesn't collide with the daily-
+        // reward auto-open or any entrance animations.
+        setTimeout(() => {
+          maybePromptForStreakDay7({
+            currentStreak,
+            shieldIntact: streakShields > 0,
+          }).catch(() => {});
+        }, 1500);
       }
     }
   }, [highestLevel]); // eslint-disable-line react-hooks/exhaustive-deps

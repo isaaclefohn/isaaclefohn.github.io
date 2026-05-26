@@ -12,6 +12,7 @@ import { initializeAds } from './src/services/ads';
 import { initSentry, initAnalytics } from './src/services/analytics';
 import { initializePurchases } from './src/services/purchases';
 import { ensureSession } from './src/services/auth';
+import { recordSessionStart } from './src/services/appRating';
 
 // Initialize Sentry as early as possible so startup errors are captured.
 initSentry();
@@ -26,6 +27,11 @@ export default function App() {
     // Establish an (anonymous) session so leaderboard submits have a JWT.
     // Fire-and-forget: no-ops when Supabase/anon-auth isn't available.
     void ensureSession();
+    // Count this app-open session. The Chapter 1 rating-prompt gate
+    // requires ≥2 sessions so a brand-new player who happens to clear
+    // level 30 on their very first sitting does not get a prompt
+    // before they have come back. (Per the 2026-06 growth plan.)
+    void recordSessionStart();
   }, []);
 
   return (

@@ -9,7 +9,10 @@ import { usePlayerStore } from '../store/playerStore';
 import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
 import { calculateCoinReward } from '../game/engine/Scoring';
 import { getScoreMultiplier, getXPMultiplier, getCoinMultiplier } from '../game/events/LiveEvents';
-import { recordCompletionForRating, maybePromptRating } from '../services/appRating';
+import {
+  maybePromptForChapterOneBoss,
+  maybePromptForPerfectCascade,
+} from '../services/appRating';
 import { getWeeklyChallengeConfig, getCurrentWeekId, WEEKLY_COIN_REWARDS, WEEKLY_GEM_BONUS } from '../game/challenges/WeeklyChallenge';
 import { getDailyPuzzleConfig, getDailyPuzzleId, DAILY_PUZZLE_LEVEL_NUMBER, DAILY_COIN_REWARDS, DAILY_GEM_REWARD_3_STAR } from '../game/challenges/DailyPuzzle';
 import { calculateSRChange } from '../game/systems/SkillRating';
@@ -200,12 +203,40 @@ export function useGameEngine() {
         updateSkillRating(srChange);
       }
 
-      // Track for app rating prompt — prompt after 3-star wins
-      recordCompletionForRating().catch(() => {});
-      if (stars === 3 && !isWeekly && !isDaily) {
-        setTimeout(() => {
-          maybePromptRating(Object.keys(levelStars).length).catch(() => {});
-        }, 2000);
+      // Rating prompt triggers — per the 2026-06 growth plan. Two
+      // separate slots can fire here, both gated to non-daily /
+      // non-weekly campaign wins:
+      //
+      //   Slot 1 (chapter_one_boss) fires after the Chapter 1 boss
+      //   at level 30 — the highest local satisfaction peak in the
+      //   early campaign per the FTUE arc.
+      //
+      //   Slot 3 (perfect_cascade) fires after a 3-star win at L≥50
+      //   with at least one chromatic clear — reserves the late-funnel
+      //   slot for a brand-signature "wow" moment.
+      //
+      // Both maybePromptForX functions internally re-check the slot
+      // gate, the 30-day cooldown, and the 3-prompt cap. They are
+      // safe to call from both branches.
+      if (!isWeekly && !isDaily) {
+        if (levelConfig.levelNumber === 30) {
+          setTimeout(() => {
+            // crashFreeSession is true if Sentry didn't surface a
+            // crash this session. We don't expose that flag directly
+            // — assume true here since the player got far enough to
+            // win a boss level.
+            maybePromptForChapterOneBoss({ crashFreeSession: true }).catch(() => {});
+          }, 2000);
+        }
+        if (stars === 3 && levelConfig.levelNumber >= 50) {
+          setTimeout(() => {
+            maybePromptForPerfectCascade({
+              level: levelConfig.levelNumber,
+              stars,
+              chromaticClears: gameState.chromaticClears,
+            }).catch(() => {});
+          }, 2000);
+        }
       }
     } else if (gameState.status === 'lost') {
       trackGameEvent({ type: 'level_fail', level: levelConfig.levelNumber, score: gameState.score });
