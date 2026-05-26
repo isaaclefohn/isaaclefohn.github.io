@@ -12,6 +12,8 @@ import { GameIcon } from './GameIcon';
 import { DAILY_REWARDS, usePlayerStore } from '../store/playerStore';
 import { getDailyTiles, type WheelTile } from '../game/engine/dailyWheel';
 import { scheduleDailyRewardReminder } from '../services/notifications';
+import { canShowRewarded, showRewardedAd } from '../services/ads';
+import { TouchableOpacity } from 'react-native';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
 
 interface DailyRewardModalProps {
@@ -20,7 +22,13 @@ interface DailyRewardModalProps {
 }
 
 export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onClose }) => {
-  const { dailyRewardDay, dailyRewardLastClaimed, claimDailyReward } = usePlayerStore();
+  const {
+    dailyRewardDay,
+    dailyRewardLastClaimed,
+    claimDailyReward,
+    canClaimDailyWheelRespin,
+    rewardDailyWheelRespin,
+  } = usePlayerStore();
   const bounceAnim = useRef(new Animated.Value(0.8)).current;
 
   const today = new Date().toISOString().split('T')[0];
@@ -78,6 +86,47 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
         setWonTile(result.wheel.tile);
         setSpinPhase('settled');
         scheduleDailyRewardReminder().catch(() => {});
+      }
+    };
+    tick();
+  };
+
+  /** Re-spin after watching a rewarded ad. Only available once per day,
+   *  AFTER the natural reward arc has fired (per the dopamine-arc rule
+   *  in the 2026-06 monetization plan — never interrupt or precede
+   *  variable rewards with an ad). Runs the same spin animation +
+   *  settle sequence as the original claim. */
+  const [respinAdInFlight, setRespinAdInFlight] = useState(false);
+  const handleRespin = async () => {
+    if (respinAdInFlight || !canShowRewarded()) return;
+    setRespinAdInFlight(true);
+    let earned = false;
+    try {
+      earned = await showRewardedAd();
+    } finally {
+      setRespinAdInFlight(false);
+    }
+    if (!earned) return;
+    const result = rewardDailyWheelRespin();
+    if (!result) return;
+    // Reset to spinning phase so the wheel re-runs its decelerating
+    // staircase from the top — players who paid an ad get the full
+    // dopamine arc, not a snap.
+    const targetIndex = result.index;
+    const stepDurations = [55, 55, 55, 60, 70, 90, 120, 170, 240];
+    let step = 0;
+    setSpinPhase('spinning');
+    setWonTile(null);
+    const tick = () => {
+      if (step < stepDurations.length) {
+        setSpinIndex(step % 4);
+        const dur = stepDurations[step];
+        step++;
+        setTimeout(tick, dur);
+      } else {
+        setSpinIndex(targetIndex);
+        setWonTile(result.tile);
+        setSpinPhase('settled');
       }
     };
     tick();
@@ -161,6 +210,25 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
           </View>
           {spinPhase === 'settled' && wonTile && (
             <Text style={styles.wonText}>You won: {wonTile.label}!</Text>
+          )}
+          {/* Rewarded re-spin offer — only renders AFTER the natural
+              celebration has landed (settled phase), only when the
+              once-per-day throttle agrees, only when the ad cap allows.
+              Per the dopamine-arc rule: NEVER show this before or
+              during the natural reward animation. */}
+          {spinPhase === 'settled' &&
+            canClaimDailyWheelRespin() &&
+            canShowRewarded() && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleRespin}
+              disabled={respinAdInFlight}
+              style={styles.respinCta}
+            >
+              <Text style={styles.respinText}>
+                {respinAdInFlight ? 'Loading ad…' : '🎁  Watch ad → Spin again'}
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
       )}
@@ -342,5 +410,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.accentGold,
     letterSpacing: 0.5,
+  },
+  respinCta: {
+    marginTop: SPACING.sm,
+    paddingVertical: 10,
+    paddingHorizontal: SPACING.md,
+    backgroundColor: `${COLORS.accent}15`,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    borderColor: `${COLORS.accent}50`,
+    alignSelf: 'center',
+  },
+  respinText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.accent,
+    letterSpacing: 0.3,
   },
 });

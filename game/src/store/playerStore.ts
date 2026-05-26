@@ -81,6 +81,9 @@ interface PlayerStoreState {
   // Daily rewards
   dailyRewardDay: number;
   dailyRewardLastClaimed: string | null;
+  /** ISO date the player last used their rewarded-ad daily-wheel re-spin.
+   *  Throttled to once per day so the variance moment retains meaning. */
+  dailyWheelRespinDate: string | null;
   // Achievements
   unlockedAchievements: string[];
   // Stats
@@ -245,6 +248,16 @@ interface PlayerStore extends PlayerStoreState {
     calendar: { coins: number; gems?: number; powerUp?: string };
     wheel: { tiles: WheelTile[]; index: number; tile: WheelTile };
   } | null;
+  /** Whether the player can use their rewarded-ad daily-wheel re-spin
+   *  right now. True when (a) they've already claimed today (so the
+   *  re-spin is bonus, not a way to skip the natural reward) AND (b)
+   *  they haven't already used their re-spin today. */
+  canClaimDailyWheelRespin: () => boolean;
+  /** Re-spin the daily wheel after watching a rewarded ad. Credits the
+   *  rolled tile's reward, stamps the date so it can't be repeated, and
+   *  returns the wheel result for animation. Returns null if the gate
+   *  fails (re-validates internally for defense in depth). */
+  rewardDailyWheelRespin: () => { tiles: WheelTile[]; index: number; tile: WheelTile } | null;
   checkAchievements: () => Achievement[];
   recordGamePlayed: (combo: number) => void;
   recordZenGame: (score: number, linesCleared: number, combo: number) => void;
@@ -360,6 +373,7 @@ export const usePlayerStore = create<PlayerStore>()(
       powerUps: { bomb: 0, rowClear: 0, colorClear: 0 },
       dailyRewardDay: 0,
       dailyRewardLastClaimed: null,
+      dailyWheelRespinDate: null,
       unlockedAchievements: [],
       totalGamesPlayed: 0,
       totalPowerUpsUsed: 0,
@@ -593,6 +607,48 @@ export const usePlayerStore = create<PlayerStore>()(
           calendar: { coins: reward.coins, gems: reward.gems, powerUp: reward.powerUp },
           wheel: { tiles, index: wheelResult.index, tile: wheelTile },
         };
+      },
+
+      canClaimDailyWheelRespin: () => {
+        const state = get();
+        const today = getToday();
+        // (a) Must have already claimed today's calendar reward —
+        // the re-spin is a BONUS on top of the natural arc, not a
+        // way to skip it. (b) Must not have already re-spun today.
+        return (
+          state.dailyRewardLastClaimed === today &&
+          state.dailyWheelRespinDate !== today
+        );
+      },
+
+      rewardDailyWheelRespin: () => {
+        const state = get();
+        const today = getToday();
+        // Re-validate the gate (same logic as canClaim) so a caller
+        // that bypassed the UI offer cannot mutate state out of band.
+        if (state.dailyRewardLastClaimed !== today) return null;
+        if (state.dailyWheelRespinDate === today) return null;
+
+        // Use the same wheel layout the player saw on their claim,
+        // so the re-spin lands on the same 4 tiles they remember.
+        const tiles = getDailyTiles(state.dailyRewardDay - 1);
+        const wheelResult = rollWheel(tiles);
+        const wheelTile = wheelResult.tile;
+
+        set((s) => {
+          const nextPowerUps = { ...s.powerUps };
+          if (wheelTile.powerUp) {
+            nextPowerUps[wheelTile.powerUp] = nextPowerUps[wheelTile.powerUp] + 1;
+          }
+          return {
+            coins: s.coins + wheelTile.coins,
+            gems: s.gems + wheelTile.gems,
+            powerUps: nextPowerUps,
+            dailyWheelRespinDate: today,
+          };
+        });
+
+        return { tiles, index: wheelResult.index, tile: wheelTile };
       },
 
       checkAchievements: () => {
