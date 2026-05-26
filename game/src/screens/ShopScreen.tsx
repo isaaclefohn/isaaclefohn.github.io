@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   ScrollView,
   Pressable,
+  TouchableOpacity,
   Alert,
   Animated,
 } from 'react-native';
@@ -19,6 +20,7 @@ import { CurrencyDisplay } from '../components/CurrencyDisplay';
 import { Button } from '../components/common/Button';
 import { PRODUCTS, getCoinProducts, getGemProducts, getBundleProducts, getPremiumProducts, Product } from '../services/purchases';
 import { POWER_UP_CONFIGS, PowerUpType } from '../game/powerups/PowerUpManager';
+import { canShowRewarded, showRewardedAd } from '../services/ads';
 import { POWER_UP_UPGRADES, getUpgradeInfo, canAffordUpgrade } from '../game/powerups/PowerUpUpgrades';
 import { THEMES, BLOCK_SKINS, GameTheme, BlockSkin } from '../game/rendering/ThemeManager';
 import { GameIcon } from '../components/GameIcon';
@@ -246,6 +248,33 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
     }
   };
 
+  /** Rewarded ad → one free random power-up. Per the 2026-06 monetization
+   *  plan: doubles rewarded ad inventory in a player-positive way (the
+   *  player ASKED for the ad, they get real value, the cap from `ads.ts`
+   *  still applies so this isn't spammable). The PowerUpType picked
+   *  rotates to avoid stockpiling one kind. */
+  const [adPowerUpInFlight, setAdPowerUpInFlight] = useState(false);
+  const handleAdPowerUp = useCallback(async () => {
+    if (adPowerUpInFlight || !canShowRewarded()) return;
+    setAdPowerUpInFlight(true);
+    try {
+      const earned = await showRewardedAd();
+      if (earned) {
+        // Pick the power-up the player owns the least of — gentle anti-
+        // hoarding so the player builds a balanced toolkit. Ties favor
+        // bomb (the most generally useful) so the choice is never
+        // surprising.
+        const types: PowerUpType[] = ['bomb', 'rowClear', 'colorClear'];
+        const counts = types.map((t) => player.powerUps[t]);
+        const minCount = Math.min(...counts);
+        const pick = types[counts.indexOf(minCount)];
+        player.addPowerUp(pick, 1);
+      }
+    } finally {
+      setAdPowerUpInFlight(false);
+    }
+  }, [adPowerUpInFlight, player]);
+
   const handleBuyTheme = (theme: GameTheme) => {
     if (theme.price === 0) {
       player.equipTheme(theme.id);
@@ -344,6 +373,23 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Power-Ups</Text>
               <Text style={styles.sectionSubtitle}>Spend coins to stock up</Text>
+
+              {/* Rewarded "free power-up" CTA — only when the ad cap
+                  allows. Picks the power-up the player owns least of,
+                  gentle anti-stockpiling without surprising them. */}
+              {canShowRewarded() && (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleAdPowerUp}
+                  disabled={adPowerUpInFlight}
+                  style={styles.freePowerUpCta}
+                >
+                  <GameIcon name="lightning" size={18} color={COLORS.accentGold} />
+                  <Text style={styles.freePowerUpText}>
+                    {adPowerUpInFlight ? 'Loading ad…' : 'Watch ad → Free Power-Up'}
+                  </Text>
+                </TouchableOpacity>
+              )}
               {(Object.keys(POWER_UP_CONFIGS) as PowerUpType[]).map((type) => {
                 const config = POWER_UP_CONFIGS[type];
                 const canAfford = player.coins >= config.coinCost;
@@ -762,6 +808,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.success,
     marginTop: 2,
+  },
+
+  // -- Rewarded "free power-up" CTA --
+  freePowerUpCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.sm,
+    backgroundColor: `${COLORS.accentGold}15`,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    borderColor: `${COLORS.accentGold}50`,
+  },
+  freePowerUpText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: COLORS.accentGold,
+    letterSpacing: 0.3,
   },
 
   // -- Price buttons --
