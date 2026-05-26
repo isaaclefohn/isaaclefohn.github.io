@@ -71,7 +71,7 @@ const TITLE_BLOCKS = [
 ];
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { highestLevel, coins, gems, totalScore, currentStreak, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, rouletteLastDate, dailyPuzzleLastPlayedId, dailyPuzzleLastPlayedScore, dailyPuzzleStreak } = usePlayerStore();
+  const { highestLevel, coins, gems, totalScore, currentStreak, streakShields, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, rouletteLastDate, dailyPuzzleLastPlayedId, dailyPuzzleLastPlayedScore, dailyPuzzleStreak } = usePlayerStore();
   const { tutorialCompleted, completeTutorial, notificationsEnabled } = useSettingsStore();
   // Onboarding is taught in-context on the game board (TutorialOverlay on
   // level 1), so we don't front-load a modal here. Kept for a future manual
@@ -375,7 +375,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               <View style={styles.statItem}>
                 <GameIcon name="fire" size={20} />
                 <Text style={styles.statValue}>{currentStreak}</Text>
-                <Text style={styles.statLabel}>STREAK</Text>
+                <Text style={styles.statLabel}>
+                  {streakShields > 0 ? 'STREAK 🛡️' : 'STREAK'}
+                </Text>
               </View>
             </>
           )}

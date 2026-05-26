@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { InboxMessage } from '../game/systems/Inbox';
+import { applyStreakShield, type StreakShieldResult } from '../game/engine/streakShield';
 
 /** Daily reward amounts — day 7 is more valuable than days 1-6 combined */
 export const DAILY_REWARDS = [
@@ -59,6 +60,9 @@ interface PlayerStoreState {
   totalLinesCleared: number;
   currentStreak: number;
   longestStreak: number;
+  /** Free "freeze" tokens that save the streak from a single-day miss.
+   *  Earned every 5 streak days (max 1 held). Loss-aversion clamp. */
+  streakShields: number;
   lastPlayDate: string | null;
   equippedTheme: string;
   equippedBlockSkin: string;
@@ -206,7 +210,10 @@ interface PlayerStore extends PlayerStoreState {
   usePowerUp: (type: 'bomb' | 'rowClear' | 'colorClear') => boolean;
   equipTheme: (themeId: string) => void;
   equipBlockSkin: (skinId: string) => void;
-  updateStreak: () => void;
+  /** Update the daily play streak. Returns the streak-shield result so the
+   *  UI can show a "Streak Saved!" toast (shield consumed) or "Shield Earned!"
+   *  toast (shield granted at a milestone). */
+  updateStreak: () => StreakShieldResult;
   setDisplayName: (name: string) => void;
   claimDailyReward: () => { coins: number; gems?: number; powerUp?: string } | null;
   checkAchievements: () => Achievement[];
@@ -316,6 +323,7 @@ export const usePlayerStore = create<PlayerStore>()(
       totalLinesCleared: 0,
       currentStreak: 0,
       longestStreak: 0,
+      streakShields: 0,
       lastPlayDate: null,
       equippedTheme: 'classic',
       equippedBlockSkin: 'default',
@@ -461,23 +469,27 @@ export const usePlayerStore = create<PlayerStore>()(
       equipTheme: (themeId) => set({ equippedTheme: themeId }),
       equipBlockSkin: (skinId) => set({ equippedBlockSkin: skinId }),
 
-      updateStreak: () => {
+      updateStreak: (): StreakShieldResult => {
         const today = getToday();
-        const { lastPlayDate, currentStreak, longestStreak } = get();
-
-        if (lastPlayDate === today) return; // Already played today
-
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-        const newStreak = lastPlayDate === yesterdayStr ? currentStreak + 1 : 1;
-
-        set({
-          lastPlayDate: today,
-          currentStreak: newStreak,
-          longestStreak: Math.max(longestStreak, newStreak),
+        const state = get();
+        const result = applyStreakShield({
+          today,
+          lastPlayDate: state.lastPlayDate,
+          currentStreak: state.currentStreak,
+          streakShields: state.streakShields,
         });
+
+        // Only mutate state on a genuine date change (already played today =
+        // no-op). Shield grant/consumption only happens when we cross a day.
+        if (state.lastPlayDate !== today) {
+          set({
+            lastPlayDate: today,
+            currentStreak: result.newStreak,
+            streakShields: result.newShields,
+            longestStreak: Math.max(state.longestStreak, result.newStreak),
+          });
+        }
+        return result;
       },
 
       setDisplayName: (name) => set({ displayName: name }),
