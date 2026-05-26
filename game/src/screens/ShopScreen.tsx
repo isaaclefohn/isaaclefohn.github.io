@@ -18,7 +18,7 @@ import {
 import { usePlayerStore } from '../store/playerStore';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
 import { Button } from '../components/common/Button';
-import { PRODUCTS, getCoinProducts, getGemProducts, getBundleProducts, getPremiumProducts, Product } from '../services/purchases';
+import { PRODUCTS, getCoinProducts, getGemProducts, getBundleProducts, getPremiumProducts, restorePurchases, Product } from '../services/purchases';
 import { POWER_UP_CONFIGS, PowerUpType } from '../game/powerups/PowerUpManager';
 import { canShowRewarded, showRewardedAd } from '../services/ads';
 import { POWER_UP_UPGRADES, getUpgradeInfo, canAffordUpgrade } from '../game/powerups/PowerUpUpgrades';
@@ -253,6 +253,33 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
    *  player ASKED for the ad, they get real value, the cap from `ads.ts`
    *  still applies so this isn't spammable). The PowerUpType picked
    *  rotates to avoid stockpiling one kind. */
+  /** Apple-required restore path for non-consumable IAPs. Calls into
+   *  the service-layer `restorePurchases`, which queries platform-
+   *  level ownership; the existing purchaseUpdatedListener re-grants
+   *  entitlements (ad-free, VIP, starter-pack contents) as Apple
+   *  replays them. Web stub is a no-op. */
+  const [restoreInFlight, setRestoreInFlight] = useState(false);
+  const handleRestorePurchases = useCallback(async () => {
+    if (restoreInFlight) return;
+    setRestoreInFlight(true);
+    try {
+      const restored = await restorePurchases();
+      if (restored.length > 0) {
+        Alert.alert(
+          'Purchases Restored',
+          `Restored ${restored.length} purchase${restored.length === 1 ? '' : 's'}.`,
+        );
+      } else {
+        Alert.alert(
+          'No Purchases Found',
+          'We did not find any previous non-consumable purchases on this Apple ID.',
+        );
+      }
+    } finally {
+      setRestoreInFlight(false);
+    }
+  }, [restoreInFlight]);
+
   const [adPowerUpInFlight, setAdPowerUpInFlight] = useState(false);
   const handleAdPowerUp = useCallback(async () => {
     if (adPowerUpInFlight || !canShowRewarded()) return;
@@ -334,6 +361,23 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
               {getPremiumProducts().map((product) => (
                 <ProductCard key={product.id} product={product} onBuy={handleBuyIAP} />
               ))}
+              {/* Restore Purchases — Apple Guideline 3.1.1 REQUIRES
+                  this surface for non-consumable IAPs (Remove Ads,
+                  Starter Pack, VIP Pass) or the app is rejected.
+                  Even though the actual purchase wiring is a DEV STUB
+                  until Apple Developer enrollment lands, the restore
+                  affordance must exist so the eventual switchover is
+                  a code change not an architecture change. */}
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleRestorePurchases}
+                disabled={restoreInFlight}
+                style={styles.restoreButton}
+              >
+                <Text style={styles.restoreButtonText}>
+                  {restoreInFlight ? 'Restoring…' : 'Restore Purchases'}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <SectionDivider />
@@ -808,6 +852,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.success,
     marginTop: 2,
+  },
+
+  // -- Restore Purchases (Apple-required for non-consumable IAPs) --
+  restoreButton: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: SPACING.md,
+    marginTop: SPACING.sm,
+  },
+  restoreButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+    letterSpacing: 0.3,
+    textDecorationLine: 'underline',
   },
 
   // -- Rewarded "free power-up" CTA --

@@ -114,6 +114,51 @@ export async function requestPurchase(productId: string): Promise<boolean> {
   }
 }
 
+/**
+ * Restore non-consumable purchases the user already owns on a fresh
+ * install / new device. Apple REJECTS apps with non-consumable IAPs
+ * (Remove Ads, Starter Pack, VIP Pass) that have no restore path —
+ * this is Guideline 3.1.1. Even though the actual purchase wiring is
+ * a DEV STUB until Apple Developer enrollment, the function + UI
+ * surface ship now so the eventual real-payment switchover is one
+ * code change instead of an architecture change.
+ *
+ * Returns the list of product IDs successfully restored, or empty if
+ * none / IAP is not available / the call fails. The UI uses the count
+ * for the "restored N purchases" confirmation message.
+ */
+export async function restorePurchases(): Promise<string[]> {
+  if (isExpoGo || !loadIAP() || !IAP) {
+    console.warn('[IAP] not available, cannot restore');
+    return [];
+  }
+  if (!iapInitialized) await initializePurchases();
+  try {
+    // react-native-iap's `getAvailablePurchases` returns the user's
+    // restorable transactions on iOS. Each non-consumable they own
+    // shows up exactly once.
+    const purchases = await IAP.getAvailablePurchases();
+    const ids: string[] = [];
+    for (const purchase of purchases) {
+      const sku = (purchase as { productId?: string }).productId;
+      if (!sku) continue;
+      const product = PRODUCTS.find((p) => p.id === sku);
+      // Only non-consumables are restorable — consumables (coins, gems,
+      // bundles) cannot and should not be re-granted on restore.
+      if (!product || product.type !== 'non_consumable') continue;
+      ids.push(sku);
+      // The purchaseUpdatedListener wired in initializePurchases will
+      // see this and re-grant the entitlement (e.g., flip ad-free back
+      // on). We do not need to call finishTransaction here — the
+      // platform tracks "already restored" automatically.
+    }
+    return ids;
+  } catch (err) {
+    console.warn('[IAP] restorePurchases failed', err);
+    return [];
+  }
+}
+
 /** Fetch the live product catalog from the store. Returns empty array on failure. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchStoreProducts(): Promise<any[]> {

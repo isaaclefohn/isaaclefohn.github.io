@@ -75,6 +75,11 @@ export async function requestPurchase(_productId: string): Promise<boolean> {
   return false;
 }
 
+export async function restorePurchases(): Promise<string[]> {
+  // Web preview has no platform-level purchases to restore.
+  return [];
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchStoreProducts(): Promise<any[]> {
   return [];
