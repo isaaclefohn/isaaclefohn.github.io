@@ -4,12 +4,13 @@
  * Appears on first open each day if reward is available.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { Modal } from './common/Modal';
 import { Button } from './common/Button';
 import { GameIcon } from './GameIcon';
 import { DAILY_REWARDS, usePlayerStore } from '../store/playerStore';
+import { getDailyTiles, type WheelTile } from '../game/engine/dailyWheel';
 import { scheduleDailyRewardReminder } from '../services/notifications';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
 
@@ -26,6 +27,13 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
   const canClaim = dailyRewardLastClaimed !== today;
   const currentDayIndex = dailyRewardDay % DAILY_REWARDS.length;
 
+  // Wheel state — read tiles directly so the player sees them BEFORE the spin
+  // (anticipation = the dopamine moment, per the variable-reward research).
+  const wheelTiles = useMemo(() => getDailyTiles(dailyRewardDay), [dailyRewardDay]);
+  const [spinPhase, setSpinPhase] = useState<'idle' | 'spinning' | 'settled'>('idle');
+  const [spinIndex, setSpinIndex] = useState<number | null>(null);
+  const [wonTile, setWonTile] = useState<WheelTile | null>(null);
+
   useEffect(() => {
     if (visible && canClaim) {
       Animated.loop(
@@ -37,13 +45,46 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
     }
   }, [visible, canClaim]);
 
-  const handleClaim = () => {
-    const reward = claimDailyReward();
-    if (reward) {
-      // Schedule next daily reward notification
-      scheduleDailyRewardReminder().catch(() => {});
-      onClose();
+  // Reset wheel state whenever the modal is hidden so the next open starts
+  // fresh (otherwise a re-open would show stale "settled" state).
+  useEffect(() => {
+    if (!visible) {
+      setSpinPhase('idle');
+      setSpinIndex(null);
+      setWonTile(null);
     }
+  }, [visible]);
+
+  const handleClaim = () => {
+    const result = claimDailyReward();
+    if (!result) return;
+    // The reward is credited immediately in the store; we now animate the
+    // wheel to the winning index. Decelerating step durations make it feel
+    // like a real wheel slowing to a stop (instead of a flat strobe).
+    const targetIndex = result.wheel.index;
+    const stepDurations = [55, 55, 55, 60, 70, 90, 120, 170, 240];
+    let step = 0;
+    setSpinPhase('spinning');
+
+    const tick = () => {
+      if (step < stepDurations.length) {
+        setSpinIndex(step % 4);
+        const dur = stepDurations[step];
+        step++;
+        setTimeout(tick, dur);
+      } else {
+        // Settle on the actual winning slot — this is the dopamine moment.
+        setSpinIndex(targetIndex);
+        setWonTile(result.wheel.tile);
+        setSpinPhase('settled');
+        scheduleDailyRewardReminder().catch(() => {});
+      }
+    };
+    tick();
+  };
+
+  const handleClose = () => {
+    onClose();
   };
 
   return (
@@ -93,10 +134,63 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
         })}
       </View>
 
+      {(canClaim || spinPhase !== 'idle') && (
+        <View style={styles.wheelSection}>
+          <Text style={styles.wheelTitle}>Bonus Spin</Text>
+          <View style={styles.wheelRow}>
+            {wheelTiles.map((tile, i) => {
+              const isHighlighted = spinIndex === i;
+              const isWinner = spinPhase === 'settled' && spinIndex === i;
+              const isRare = tile.rarity === 'rare';
+              return (
+                <View
+                  key={i}
+                  style={[
+                    styles.wheelTile,
+                    isRare && styles.wheelTileRare,
+                    isHighlighted && spinPhase === 'spinning' && styles.wheelTileSpinning,
+                    isWinner && styles.wheelTileWinner,
+                  ]}
+                >
+                  <Text style={[styles.wheelTileLabel, isRare && styles.wheelTileLabelRare]}>
+                    {tile.label}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+          {spinPhase === 'settled' && wonTile && (
+            <Text style={styles.wonText}>You won: {wonTile.label}!</Text>
+          )}
+        </View>
+      )}
+
       <Button
-        title={canClaim ? 'Claim Reward!' : 'Come Back Tomorrow'}
-        onPress={canClaim ? handleClaim : onClose}
-        variant={canClaim ? 'primary' : 'ghost'}
+        title={
+          spinPhase === 'spinning'
+            ? 'Spinning…'
+            : spinPhase === 'settled'
+            ? 'Awesome!'
+            : canClaim
+            ? 'Spin & Claim!'
+            : 'Come Back Tomorrow'
+        }
+        onPress={
+          spinPhase === 'spinning'
+            ? () => {}
+            : spinPhase === 'settled'
+            ? handleClose
+            : canClaim
+            ? handleClaim
+            : onClose
+        }
+        variant={
+          spinPhase === 'spinning'
+            ? 'ghost'
+            : canClaim || spinPhase === 'settled'
+            ? 'primary'
+            : 'ghost'
+        }
         size="medium"
       />
     </Modal>
@@ -179,5 +273,74 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
+  },
+  wheelSection: {
+    marginBottom: SPACING.lg,
+    alignItems: 'center',
+  },
+  wheelTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+    marginBottom: SPACING.sm,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  wheelRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  wheelTile: {
+    width: 60,
+    height: 60,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...SHADOWS.small,
+  },
+  wheelTileRare: {
+    borderColor: COLORS.accentGold,
+    borderWidth: 2,
+    backgroundColor: `${COLORS.accentGold}15`,
+  },
+  wheelTileSpinning: {
+    borderColor: COLORS.accent,
+    borderWidth: 2,
+    backgroundColor: `${COLORS.accent}20`,
+    transform: [{ scale: 1.08 }],
+  },
+  wheelTileWinner: {
+    borderColor: COLORS.accentGold,
+    borderWidth: 3,
+    backgroundColor: `${COLORS.accentGold}30`,
+    shadowColor: COLORS.accentGold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 14,
+    transform: [{ scale: 1.12 }],
+  },
+  wheelTileLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+    paddingHorizontal: 2,
+  },
+  wheelTileLabelRare: {
+    color: COLORS.accentGold,
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
+  wonText: {
+    marginTop: SPACING.sm,
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.accentGold,
+    letterSpacing: 0.5,
   },
 });

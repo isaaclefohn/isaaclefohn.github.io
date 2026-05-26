@@ -8,6 +8,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { InboxMessage } from '../game/systems/Inbox';
 import { applyStreakShield, type StreakShieldResult } from '../game/engine/streakShield';
+import { getDailyTiles, rollWheel, type WheelTile } from '../game/engine/dailyWheel';
 
 /** Daily reward amounts — day 7 is more valuable than days 1-6 combined */
 export const DAILY_REWARDS = [
@@ -215,7 +216,14 @@ interface PlayerStore extends PlayerStoreState {
    *  toast (shield granted at a milestone). */
   updateStreak: () => StreakShieldResult;
   setDisplayName: (name: string) => void;
-  claimDailyReward: () => { coins: number; gems?: number; powerUp?: string } | null;
+  /** Claim today's daily reward — credits BOTH the calendar payout (existing
+   *  fixed-escalating track) AND a wheel-spin bonus (variable surprise). The
+   *  wheel result includes the rolled tile + its index so the UI can animate
+   *  the spin landing on the correct slot. Returns null if already claimed. */
+  claimDailyReward: () => {
+    calendar: { coins: number; gems?: number; powerUp?: string };
+    wheel: { tiles: WheelTile[]; index: number; tile: WheelTile };
+  } | null;
   checkAchievements: () => Achievement[];
   recordGamePlayed: (combo: number) => void;
   recordZenGame: (score: number, linesCleared: number, combo: number) => void;
@@ -500,23 +508,38 @@ export const usePlayerStore = create<PlayerStore>()(
 
         if (dailyRewardLastClaimed === today) return null;
 
+        // Calendar reward (existing deterministic 7-day track).
         const rewardIndex = dailyRewardDay % DAILY_REWARDS.length;
         const reward = DAILY_REWARDS[rewardIndex];
 
-        set((s) => ({
-          coins: s.coins + reward.coins,
-          gems: s.gems + (reward.gems ?? 0),
-          dailyRewardDay: s.dailyRewardDay + 1,
-          dailyRewardLastClaimed: today,
-          ...(reward.powerUp ? {
-            powerUps: {
-              ...s.powerUps,
-              [reward.powerUp]: s.powerUps[reward.powerUp] + 1,
-            },
-          } : {}),
-        }));
+        // Wheel bonus — variable surprise on top of the calendar. The tile
+        // layout is deterministic per day (so the player sees the same tiles
+        // both before and after the spin); only the LANDING slot is random.
+        const tiles = getDailyTiles(dailyRewardDay);
+        const wheelResult = rollWheel(tiles);
+        const wheelTile = wheelResult.tile;
 
-        return { coins: reward.coins, gems: reward.gems, powerUp: reward.powerUp };
+        set((s) => {
+          // Merge BOTH rewards into a single state update.
+          const totalCoins = (reward.coins ?? 0) + wheelTile.coins;
+          const totalGems = (reward.gems ?? 0) + wheelTile.gems;
+          // Calendar power-up (if any) AND wheel power-up (if any) both apply.
+          const nextPowerUps = { ...s.powerUps };
+          if (reward.powerUp) nextPowerUps[reward.powerUp] = nextPowerUps[reward.powerUp] + 1;
+          if (wheelTile.powerUp) nextPowerUps[wheelTile.powerUp] = nextPowerUps[wheelTile.powerUp] + 1;
+          return {
+            coins: s.coins + totalCoins,
+            gems: s.gems + totalGems,
+            dailyRewardDay: s.dailyRewardDay + 1,
+            dailyRewardLastClaimed: today,
+            powerUps: nextPowerUps,
+          };
+        });
+
+        return {
+          calendar: { coins: reward.coins, gems: reward.gems, powerUp: reward.powerUp },
+          wheel: { tiles, index: wheelResult.index, tile: wheelTile },
+        };
       },
 
       checkAchievements: () => {
