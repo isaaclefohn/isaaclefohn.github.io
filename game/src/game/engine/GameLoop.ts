@@ -12,10 +12,20 @@ import { PIECES_PER_TURN, COLORS } from '../../utils/constants';
 
 export type GameStatus = 'playing' | 'won' | 'lost' | 'paused';
 
-export interface LevelObjective {
-  type: 'score';
-  target: number;
-}
+/**
+ * Win-condition for a level. Discriminated union so new objective types
+ * can be added without touching every consumer.
+ *
+ *   - `score`: reach N total points (the original, most common type).
+ *   - `chromatic`: clear N same-color lines (the brand-signature variant —
+ *     turns the chromatic mechanic from a bonus that *happens* into the
+ *     thing the player is *actually trying to do*). Stars still come off
+ *     `starThresholds` against score so existing 1-/2-/3-star economy
+ *     keeps working — only the WIN line changes.
+ */
+export type LevelObjective =
+  | { type: 'score'; target: number }
+  | { type: 'chromatic'; target: number };
 
 export interface GameState {
   grid: Grid;
@@ -161,7 +171,7 @@ export function processTurn(
     const gameOverPool = heldPiece ? [...newSet, heldPiece] : newSet;
     const gameOver = isGameOver(result.grid, gameOverPool);
     // Check for win
-    const won = checkObjective(state.objective, newScore);
+    const won = checkObjective(state.objective, newScore, state.chromaticClears + scoreEvent.chromaticClears);
 
     return {
       ...state,
@@ -183,7 +193,7 @@ export function processTurn(
   // Check for game over with remaining pieces (plus any held piece)
   const gameOverPool = heldPiece ? [...remainingPieces, heldPiece] : remainingPieces;
   const gameOver = isGameOver(result.grid, gameOverPool);
-  const won = checkObjective(state.objective, newScore);
+  const won = checkObjective(state.objective, newScore, state.chromaticClears + scoreEvent.chromaticClears);
 
   return {
     ...state,
@@ -202,13 +212,24 @@ export function processTurn(
   };
 }
 
-/** Check if the level objective has been met */
-function checkObjective(objective: LevelObjective, score: number): boolean {
+/** Check if the level objective has been met. Pass the current score AND
+ *  chromatic-clear count so the function can route to whichever the
+ *  active objective cares about.
+ *
+ *  Exported because the level-objective rule is the kind of thing that
+ *  needs unit tests separate from the full processTurn flow — a
+ *  one-line discriminated-union branch is too small to be tested only
+ *  indirectly through a 200-line game-state pipeline. */
+export function checkObjective(
+  objective: LevelObjective,
+  score: number,
+  chromaticClears: number,
+): boolean {
   switch (objective.type) {
     case 'score':
       return score >= objective.target;
-    default:
-      return false;
+    case 'chromatic':
+      return chromaticClears >= objective.target;
   }
 }
 

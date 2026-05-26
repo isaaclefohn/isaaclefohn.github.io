@@ -6,6 +6,7 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, Animated, StyleSheet, Easing } from 'react-native';
 import { GameIcon } from './GameIcon';
+import type { LevelObjective } from '../game/engine/GameLoop';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
 
@@ -13,7 +14,7 @@ interface ScoreDisplayProps {
   score: number;
   combo: number;
   chromaticClears?: number;
-  objective: { type: 'score'; target: number };
+  objective: LevelObjective;
   level: number;
   stars: 0 | 1 | 2 | 3;
 }
@@ -26,7 +27,13 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   level,
   stars,
 }) => {
-  const progress = Math.min(1, score / objective.target);
+  // Progress drives the goal-bar fill. For 'score' objectives that's
+  // score-vs-target (the original); for 'chromatic' objectives it's
+  // chromatic-clears-vs-target, since chromatic clears ARE the win line
+  // for those levels. Score still drives the big number + stars, but
+  // the bar reflects what the player is actually working toward.
+  const objectiveCount = objective.type === 'chromatic' ? chromaticClears : score;
+  const progress = objective.target > 0 ? Math.min(1, objectiveCount / objective.target) : 1;
   const comboScale = useRef(new Animated.Value(1)).current;
   const progressGlow = useRef(new Animated.Value(0.4)).current;
   const scoreScale = useRef(new Animated.Value(1)).current;
@@ -76,7 +83,16 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   const starThresholds = [0.33, 0.66, 1.0];
 
   return (
-    <View style={styles.container} accessible accessibilityLabel={`Level ${level}, Score ${formatScore(score)} of ${formatScore(objective.target)}, ${stars} stars${combo > 1 ? `, ${combo}x combo` : ''}`} accessibilityRole="summary">
+    <View
+      style={styles.container}
+      accessible
+      accessibilityLabel={
+        objective.type === 'chromatic'
+          ? `Level ${level}, ${chromaticClears} of ${objective.target} chromatic clears, score ${formatScore(score)}, ${stars} stars${combo > 1 ? `, ${combo}x combo` : ''}`
+          : `Level ${level}, Score ${formatScore(score)} of ${formatScore(objective.target)}, ${stars} stars${combo > 1 ? `, ${combo}x combo` : ''}`
+      }
+      accessibilityRole="summary"
+    >
       {/* Level badge and stars row */}
       <View style={styles.levelRow}>
         <View style={styles.levelBadge}>
@@ -150,7 +166,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           ))}
         </View>
         <Text style={styles.targetText}>
-          {formatScore(score)} / {formatScore(objective.target)}
+          {objective.type === 'chromatic'
+            ? `🌈 ${chromaticClears} / ${objective.target} chromatic`
+            : `${formatScore(score)} / ${formatScore(objective.target)}`}
         </Text>
       </View>
     </View>
