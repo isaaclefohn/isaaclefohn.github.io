@@ -122,7 +122,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   } = useGameEngine();
 
   const { playSound, playPlacement, playHaptic, playChromaticCascade } = useSound();
-  const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak, chromaticClearsSincePremium, setChromaticClearsSincePremium } = usePlayerStore(useShallow((s) => ({
+  const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak, chromaticClearsSincePremium, setChromaticClearsSincePremium, incrementTotalChromaticClears } = usePlayerStore(useShallow((s) => ({
     powerUps: s.powerUps, usePowerUp: s.usePowerUp, coins: s.coins, gems: s.gems,
     addCoins: s.addCoins, addGems: s.addGems, addPowerUp: s.addPowerUp, spendGems: s.spendGems,
     levelHighScores: s.levelHighScores, levelStars: s.levelStars, zenHighScore: s.zenHighScore,
@@ -133,6 +133,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     dailyPuzzleStreak: s.dailyPuzzleStreak,
     chromaticClearsSincePremium: s.chromaticClearsSincePremium,
     setChromaticClearsSincePremium: s.setChromaticClearsSincePremium,
+    incrementTotalChromaticClears: s.incrementTotalChromaticClears,
   })));
   const { tutorialCompleted, completeTutorial, shownTips, markTipShown } = useSettingsStore();
 
@@ -377,6 +378,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         // visual + haptic ONLY — score is untouched, balance preserved.
         const roll = rollTier(chromaticClearsSincePremium);
         setChromaticClearsSincePremium(roll.nextClearsSincePremium);
+        // Lifetime counter for the chromatic-tier achievements
+        // (first_chromatic / chromatic_25 / chromatic_100). Distinct
+        // from the pity counter above which gets reset by jackpots.
+        incrementTotalChromaticClears(event.chromaticClears);
         const tier: CelebrationTier = roll.tier;
         // Tier amplification table — multipliers/overrides applied to the
         // existing celebration knobs. Mini/normal use defaults (the standard

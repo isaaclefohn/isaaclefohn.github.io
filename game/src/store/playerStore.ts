@@ -52,6 +52,14 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'perfect_3star', name: 'Perfectionist', description: 'Get 3 stars on 10 levels', icon: 'sparkle', reward: { coins: 100, gems: 5 }, check: (s) => Object.values(s.levelStars).filter(v => v >= 3).length >= 10 },
   { id: 'coins_1000', name: 'Coin Hoarder', description: 'Hold 1,000 coins', icon: 'coin', reward: { gems: 3 }, check: (s) => s.coins >= 1000 },
   { id: 'first_powerup', name: 'Power User', description: 'Use a power-up', icon: 'bomb', reward: { coins: 15 }, check: (s) => s.totalPowerUpsUsed >= 1 },
+  // Chromatic mechanic — three tiers that ladder up the signature
+  // brand identity. Pairs with the `first_chromatic` teach tip
+  // (which fires on the same in-game event the achievement unlocks
+  // on) so the player's first chromatic clear becomes a triple-
+  // attribution moment: cascade + label + achievement.
+  { id: 'first_chromatic', name: 'First Spark', description: 'Trigger your first chromatic clear', icon: 'sparkle', reward: { coins: 25 }, check: (s) => s.totalChromaticClears >= 1 },
+  { id: 'chromatic_25', name: 'Chromatic Adept', description: 'Trigger 25 chromatic clears', icon: 'palette', reward: { coins: 100, gems: 3 }, check: (s) => s.totalChromaticClears >= 25 },
+  { id: 'chromatic_100', name: 'Color Master', description: 'Trigger 100 chromatic clears', icon: 'crown', reward: { coins: 400, gems: 15 }, check: (s) => s.totalChromaticClears >= 100 },
 ];
 
 interface PlayerStoreState {
@@ -105,6 +113,12 @@ interface PlayerStoreState {
   // (the variable-jackpot system's "drought protection" so an unlucky player
   // is guaranteed a premium-tier fire after N clears).
   chromaticClearsSincePremium: number;
+  /** Lifetime chromatic-clear count. Drives the chromatic-tier
+   *  achievements (first_chromatic / chromatic_25 / chromatic_100)
+   *  and any future stats / leaderboard surfaces that want to
+   *  celebrate the signature mechanic. Distinct from
+   *  `chromaticClearsSincePremium` which is the pity counter. */
+  totalChromaticClears: number;
   // Lucky Spin
   lastSpinDate: string | null;
   // Adaptive difficulty
@@ -264,6 +278,10 @@ interface PlayerStore extends PlayerStoreState {
   recordDailyPuzzleResult: (puzzleId: string, score: number, stars: number) => { isFirstCompletion: boolean; isNewBest: boolean };
   /** Persist the new pity counter value after a celebration-tier roll. */
   setChromaticClearsSincePremium: (n: number) => void;
+  /** Increment the lifetime chromatic-clear counter. Called from
+   *  GameScreen when a chromatic line clears, alongside the pity-
+   *  counter setter. Drives chromatic-tier achievements. */
+  incrementTotalChromaticClears: (n: number) => void;
   recordSpin: () => void;
   recordFailure: (level: number) => void;
   resetFailures: () => void;
@@ -388,6 +406,7 @@ export const usePlayerStore = create<PlayerStore>()(
       dailyPuzzleStreak: 0,
       dailyPuzzlePlayCount: 0,
       chromaticClearsSincePremium: 0,
+      totalChromaticClears: 0,
       lastSpinDate: null,
       consecutiveFailures: 0,
       lastFailedLevel: 0,
@@ -736,6 +755,14 @@ export const usePlayerStore = create<PlayerStore>()(
 
       setChromaticClearsSincePremium: (n: number) => {
         set({ chromaticClearsSincePremium: Math.max(0, n) });
+      },
+
+      incrementTotalChromaticClears: (n: number) => {
+        // Guard against accidental decrement / NaN — chromaticClears
+        // from the engine is always a non-negative integer, but
+        // callers can change. State stays monotonic.
+        if (!Number.isFinite(n) || n <= 0) return;
+        set((s) => ({ totalChromaticClears: s.totalChromaticClears + Math.floor(n) }));
       },
 
       recordSpin: () => {
