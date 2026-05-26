@@ -1182,7 +1182,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         ) : (
           <>
             <Text style={styles.modalTarget}>
-              Target: {formatScore(levelConfig.objective.target)}
+              {levelConfig.objective.type === 'chromatic'
+                ? `Target: 🌈 ${levelConfig.objective.target} chromatic`
+                : `Target: ${formatScore(levelConfig.objective.target)}`}
             </Text>
             <View style={styles.statsSummary}>
               <View style={styles.summaryRow}>
@@ -1195,7 +1197,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Progress</Text>
-                <Text style={styles.summaryValue}>{Math.min(Math.round((gameState.score / levelConfig.objective.target) * 100), 100)}%</Text>
+                <Text style={styles.summaryValue}>
+                  {levelConfig.objective.type === 'chromatic'
+                    ? `${Math.min(Math.round((gameState.chromaticClears / levelConfig.objective.target) * 100), 100)}%`
+                    : `${Math.min(Math.round((gameState.score / levelConfig.objective.target) * 100), 100)}%`}
+                </Text>
               </View>
             </View>
           </>

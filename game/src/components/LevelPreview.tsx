@@ -73,13 +73,21 @@ export const LevelPreview: React.FC<LevelPreviewProps> = ({
         </View>
       </View>
 
-      {/* Objectives */}
+      {/* Objectives — branch on the discriminated union so chromatic-
+          objective levels read "Clear N chromatic lines" instead of the
+          misleading "Score 3 points" rendering of `.target` as score. */}
       <View style={styles.objectiveCard}>
         <Text style={styles.objectiveTitle}>OBJECTIVE</Text>
         <View style={styles.objectiveRow}>
-          <GameIcon name="target" size={16} color={COLORS.accent} />
+          <GameIcon
+            name={config.objective.type === 'chromatic' ? 'sparkle' : 'target'}
+            size={16}
+            color={config.objective.type === 'chromatic' ? COLORS.accentGold : COLORS.accent}
+          />
           <Text style={styles.objectiveText}>
-            Score {formatScore(config.objective.target)} points
+            {config.objective.type === 'chromatic'
+              ? `Clear ${config.objective.target} chromatic lines`
+              : `Score ${formatScore(config.objective.target)} points`}
           </Text>
         </View>
       </View>
