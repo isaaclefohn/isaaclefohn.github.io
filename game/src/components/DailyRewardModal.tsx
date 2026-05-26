@@ -10,7 +10,7 @@ import { Modal } from './common/Modal';
 import { Button } from './common/Button';
 import { GameIcon } from './GameIcon';
 import { DAILY_REWARDS, usePlayerStore } from '../store/playerStore';
-import { getDailyTiles, type WheelTile } from '../game/engine/dailyWheel';
+import { getDailyTiles, WHEEL_ODDS_DISCLOSURE, type WheelTile } from '../game/engine/dailyWheel';
 import { scheduleDailyRewardReminder } from '../services/notifications';
 import { canShowRewarded, showRewardedAd } from '../services/ads';
 import { TouchableOpacity } from 'react-native';
@@ -39,6 +39,10 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
   // (anticipation = the dopamine moment, per the variable-reward research).
   const wheelTiles = useMemo(() => getDailyTiles(dailyRewardDay), [dailyRewardDay]);
   const [spinPhase, setSpinPhase] = useState<'idle' | 'spinning' | 'settled'>('idle');
+  /** Whether the wheel-odds disclosure (App Store Guideline 3.1.1) is
+   *  currently expanded. Collapsed by default to avoid clutter; the
+   *  little "Odds" toggle in the wheel header opens it. */
+  const [showOdds, setShowOdds] = useState(false);
   const [spinIndex, setSpinIndex] = useState<number | null>(null);
   const [wonTile, setWonTile] = useState<WheelTile | null>(null);
 
@@ -185,7 +189,31 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
 
       {(canClaim || spinPhase !== 'idle') && (
         <View style={styles.wheelSection}>
-          <Text style={styles.wheelTitle}>Bonus Spin</Text>
+          <View style={styles.wheelHeaderRow}>
+            <Text style={styles.wheelTitle}>Bonus Spin</Text>
+            <TouchableOpacity
+              onPress={() => setShowOdds((v) => !v)}
+              hitSlop={8}
+              accessibilityLabel="Show wheel odds"
+            >
+              <Text style={styles.wheelOddsToggle}>{showOdds ? 'Hide odds' : 'Odds'}</Text>
+            </TouchableOpacity>
+          </View>
+          {/* Odds disclosure satisfies App Store Guideline 3.1.1
+              (randomized rewards must disclose odds pre-purchase).
+              Numbers come from WHEEL_ODDS_DISCLOSURE in the engine so
+              they cannot drift from rollWheel's actual distribution —
+              the test suite enforces parity. */}
+          {showOdds && (
+            <View style={styles.oddsCard}>
+              {WHEEL_ODDS_DISCLOSURE.map((row) => (
+                <View key={row.label} style={styles.oddsRow}>
+                  <Text style={styles.oddsLabel}>{row.label}</Text>
+                  <Text style={styles.oddsValue}>{row.oddsPct}%</Text>
+                </View>
+              ))}
+            </View>
+          )}
           <View style={styles.wheelRow}>
             {wheelTiles.map((tile, i) => {
               const isHighlighted = spinIndex === i;
@@ -346,14 +374,54 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
     alignItems: 'center',
   },
+  wheelHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: SPACING.sm,
+  },
   wheelTitle: {
     fontSize: 13,
     fontWeight: '800',
     color: COLORS.textPrimary,
     textAlign: 'center',
-    marginBottom: SPACING.sm,
     letterSpacing: 1,
     textTransform: 'uppercase',
+  },
+  wheelOddsToggle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    textDecorationLine: 'underline',
+  },
+  oddsCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+    padding: SPACING.sm,
+    marginBottom: SPACING.sm,
+    width: '100%',
+    gap: 2,
+  },
+  oddsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  oddsLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+    flex: 1,
+    marginRight: SPACING.sm,
+  },
+  oddsValue: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.accentGold,
   },
   wheelRow: {
     flexDirection: 'row',

@@ -3,6 +3,7 @@ import {
   rollWheel,
   RARE_TILE_INDEX,
   RARE_WEIGHT,
+  WHEEL_ODDS_DISCLOSURE,
 } from '../game/engine/dailyWheel';
 
 describe('daily reward wheel', () => {
@@ -74,6 +75,36 @@ describe('daily reward wheel', () => {
         if (rollWheel(tiles, () => r).tile.rarity === 'rare') jackpots++;
       }
       expect(jackpots / N).toBeCloseTo(RARE_WEIGHT, 2);
+    });
+  });
+
+  // The in-app odds disclosure is a public commitment Apple holds the
+  // app to under Guideline 3.1.1 (randomized rewards). These tests fail
+  // the build if the engine's distribution drifts from what we tell
+  // users — so the disclosure and the implementation cannot diverge
+  // silently.
+  describe('odds disclosure', () => {
+    it('disclosed odds sum to exactly 100%', () => {
+      const total = WHEEL_ODDS_DISCLOSURE.reduce((s, r) => s + r.oddsPct, 0);
+      expect(total).toBe(100);
+    });
+
+    it('disclosed jackpot odds match the engine constant', () => {
+      const jackpot = WHEEL_ODDS_DISCLOSURE.find((r) => r.label.startsWith('JACKPOT'));
+      expect(jackpot).toBeDefined();
+      expect(jackpot!.oddsPct).toBeCloseTo(RARE_WEIGHT * 100, 4);
+    });
+
+    it('disclosed common odds split the non-rare mass uniformly', () => {
+      // Three common tiles must share the remaining (1 - RARE_WEIGHT)
+      // probability evenly. If a future refactor weights them, this test
+      // fails — forcing the disclosure to be updated alongside.
+      const common = WHEEL_ODDS_DISCLOSURE.filter((r) => !r.label.startsWith('JACKPOT'));
+      expect(common).toHaveLength(3);
+      const expectedCommonPct = ((1 - RARE_WEIGHT) / 3) * 100;
+      for (const row of common) {
+        expect(row.oddsPct).toBeCloseTo(expectedCommonPct, 0);
+      }
     });
   });
 });

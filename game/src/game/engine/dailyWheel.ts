@@ -40,6 +40,25 @@ export const RARE_TILE_INDEX = 3;
 /** Jackpot probability — 1-in-10 = roughly weekly jackpot for a daily player. */
 export const RARE_WEIGHT = 0.10;
 
+/**
+ * Human-readable odds table for the daily wheel, used by the in-app
+ * disclosure surface that satisfies App Store Guideline 3.1.1
+ * (randomized rewards must disclose odds pre-purchase). Numbers
+ * derived from RARE_WEIGHT and the 3-common-tile uniform split inside
+ * `rollWheel`. If the engine's distribution changes, update this table
+ * in lockstep — the disclosure is a public commitment Apple holds you
+ * to under that guideline.
+ */
+export const WHEEL_ODDS_DISCLOSURE: ReadonlyArray<{
+  label: string;
+  oddsPct: number;
+}> = [
+  { label: '+15 coins',                       oddsPct: 30 },
+  { label: '+3 gems',                         oddsPct: 30 },
+  { label: '+1 power-up',                     oddsPct: 30 },
+  { label: 'JACKPOT (+100 coins, +5 gems, +1 power-up)', oddsPct: 10 },
+];
+
 /** A small power-up rotation so the "power-up" tile is not always the same. */
 const POWERUP_ROTATION: Array<'bomb' | 'rowClear' | 'colorClear'> = [
   'bomb',
