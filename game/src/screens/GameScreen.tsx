@@ -54,6 +54,7 @@ import { getLuckyLevelReward, LuckyLevelReward } from '../game/rewards/LuckyLeve
 import { LuckyLevelModal } from '../components/LuckyLevelModal';
 import { WorldCompleteModal } from '../components/WorldCompleteModal';
 import { TomorrowPromise } from '../components/TomorrowPromise';
+import { buildLevelRunShareCard, buildEndlessShareCard } from '../game/social/shareCards';
 import { getWorldCompletionStatus, getWorldReward, WorldReward } from '../game/rewards/WorldRewards';
 import { calculateSRChange, getSkillTier } from '../game/systems/SkillRating';
 import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
@@ -732,20 +733,35 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         scoreFraction: Math.min(1, gameState.score / threeStar),
       });
     } else if (isEndless) {
-      message = `I scored ${gameState.score.toLocaleString()} in Zen Mode!\n\n` +
-        `Lines: ${gameState.linesCleared} | Pieces: ${gameState.piecesPlaced}\n\n` +
-        `CHROMA — Can you beat my score?`;
+      // Zen-mode Wordle-style card; bar represents score-vs-personal-best
+      // so the share reads as a self-comparison (or a new-best trophy).
+      message = buildEndlessShareCard({
+        score: gameState.score,
+        personalBest: zenHighScore,
+        linesCleared: gameState.linesCleared,
+        piecesPlaced: gameState.piecesPlaced,
+        bestCombo: gameState.combo ?? 0,
+        chromaticClears: gameState.chromaticClears,
+      });
     } else {
-      const starEmojis = '⭐'.repeat(stars);
-      const worldName = currentWorld?.name ?? '';
-      message = `I scored ${gameState.score.toLocaleString()} on Level ${levelConfig.levelNumber} ${starEmojis}\n` +
-        (worldName ? `World: ${worldName}\n` : '') +
-        `\nCHROMA — Can you beat my score?`;
+      // Standard level card; bar represents score-vs-3-star-threshold so
+      // the card mirrors the daily card's "how close to mastery" framing.
+      const threeStar = levelConfig.starThresholds?.[2] ?? 1;
+      message = buildLevelRunShareCard({
+        levelNumber: levelConfig.levelNumber,
+        worldName: currentWorld?.name,
+        stars: Math.max(0, Math.min(3, stars)) as 0 | 1 | 2 | 3,
+        score: gameState.score,
+        scoreFraction: Math.min(1, gameState.score / threeStar),
+        linesCleared: gameState.linesCleared,
+        bestCombo: gameState.combo ?? 0,
+        chromaticClears: gameState.chromaticClears,
+      });
     }
     try {
       await Share.share({ message });
     } catch {}
-  }, [gameState, levelConfig, stars, isEndless, isDaily, currentWorld, dailyPuzzleStreak]);
+  }, [gameState, levelConfig, stars, isEndless, isDaily, currentWorld, dailyPuzzleStreak, zenHighScore]);
 
   const handleChallengeFriend = useCallback(async () => {
     if (!gameState || !levelConfig || isEndless) return;
