@@ -341,6 +341,24 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           <Text style={styles.footerVersion}>Version 1.0.0</Text>
           <Text style={styles.footerCopy}>Made with care</Text>
 
+          {/* Soft "rate this app" link — opens the App Store review
+              composer via deep link. Unlimited (unlike the 3-per-year
+              SKStoreReviewController prompt) so catches motivated
+              raters outside the system-prompt window per the 2026-06
+              growth plan. Pre-launch the URL has a placeholder
+              app-id — swap in the real ID after App Store Connect
+              creates the listing. */}
+          <TouchableOpacity
+            onPress={() => Linking.openURL(PUBLIC_URLS.appStoreReviewUrl).catch(() => {})}
+            hitSlop={8}
+            accessibilityRole="link"
+            accessibilityLabel="Rate CHROMA on the App Store"
+            style={styles.rateRow}
+          >
+            <GameIcon name="star" size={14} color={COLORS.accentGold} />
+            <Text style={styles.rateLink}>Loving CHROMA? Tell us.</Text>
+          </TouchableOpacity>
+
           <View style={styles.legalLinkRow}>
             <TouchableOpacity
               onPress={() => Linking.openURL(PUBLIC_URLS.privacyPolicy).catch(() => {})}
@@ -684,6 +702,25 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.textMuted,
     fontStyle: 'italic',
+  },
+  rateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: SPACING.md,
+    paddingVertical: 6,
+    paddingHorizontal: SPACING.md,
+    backgroundColor: `${COLORS.accentGold}12`,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    borderColor: `${COLORS.accentGold}40`,
+  },
+  rateLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.accentGold,
+    letterSpacing: 0.3,
   },
   legalLinkRow: {
     flexDirection: 'row',

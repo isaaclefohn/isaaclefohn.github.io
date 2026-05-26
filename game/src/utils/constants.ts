@@ -170,4 +170,13 @@ export const PUBLIC_URLS = {
   // Support email — used by the App Store Connect submission form
   // and surfaced in Settings → About so reviewers can contact us.
   supportEmail: 'kiwilefohn@gmail.com',
+  // Direct-write-review deep link. The App Store Connect "App Store
+  // ID" Apple assigns at app creation needs to replace `XXXXX` before
+  // submission. The `action=write-review` parameter jumps straight
+  // into the review composer instead of the product page — Apple
+  // explicitly supports this URL form per the HIG on ratings.
+  // Unlike `SKStoreReviewController` this has NO 3-prompt-per-year
+  // limit; it just opens the App Store. Use for the Settings link
+  // that catches motivated raters outside the system-prompt window.
+  appStoreReviewUrl: 'https://apps.apple.com/app/idXXXXX?action=write-review',
 } as const;
