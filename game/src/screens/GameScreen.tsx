@@ -53,6 +53,7 @@ import {
 import { getLuckyLevelReward, LuckyLevelReward } from '../game/rewards/LuckyLevel';
 import { LuckyLevelModal } from '../components/LuckyLevelModal';
 import { WorldCompleteModal } from '../components/WorldCompleteModal';
+import { TomorrowPromise } from '../components/TomorrowPromise';
 import { getWorldCompletionStatus, getWorldReward, WorldReward } from '../game/rewards/WorldRewards';
 import { calculateSRChange, getSkillTier } from '../game/systems/SkillRating';
 import { CELL_SIZE, CELL_GAP, COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
@@ -1242,6 +1243,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             style={styles.continueButton}
           />
         )}
+
+        {/* Tomorrow-Promise — forward-looking peek at the next daily reward.
+            Reframes session-end from regret-about-the-score to
+            anticipation-of-tomorrow's-visit. No countdown, no FOMO. */}
+        <TomorrowPromise />
 
         <View style={styles.modalButtons}>
           {isDaily ? (
