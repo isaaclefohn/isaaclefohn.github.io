@@ -7,7 +7,12 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { InboxMessage } from '../game/systems/Inbox';
-import { applyStreakShield, type StreakShieldResult } from '../game/engine/streakShield';
+import {
+  applyStreakShield,
+  canClaimRewardedShield,
+  MAX_STREAK_SHIELDS,
+  type StreakShieldResult,
+} from '../game/engine/streakShield';
 import { getDailyTiles, rollWheel, type WheelTile } from '../game/engine/dailyWheel';
 
 /** Daily reward amounts — day 7 is more valuable than days 1-6 combined */
@@ -64,6 +69,11 @@ interface PlayerStoreState {
   /** Free "freeze" tokens that save the streak from a single-day miss.
    *  Earned every 5 streak days (max 1 held). Loss-aversion clamp. */
   streakShields: number;
+  /** ISO date the player last claimed a rewarded-ad shield refill.
+   *  Throttled to once per 7 days so the shield retains meaning —
+   *  unlimited refills would let players ignore the streak rhythm
+   *  the whole feature is meant to encourage. */
+  streakShieldAdLastDate: string | null;
   lastPlayDate: string | null;
   equippedTheme: string;
   equippedBlockSkin: string;
@@ -215,6 +225,17 @@ interface PlayerStore extends PlayerStoreState {
    *  UI can show a "Streak Saved!" toast (shield consumed) or "Shield Earned!"
    *  toast (shield granted at a milestone). */
   updateStreak: () => StreakShieldResult;
+  /** Whether the player currently qualifies for a rewarded-ad shield
+   *  refill. True when: (a) they have a streak worth protecting, (b)
+   *  no shield held, (c) ≥7 days since their last refill (or never).
+   *  Used to gate the in-UI offer; the action itself re-checks. */
+  canClaimStreakShieldAd: () => boolean;
+  /** Grant a streak shield in exchange for a watched rewarded ad. The
+   *  ad result is the caller's responsibility — this just credits the
+   *  shield and stamps the throttle. Returns true on success, false if
+   *  the throttle blocks it (shouldn't normally happen if caller
+   *  gated on `canClaimStreakShieldAd` first, but defense in depth). */
+  addStreakShieldFromAd: () => boolean;
   setDisplayName: (name: string) => void;
   /** Claim today's daily reward — credits BOTH the calendar payout (existing
    *  fixed-escalating track) AND a wheel-spin bonus (variable surprise). The
@@ -332,6 +353,7 @@ export const usePlayerStore = create<PlayerStore>()(
       currentStreak: 0,
       longestStreak: 0,
       streakShields: 0,
+      streakShieldAdLastDate: null,
       lastPlayDate: null,
       equippedTheme: 'classic',
       equippedBlockSkin: 'default',
@@ -498,6 +520,37 @@ export const usePlayerStore = create<PlayerStore>()(
           });
         }
         return result;
+      },
+
+      canClaimStreakShieldAd: () => {
+        const state = get();
+        return canClaimRewardedShield({
+          today: getToday(),
+          currentStreak: state.currentStreak,
+          streakShields: state.streakShields,
+          streakShieldAdLastDate: state.streakShieldAdLastDate,
+        });
+      },
+
+      addStreakShieldFromAd: () => {
+        const state = get();
+        const today = getToday();
+        // Re-validate the same way the gate does. Defense in depth: a
+        // caller that bypassed `canClaimStreakShieldAd` (mock, race,
+        // future refactor) still cannot grant out-of-throttle.
+        if (!canClaimRewardedShield({
+          today,
+          currentStreak: state.currentStreak,
+          streakShields: state.streakShields,
+          streakShieldAdLastDate: state.streakShieldAdLastDate,
+        })) {
+          return false;
+        }
+        set({
+          streakShields: MAX_STREAK_SHIELDS,
+          streakShieldAdLastDate: today,
+        });
+        return true;
       },
 
       setDisplayName: (name) => set({ displayName: name }),

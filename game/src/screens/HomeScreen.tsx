@@ -28,6 +28,7 @@ import { AchievementShowcase } from '../components/AchievementShowcase';
 import { BossRushModal } from '../components/BossRushModal';
 import { isBossRushUnlocked } from '../game/modes/BossRush';
 import { LeaderboardModal } from '../components/LeaderboardModal';
+import { canShowRewarded, showRewardedAd } from '../services/ads';
 import { TournamentModal } from '../components/TournamentModal';
 import { getHighestTier } from '../game/modes/Tournament';
 import { InboxModal } from '../components/InboxModal';
@@ -72,7 +73,7 @@ const TITLE_BLOCKS = [
 ];
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { highestLevel, coins, gems, totalScore, currentStreak, streakShields, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, rouletteLastDate, dailyPuzzleLastPlayedId, dailyPuzzleLastPlayedScore, dailyPuzzleStreak } = usePlayerStore();
+  const { highestLevel, coins, gems, totalScore, currentStreak, streakShields, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, rouletteLastDate, dailyPuzzleLastPlayedId, dailyPuzzleLastPlayedScore, dailyPuzzleStreak, canClaimStreakShieldAd, addStreakShieldFromAd } = usePlayerStore();
   const { tutorialCompleted, completeTutorial, notificationsEnabled } = useSettingsStore();
   // Floating "+N" indicators for the COINS / GEMS stat chips — the
   // dopamine moment when the daily reward + wheel land back here.
@@ -288,6 +289,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     completeTutorial();
   }, [completeTutorial]);
 
+  /** Watch a rewarded ad in exchange for restoring the consumed streak
+   *  shield. Player-positive (saves a real loss moment), throttled to
+   *  once per week so the streak retains meaning. The store action
+   *  re-validates the throttle so a stale UI state can't bypass it. */
+  const [shieldAdInFlight, setShieldAdInFlight] = useState(false);
+  const handleShieldRefill = useCallback(async () => {
+    if (shieldAdInFlight) return;
+    setShieldAdInFlight(true);
+    try {
+      const earned = await showRewardedAd();
+      if (earned) {
+        addStreakShieldFromAd();
+      }
+    } finally {
+      setShieldAdInFlight(false);
+    }
+  }, [shieldAdInFlight, addStreakShieldFromAd]);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Screen vignette */}
@@ -406,6 +425,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           )}
         </Animated.View>
         </TouchableOpacity>
+
+        {/* Rewarded shield refill CTA — only renders when streak ≥ 1,
+            no shield held, throttle elapsed, AND the ad cap allows.
+            Genuine player value (saves a real loss moment); not a dark
+            pattern. The shieldAdInFlight gate prevents double-click. */}
+        {canClaimStreakShieldAd() && canShowRewarded() && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleShieldRefill}
+            disabled={shieldAdInFlight}
+            style={styles.shieldRefillCta}
+          >
+            <GameIcon name="shield" size={16} color={COLORS.accentGold} />
+            <Text style={styles.shieldRefillText}>
+              {shieldAdInFlight ? 'Loading ad…' : 'Watch ad → Restore Streak Shield'}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Main buttons */}
         <Animated.View
@@ -883,6 +920,27 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     gap: SPACING.sm,
+  },
+  shieldRefillCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginTop: -SPACING.sm,
+    marginBottom: SPACING.sm,
+    backgroundColor: `${COLORS.accentGold}15`,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    borderColor: `${COLORS.accentGold}40`,
+    alignSelf: 'center',
+  },
+  shieldRefillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.accentGold,
+    letterSpacing: 0.3,
   },
   playButtonWrap: {
     width: '100%',

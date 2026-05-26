@@ -111,3 +111,35 @@ export function applyStreakShield(input: StreakShieldInput): StreakShieldResult 
 
   return { newStreak, newShields, shieldConsumed, shieldGranted };
 }
+
+// ── Rewarded-ad shield refill ──────────────────────────────────────
+
+/** Days between rewarded-ad shield refills. 7 keeps the streak
+ *  meaningful (refilling every day would erase loss-aversion); shorter
+ *  feels exploitative, longer is too rare to be worth the ad. */
+export const REWARDED_SHIELD_COOLDOWN_DAYS = 7;
+
+/**
+ * Decide if the player currently qualifies for a rewarded-ad shield
+ * refill. Three gates:
+ *
+ *   1. They have a streak worth protecting (≥ 1).
+ *   2. The shield slot is empty (≥ MAX would refuse).
+ *   3. ≥ REWARDED_SHIELD_COOLDOWN_DAYS since the last refill (or never).
+ *
+ * Pure function so it can be evaluated in tests without a Zustand store
+ * + AsyncStorage harness, and so the store action can re-validate the
+ * same way (defense in depth — caller can't bypass the throttle by
+ * calling the action directly).
+ */
+export function canClaimRewardedShield(input: {
+  today: string;
+  currentStreak: number;
+  streakShields: number;
+  streakShieldAdLastDate: string | null;
+}): boolean {
+  if (input.currentStreak < 1) return false;
+  if (input.streakShields >= MAX_STREAK_SHIELDS) return false;
+  if (input.streakShieldAdLastDate === null) return true;
+  return daysBetween(input.streakShieldAdLastDate, input.today) >= REWARDED_SHIELD_COOLDOWN_DAYS;
+}
