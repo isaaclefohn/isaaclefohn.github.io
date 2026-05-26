@@ -23,15 +23,37 @@ describe('LevelGenerator', () => {
       expect(config.levelNumber).toBe(26);
     });
 
-    it('returns chromatic-objective config for the Chapter 1 milestones', () => {
+    it('returns chromatic-objective config for the full Chapter 1 arc', () => {
       // Regression guard: a refactor that flattens the LevelObjective
       // discriminated union back to "always score" would silently turn
-      // these into broken score levels (target=2, 3, 4 points = instant
-      // win at level start). Pin the contract here.
-      for (const [level, target] of [[30, 2], [60, 3], [90, 4]] as const) {
+      // these into broken score levels (target=2..8 points = instant
+      // win at level start). Pin the contract for all 7 chapter slots.
+      const chapter: ReadonlyArray<readonly [number, number]> = [
+        [30, 2],  // Ignition
+        [60, 3],  // Cascade
+        [90, 4],  // Resonance
+        [120, 5], // Convergence
+        [155, 6], // Saturation (155 not 150 — 150 is a score boss)
+        [180, 7], // Spectrum
+        [210, 8], // Singularity
+      ];
+      for (const [level, target] of chapter) {
         const config = getLevel(level);
         expect(config.objective.type).toBe('chromatic');
         expect(config.objective.target).toBe(target);
+      }
+    });
+
+    it('Chapter 1 targets escalate monotonically', () => {
+      // The chapter is a difficulty staircase — each level's chromatic
+      // target must be ≥ the previous one so the curve never dips.
+      const levels = [30, 60, 90, 120, 155, 180, 210];
+      const targets = levels.map((l) => {
+        const obj = getLevel(l).objective;
+        return obj.type === 'chromatic' ? obj.target : -Infinity;
+      });
+      for (let i = 1; i < targets.length; i++) {
+        expect(targets[i]).toBeGreaterThanOrEqual(targets[i - 1]);
       }
     });
 

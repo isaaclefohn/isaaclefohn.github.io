@@ -72,6 +72,64 @@ export const BOSS_LEVELS: Record<number, LevelConfig> = {
     paletteSize: 3,
     seed: hashSeed(90),
   },
+
+  // ── Chromatic: Convergence ───────────────────────────────────────
+  // 10x10 grid era — board has more cells, so chromatic alignment
+  // requires more deliberate piece placement. Palette held at 3
+  // (going to 2 would trivialize chromatic since every line is
+  // chromatic on a 2-color board).
+  120: {
+    levelNumber: 120,
+    gridSize: 10,
+    objective: { type: 'chromatic', target: 5 },
+    piecePool: PIECE_POOLS.extreme,
+    starThresholds: [2000, 3200, 5000],
+    paletteSize: 3,
+    seed: hashSeed(120),
+  },
+
+  // ── Chromatic: Saturation ────────────────────────────────────────
+  // Mid-late chapter. Same 10x10 / palette-3 shape but higher target,
+  // so the player has to plan multi-line chromatic chains across the
+  // run, not just react to opportunistic clears.
+  // Slotted at 155 (NOT 150 — there is already a score boss at 150;
+  // chromatic chapter slots must sit between existing score bosses).
+  155: {
+    levelNumber: 155,
+    gridSize: 10,
+    objective: { type: 'chromatic', target: 6 },
+    piecePool: PIECE_POOLS.extreme,
+    starThresholds: [2500, 4000, 6000],
+    paletteSize: 3,
+    seed: hashSeed(155),
+  },
+
+  // ── Chromatic: Spectrum ──────────────────────────────────────────
+  // Late chapter — the player should now expect to plan their entire
+  // run around chromatic chains rather than score density.
+  180: {
+    levelNumber: 180,
+    gridSize: 10,
+    objective: { type: 'chromatic', target: 7 },
+    piecePool: PIECE_POOLS.extreme,
+    starThresholds: [3500, 5500, 8000],
+    paletteSize: 3,
+    seed: hashSeed(180),
+  },
+
+  // ── Chromatic: Singularity ───────────────────────────────────────
+  // Chapter 1 finale. Target 8 chromatic clears in a single run is
+  // the mastery test — at palette 3 this requires near-perfect piece
+  // placement decisions across the whole run.
+  210: {
+    levelNumber: 210,
+    gridSize: 10,
+    objective: { type: 'chromatic', target: 8 },
+    piecePool: PIECE_POOLS.extreme,
+    starThresholds: [4500, 7000, 10000],
+    paletteSize: 3,
+    seed: hashSeed(210),
+  },
   50: {
     levelNumber: 50,
     gridSize: 8,

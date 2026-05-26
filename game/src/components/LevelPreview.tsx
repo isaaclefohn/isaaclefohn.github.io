@@ -42,6 +42,10 @@ const CHROMATIC_CHAPTER_NAMES: Record<number, string> = {
   30: 'Chromatic: Ignition',
   60: 'Chromatic: Cascade',
   90: 'Chromatic: Resonance',
+  120: 'Chromatic: Convergence',
+  155: 'Chromatic: Saturation',
+  180: 'Chromatic: Spectrum',
+  210: 'Chromatic: Singularity',
 };
 
 export const LevelPreview: React.FC<LevelPreviewProps> = ({
