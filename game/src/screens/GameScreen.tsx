@@ -61,6 +61,7 @@ import { calculateCoinReward } from '../game/engine/Scoring';
 import { canShowRewarded, onLevelCompleted, showRewardedAd, showInterstitialAd, AD_REWARDS } from '../services/ads';
 import { createChallenge, shareChallenge } from '../services/challenges';
 import { reportGameResult } from '../services/leaderboard';
+import { rollTier, type CelebrationTier } from '../game/engine/celebrationTier';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -118,7 +119,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   } = useGameEngine();
 
   const { playSound, playPlacement, playHaptic, playChromaticCascade } = useSound();
-  const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak } = usePlayerStore(useShallow((s) => ({
+  const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak, chromaticClearsSincePremium, setChromaticClearsSincePremium } = usePlayerStore(useShallow((s) => ({
     powerUps: s.powerUps, usePowerUp: s.usePowerUp, coins: s.coins, gems: s.gems,
     addCoins: s.addCoins, addGems: s.addGems, addPowerUp: s.addPowerUp, spendGems: s.spendGems,
     levelHighScores: s.levelHighScores, levelStars: s.levelStars, zenHighScore: s.zenHighScore,
@@ -127,6 +128,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     claimedWorldClears: s.claimedWorldClears, claimedWorldPerfects: s.claimedWorldPerfects,
     claimWorldClear: s.claimWorldClear, claimWorldPerfect: s.claimWorldPerfect,
     dailyPuzzleStreak: s.dailyPuzzleStreak,
+    chromaticClearsSincePremium: s.chromaticClearsSincePremium,
+    setChromaticClearsSincePremium: s.setChromaticClearsSincePremium,
   })));
   const { tutorialCompleted, completeTutorial, shownTips, markTipShown } = useSettingsStore();
 
@@ -351,12 +354,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         setTimeout(() => setShowConfetti(false), 2500);
         setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.chromaticClears > 0) {
-        // Chromatic clear — our signature SOMATIC event. The chromatic line
-        // triggers a board-wide same-color detonation; we fire a layered haptic
-        // arc that maps directly to that explosion: heavy thump (anticipation)
-        // → stuttered cascade pulses (climax) → Success notification (tail).
-        // Shake + flash scale with the cascade size so a big detonation
-        // physically rocks the screen.
+        // Chromatic clear — our signature SOMATIC event. Variable-tier system
+        // on top: most clears get the standard celebration, ~10% fire a
+        // Big/Jackpot the player did not see coming (reward prediction error
+        // per the dopamine research). Pity timer N=22 forces a Big if the
+        // player has gone too long without a premium tier. Tier amplifies
+        // visual + haptic ONLY — score is untouched, balance preserved.
+        const roll = rollTier(chromaticClearsSincePremium);
+        setChromaticClearsSincePremium(roll.nextClearsSincePremium);
+        const tier: CelebrationTier = roll.tier;
+        // Tier amplification table — multipliers/overrides applied to the
+        // existing celebration knobs. Mini/normal use defaults (the standard
+        // chromatic detonation we just shipped); Big/Jackpot dial it up.
+        const amp =
+          tier === 'jackpot'
+            ? { shakeMul: 2.2, flashMul: 2.5, hypeText: 'JACKPOT!', hypeColorOverride: COLORS.accentGold, confettiMs: 2500, extraHaptic: true }
+            : tier === 'big'
+              ? { shakeMul: 1.5, flashMul: 1.5, hypeText: 'HUGE!', hypeColorOverride: null, confettiMs: 1200, extraHaptic: false }
+              : { shakeMul: 1.0, flashMul: 1.0, hypeText: null,    hypeColorOverride: null, confettiMs: 0,    extraHaptic: false };
+
         const distinctColors = [...new Set(event.chromaticColors ?? [])];
         const isRainbow = distinctColors.length >= 2;
         const chromaColor = isRainbow
@@ -365,23 +381,31 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         const cascadeCount = event.cascadeCellsCleared ?? 0;
         // Heavy thump + combo sound (initial detonation).
         playSound('combo');
-        // Rich cascade haptic pattern — outlasts the visual by ~100ms (the
-        // "addiction signature" per the Color Blast teardown).
+        // Rich cascade haptic pattern — outlasts visual by ~100ms ("addiction
+        // signature" per Color Blast teardown).
         playChromaticCascade(cascadeCount + 6);
+        // Jackpot tier: extra "exclamation point" Success haptic 700ms after
+        // the cascade — outlasts the visual even more.
+        if (amp.extraHaptic) {
+          setTimeout(() => playHaptic('success'), 700);
+        }
         setShowComboBanner(true);
         setClearFlashColor(chromaColor);
         setShowClearFlash(true);
-        // Shake scales with cascade size (capped) — board-wide detonations
-        // physically rock the screen harder than tight clears.
+        // Shake intensity = base + cascade-size boost, multiplied by tier.
         const cascadeShakeBoost = Math.min(cascadeCount * 0.08, 1.5);
-        shakeBoard(1.8 + event.chromaticClears * 0.5 + cascadeShakeBoost);
-        setHypeText(isRainbow ? 'RAINBOW!' : 'CHROMATIC!');
-        setHypeColor(chromaColor);
+        shakeBoard((1.8 + event.chromaticClears * 0.5 + cascadeShakeBoost) * amp.shakeMul);
+        setHypeText(amp.hypeText ?? (isRainbow ? 'RAINBOW!' : 'CHROMATIC!'));
+        setHypeColor(amp.hypeColorOverride ?? chromaColor);
         setShowHype(true);
         setBurstColor(chromaColor);
         setShowBurst(true);
-        // Flash lingers longer for bigger cascades — the dopamine tail.
-        const flashDuration = 400 + Math.min(cascadeCount * 20, 300);
+        // Big/Jackpot trigger confetti for the "screen erupts" moment.
+        if (amp.confettiMs > 0) {
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), amp.confettiMs);
+        }
+        const flashDuration = (400 + Math.min(cascadeCount * 20, 300)) * amp.flashMul;
         setTimeout(() => setShowClearFlash(false), flashDuration);
       } else if (event.linesCleared >= 3) {
         playSound('combo');

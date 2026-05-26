@@ -83,6 +83,10 @@ interface PlayerStoreState {
   dailyPuzzleBestScore: number;
   dailyPuzzleStreak: number;
   dailyPuzzlePlayCount: number;
+  // Celebration tier pity counter — chromatic clears since last Big/Jackpot
+  // (the variable-jackpot system's "drought protection" so an unlucky player
+  // is guaranteed a premium-tier fire after N clears).
+  chromaticClearsSincePremium: number;
   // Lucky Spin
   lastSpinDate: string | null;
   // Adaptive difficulty
@@ -209,6 +213,8 @@ interface PlayerStore extends PlayerStoreState {
   recordGamePlayed: (combo: number) => void;
   recordZenGame: (score: number, linesCleared: number, combo: number) => void;
   recordDailyPuzzleResult: (puzzleId: string, score: number, stars: number) => { isFirstCompletion: boolean; isNewBest: boolean };
+  /** Persist the new pity counter value after a celebration-tier roll. */
+  setChromaticClearsSincePremium: (n: number) => void;
   recordSpin: () => void;
   recordFailure: (level: number) => void;
   resetFailures: () => void;
@@ -329,6 +335,7 @@ export const usePlayerStore = create<PlayerStore>()(
       dailyPuzzleBestScore: 0,
       dailyPuzzleStreak: 0,
       dailyPuzzlePlayCount: 0,
+      chromaticClearsSincePremium: 0,
       lastSpinDate: null,
       consecutiveFailures: 0,
       lastFailedLevel: 0,
@@ -581,6 +588,10 @@ export const usePlayerStore = create<PlayerStore>()(
           totalGamesPlayed: s.totalGamesPlayed + 1,
         });
         return { isFirstCompletion: true, isNewBest };
+      },
+
+      setChromaticClearsSincePremium: (n: number) => {
+        set({ chromaticClearsSincePremium: Math.max(0, n) });
       },
 
       recordSpin: () => {
