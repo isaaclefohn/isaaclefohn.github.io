@@ -14,6 +14,6 @@
     { "id": "com.isaaclefohn.chromadrop.gems100", "name": "100 Gems", "price": "$1.99" },
     { "id": "com.isaaclefohn.chromadrop.gems500", "name": "500 Gems", "price": "$7.99" },
     { "id": "com.isaaclefohn.chromadrop.starter_pack", "name": "Starter Pack", "price": "$4.99" },
-    { "id": "com.isaaclefohn.chromadrop.remove_ads", "name": "Remove Ads", "price": "$3.99" }
+    { "id": "com.isaaclefohn.chromadrop.remove_ads", "name": "Remove Ads", "price": "$2.99" }
   ]
 }

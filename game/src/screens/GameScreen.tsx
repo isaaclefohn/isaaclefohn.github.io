@@ -259,9 +259,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       playSound('levelWin');
       setShowConfetti(true);
       setTimeout(() => setShowWinModal(true), 600);
-      if (onLevelCompleted()) {
-        showInterstitialAd();
-      }
+      // Interstitial moved OFF the win path per the 2026-06 audit —
+      // punishing success is the wrong dopamine arc. The trigger now
+      // lives on lose-modal dismiss (handleRetry / handleHome below).
       // Calculate SR change for display
       if (!isEndless && isFeatureUnlocked('skill_rating', highestLevel)) {
         const change = calculateSRChange({
@@ -700,8 +700,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const handlePause = useCallback(() => { pauseGame(); setShowPauseMenu(true); }, [pauseGame]);
   const handleResume = useCallback(() => { setShowPauseMenu(false); resumeGame(); }, [resumeGame]);
   const handleNextLevel = useCallback(() => { setShowWinModal(false); setShowConfetti(false); navigation.replace('Game', { level: level + 1 }); }, [navigation, level]);
-  const handleRetry = useCallback(() => { setShowLoseModal(false); setShowWinModal(false); setShowPauseMenu(false); setShowConfetti(false); setActivePowerUp(null); setDoubleCoinsUsed(false); resetLevel(); }, [resetLevel]);
-  const handleHome = useCallback(() => { navigation.navigate('Home'); }, [navigation]);
+  /** Lose-modal dismiss path. The interstitial cap (every-3 events + 2-min
+   *  floor, from `ads.ts`) lives here per the 2026-06 monetization audit:
+   *  showing on lose dismiss matches Block Blast's Classical pattern and
+   *  preserves the win arc. The cap function ticks regardless of whether
+   *  the ad fires; that's intentional. */
+  const handleRetry = useCallback(() => {
+    setShowLoseModal(false); setShowWinModal(false); setShowPauseMenu(false);
+    setShowConfetti(false); setActivePowerUp(null); setDoubleCoinsUsed(false);
+    if (onLevelCompleted()) { showInterstitialAd(); }
+    resetLevel();
+  }, [resetLevel]);
+  const handleHome = useCallback(() => {
+    if (onLevelCompleted()) { showInterstitialAd(); }
+    navigation.navigate('Home');
+  }, [navigation]);
 
   const handleWatchAd = useCallback(async () => {
     if (!canShowRewarded()) return;

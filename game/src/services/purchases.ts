@@ -247,11 +247,16 @@ export const PRODUCTS: Product[] = [
   },
 
   // ─── Premium ───────────────────────────────────────────────────
+  // Price drop from $3.99 → $2.99 per the 2026-06 monetization audit:
+  // casual-puzzle ad-removals convert best at $1.99–$2.99 (~1-3% of
+  // DAU); $3.99 prices like a premium-casual title (Toon Blast tier)
+  // without the brand to back it. Volume from the lower anchor more
+  // than offsets per-unit revenue at our audience scale.
   {
     id: 'com.isaaclefohn.chromadrop.adfree',
     title: 'Remove Ads',
     description: 'Permanently remove all ads',
-    price: '$3.99',
+    price: '$2.99',
     type: 'non_consumable',
     reward: { type: 'ad_free', amount: 1 },
   },

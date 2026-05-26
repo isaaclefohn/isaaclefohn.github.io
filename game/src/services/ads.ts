@@ -90,7 +90,18 @@ export function shouldShowAds(): boolean {
   return !usePlayerStore.getState().adFree;
 }
 
-/** Track level completion for interstitial pacing */
+/**
+ * Tick the interstitial-cap counter and return whether an ad should
+ * show on THIS event. Called from the lose-modal dismiss path (and
+ * historically from the win path, but per the 2026-06 monetization
+ * audit we moved it off the win path — Block Blast Classical shows
+ * interstitials on lose, not win, and punishing success is the wrong
+ * dopamine arc for a puzzle game).
+ *
+ * The counter is named for level-completion for legacy reasons; what
+ * it really tracks is "events since the last interstitial." Keeping
+ * the name to avoid churning the public API of this module.
+ */
 export function onLevelCompleted(): boolean {
   if (!shouldShowAds()) return false;
 
