@@ -165,7 +165,7 @@ export function buildDailyShareCard(input: DailyShareCardInput): string {
   const bar = FILLED.repeat(filled) + EMPTY.repeat(10 - filled);
 
   const lines: string[] = [];
-  lines.push(`Chroma Drop #${input.puzzleNumber} — ${input.dateLabel}`);
+  lines.push(`CHROMA #${input.puzzleNumber} — ${input.dateLabel}`);
   lines.push(`${starBar}  ${input.score.toLocaleString()} pts`);
   lines.push(bar);
 
@@ -176,6 +176,6 @@ export function buildDailyShareCard(input: DailyShareCardInput): string {
   if (input.bestCombo > 1) stats.push(`x${input.bestCombo} combo`);
   lines.push(stats.join(' · '));
 
-  lines.push('chromadrop.app');
+  lines.push('chroma.game');
   return lines.join('\n');
 }

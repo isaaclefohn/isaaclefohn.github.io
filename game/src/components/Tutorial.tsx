@@ -17,7 +17,7 @@ interface TutorialStep {
 
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    title: 'Welcome to Chroma Drop!',
+    title: 'Welcome to Chroma!',
     description: 'Place blocks on the grid to fill complete rows or columns. Cleared lines score points!',
     icon: 'gamepad',
   },

@@ -112,10 +112,10 @@ export const BrandSplash: React.FC<BrandSplashProps> = ({ onDone }) => {
       <Animated.Text
         style={[styles.title, { opacity: titleOpacity, transform: [{ translateY: titleTranslate }] }]}
       >
-        CHROMA DROP
+        CHROMA
       </Animated.Text>
       <Animated.Text style={[styles.tagline, { opacity: taglineOpacity }]}>
-        Drop · Clear · Climb
+        Fewer colors. Harder choices.
       </Animated.Text>
     </Animated.View>
   );

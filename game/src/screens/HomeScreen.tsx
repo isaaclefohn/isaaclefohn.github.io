@@ -336,14 +336,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           >
             CHROMA
           </Animated.Text>
-          <Animated.View style={[styles.blastRow, { transform: [{ scale: blastScale }], opacity: blastGlow }]}>
-            <View style={styles.titleDeco} />
-            <Text style={styles.titleAccent}>DROP</Text>
-            <View style={styles.titleDeco} />
-          </Animated.View>
           {/* Subtitle tagline */}
           <Animated.Text style={[styles.tagline, { opacity: statsOpacity }]}>
-            Drop • Clear • Climb
+            Fewer colors. Harder choices.
           </Animated.Text>
         </View>
 

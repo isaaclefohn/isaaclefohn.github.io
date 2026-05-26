@@ -66,7 +66,7 @@ export async function shareChallenge(challenge: ChallengeData): Promise<boolean>
   const message =
     `${challenge.challengerName} challenges you to beat ${challenge.challengerScore.toLocaleString()} points on Level ${challenge.level}!\n\n` +
     `Challenge code: ${encoded}\n\n` +
-    `Open Chroma Drop and enter this code to play the same board!`;
+    `Open CHROMA and enter this code to play the same board!`;
 
   try {
     const result = await Share.share({ message });

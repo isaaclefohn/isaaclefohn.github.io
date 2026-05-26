@@ -262,7 +262,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                     achievements: player.unlockedAchievements.length,
                   };
                   try {
-                    await Share.share({ message: `Chroma Drop Progress\n${JSON.stringify(data, null, 2)}` });
+                    await Share.share({ message: `CHROMA Progress\n${JSON.stringify(data, null, 2)}` });
                   } catch { /* cancelled */ }
                 }}
                 variant="ghost"
@@ -330,7 +330,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
         {/* About footer */}
         <Animated.View style={[styles.footer, animatedStyle(anims[8])]}>
           <GameIcon name="gamepad" size={32} />
-          <Text style={styles.footerAppName}>Chroma Drop</Text>
+          <Text style={styles.footerAppName}>CHROMA</Text>
           <Text style={styles.footerVersion}>Version 1.0.0</Text>
           <Text style={styles.footerCopy}>Made with care</Text>
         </Animated.View>

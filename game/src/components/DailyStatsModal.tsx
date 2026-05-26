@@ -101,7 +101,7 @@ export const DailyStatsModal: React.FC<DailyStatsModalProps> = ({ visible, onClo
     <Modal visible={visible} onClose={onClose} dismissable>
       <View style={styles.header}>
         <GameIcon name="sparkle" size={32} color={COLORS.accentGold} />
-        <Text style={styles.title}>Chroma Drop #{puzzleNumber}</Text>
+        <Text style={styles.title}>CHROMA #{puzzleNumber}</Text>
         <Text style={styles.subtitle}>{dateLabel}</Text>
       </View>
 
