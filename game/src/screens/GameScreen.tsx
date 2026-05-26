@@ -15,7 +15,7 @@ import { HoldSlot } from '../components/HoldSlot';
 import { NextPiecesPreview } from '../components/NextPiecesPreview';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { Piece, getPieceCells, getPieceCentroid } from '../game/engine/Piece';
-import { canPlace, findBestPlacement } from '../game/engine/Board';
+import { canPlace, findBestPlacement, getNearChromaticLines } from '../game/engine/Board';
 import { getWorldForLevel } from '../game/levels/Worlds';
 import { ScoreDisplay } from '../components/ScoreDisplay';
 import { PowerUpBar } from '../components/PowerUpBar';
@@ -356,6 +356,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         setTimeout(() => setShowConfetti(false), 2500);
         setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.chromaticClears > 0) {
+        // First-ever chromatic clear: teach in-context. The signature
+        // move otherwise fires unattributed — confetti + cascade go off
+        // and the player can't connect them to what they did. Fire AFTER
+        // the cascade lands (1400ms) so the player sees the event first,
+        // then gets the explanation. One-shot, stored in settings.
+        if (!shownTips.includes('first_chromatic')) {
+          setTimeout(() => {
+            setActiveTip('first_chromatic');
+            markTipShown('first_chromatic');
+          }, 1400);
+        }
+
         // Chromatic clear — our signature SOMATIC event. Variable-tier system
         // on top: most clears get the standard celebration, ~10% fire a
         // Big/Jackpot the player did not see coming (reward prediction error
@@ -533,6 +545,27 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       return () => clearTimeout(timer);
     }
   }, [gameState?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // First-time near-chromatic teach. The `NearChromaticHint` overlay
+  // pulses a colored bar when the board is one same-color piece away
+  // from a chromatic clear — brilliant signal but unlabeled. The first
+  // time the player sees that pulse, fire a one-shot tip explaining
+  // what it means. Computed off the grid here (same source the overlay
+  // uses) so the tip lands the same render the pulse appears on.
+  useEffect(() => {
+    if (!gameState || gameState.status !== 'playing') return;
+    if (shownTips.includes('first_near_chromatic')) return;
+    if (shownTips.includes('first_chromatic')) {
+      // Player already saw the cascade explanation — no need to teach
+      // the pre-cursor. Marking shown skips this branch on later runs.
+      markTipShown('first_near_chromatic');
+      return;
+    }
+    const near = getNearChromaticLines(gameState.grid);
+    if (near.rows.length === 0 && near.cols.length === 0) return;
+    setActiveTip('first_near_chromatic');
+    markTipShown('first_near_chromatic');
+  }, [gameState?.grid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Combo tip — triggered when player gets first combo
   useEffect(() => {

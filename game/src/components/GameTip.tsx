@@ -17,7 +17,14 @@ export type TipId =
   | 'boss_level_tip'
   | 'weekly_challenge_tip'
   | 'zen_mode_tip'
-  | 'rotate_tip';
+  | 'rotate_tip'
+  // The two tips that teach CHROMA's signature mechanic in-context.
+  // Per the 2026-06 FTUE audit, the chromatic clear's first appearance
+  // currently has no attribution — confetti + cascade fire but the
+  // player can't connect them to the move they just made. These tips
+  // close that gap once per lifetime, the moment each cue first fires.
+  | 'first_chromatic'
+  | 'first_near_chromatic';
 
 interface TipConfig {
   title: string;
@@ -74,6 +81,19 @@ const TIP_CONFIGS: Record<TipId, TipConfig> = {
     body: 'Tap a selected piece again to rotate it 90 degrees. Try different orientations!',
     icon: 'refresh',
     color: COLORS.info,
+  },
+  // ── CHROMA's signature mechanic, taught in-context ────────────────
+  first_chromatic: {
+    title: 'CHROMATIC!',
+    body: 'Single-color line = every block of that color detonates. This is the signature move. Plan your colors.',
+    icon: 'sparkle',
+    color: COLORS.accentGold,
+  },
+  first_near_chromatic: {
+    title: 'One away…',
+    body: 'A glowing row means you are one same-color piece from a CHROMATIC clear. Match the color for the bonus.',
+    icon: 'target',
+    color: COLORS.accent,
   },
 };
 
