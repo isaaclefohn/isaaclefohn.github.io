@@ -157,7 +157,12 @@ export const GameTip: React.FC<GameTipProps> = ({ tipId, visible, onDismiss }) =
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 100,
+    // top: 100 used to land directly over the ScoreDisplay component,
+    // which meant the `first_chromatic` and `first_near_chromatic` teach
+    // tips occluded the very score display the tip was meant to teach
+    // the player to grow. Moved up to 50 (under the navbar / safe-area
+    // band, above the score) per the 2026-06 FTUE audit.
+    top: 50,
     left: SPACING.md,
     right: SPACING.md,
     zIndex: 100,
