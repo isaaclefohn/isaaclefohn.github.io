@@ -15,6 +15,7 @@ import {
   Alert,
   Share,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Tutorial } from '../components/Tutorial';
@@ -24,7 +25,7 @@ import { getSkillTier } from '../game/systems/SkillRating';
 import { useSettingsStore } from '../store/settingsStore';
 import { usePlayerStore } from '../store/playerStore';
 import { Button } from '../components/common/Button';
-import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
+import { COLORS, SHADOWS, SPACING, RADII, PUBLIC_URLS } from '../utils/constants';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -327,12 +328,53 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           </View>
         </Animated.View>
 
-        {/* About footer */}
+        {/* About footer — wordmark + version + the legal/support
+            links Apple expects reachable from inside the app. The
+            privacy URL specifically is a documented App Store review
+            checkpoint; reviewers visit it. Linking opens in the system
+            browser via Linking.openURL, NOT WebView, so the user keeps
+            their Safari session cookies / autofill / accessibility
+            settings instead of getting a stripped-down embedded view. */}
         <Animated.View style={[styles.footer, animatedStyle(anims[8])]}>
           <GameIcon name="gamepad" size={32} />
           <Text style={styles.footerAppName}>CHROMA</Text>
           <Text style={styles.footerVersion}>Version 1.0.0</Text>
           <Text style={styles.footerCopy}>Made with care</Text>
+
+          <View style={styles.legalLinkRow}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL(PUBLIC_URLS.privacyPolicy).catch(() => {})}
+              hitSlop={8}
+              accessibilityRole="link"
+              accessibilityLabel="Open privacy policy"
+            >
+              <Text style={styles.legalLink}>Privacy Policy</Text>
+            </TouchableOpacity>
+            {PUBLIC_URLS.termsOfUse && (
+              <>
+                <Text style={styles.legalLinkSep}> · </Text>
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(PUBLIC_URLS.termsOfUse!).catch(() => {})}
+                  hitSlop={8}
+                  accessibilityRole="link"
+                  accessibilityLabel="Open terms of use"
+                >
+                  <Text style={styles.legalLink}>Terms</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            <Text style={styles.legalLinkSep}> · </Text>
+            <TouchableOpacity
+              onPress={() =>
+                Linking.openURL(`mailto:${PUBLIC_URLS.supportEmail}?subject=CHROMA%20support`).catch(() => {})
+              }
+              hitSlop={8}
+              accessibilityRole="link"
+              accessibilityLabel="Email support"
+            >
+              <Text style={styles.legalLink}>Support</Text>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
       </ScrollView>
 
@@ -642,5 +684,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.textMuted,
     fontStyle: 'italic',
+  },
+  legalLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: SPACING.sm,
+    flexWrap: 'wrap',
+  },
+  legalLink: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+    textDecorationLine: 'underline',
+  },
+  legalLinkSep: {
+    fontSize: 11,
+    color: COLORS.textMuted,
   },
 });

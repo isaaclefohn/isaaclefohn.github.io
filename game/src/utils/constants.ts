@@ -143,3 +143,31 @@ export const RADII = {
   xl: 20,
   round: 999,
 } as const;
+
+/**
+ * Public-facing URLs the App Store reviewer and end users need to be
+ * able to reach. Keep them in one place so the "hosted privacy policy
+ * isn't live yet, swap the URL" task is a one-line change.
+ *
+ * IMPORTANT: these URLs must resolve to publicly-fetchable pages
+ * (no login walls) BEFORE App Store submission. Apple's automated
+ * checks fetch the privacy URL — a 404 stalls review.
+ *
+ * The privacy policy text lives in `game/privacy-policy-template.md`;
+ * the published version lives at the URL below (host options: Notion
+ * "Share to web", GitHub Pages on isaaclefohn.com/chroma/privacy/,
+ * Termly/iubenda generated page).
+ */
+export const PUBLIC_URLS = {
+  // TODO before App Store submission: confirm the privacy policy is
+  // published at this URL and reachable without login.
+  privacyPolicy: 'https://isaaclefohn.com/chroma/privacy/',
+  // Optional but a nice-to-have for the App Store listing. Terms of
+  // Use are not strictly required for a free puzzle game without
+  // user-generated content, but Apple recommends them when IAP is
+  // present. Leave as null until/unless a hosted page exists.
+  termsOfUse: null as string | null,
+  // Support email — used by the App Store Connect submission form
+  // and surfaced in Settings → About so reviewers can contact us.
+  supportEmail: 'kiwilefohn@gmail.com',
+} as const;
