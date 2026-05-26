@@ -23,6 +23,28 @@ describe('LevelGenerator', () => {
       expect(config.levelNumber).toBe(26);
     });
 
+    it('returns chromatic-objective config for the Chapter 1 milestones', () => {
+      // Regression guard: a refactor that flattens the LevelObjective
+      // discriminated union back to "always score" would silently turn
+      // these into broken score levels (target=2, 3, 4 points = instant
+      // win at level start). Pin the contract here.
+      for (const [level, target] of [[30, 2], [60, 3], [90, 4]] as const) {
+        const config = getLevel(level);
+        expect(config.objective.type).toBe('chromatic');
+        expect(config.objective.target).toBe(target);
+      }
+    });
+
+    it('chromatic boss levels still have score-based star thresholds', () => {
+      // Stars are off score even on chromatic levels — the win is N
+      // chromatic clears, but how-well-you-did is still measured in
+      // score so the 1/2/3-star economy is preserved untouched.
+      const config = getLevel(30);
+      expect(config.starThresholds[0]).toBeGreaterThan(2); // not a chromatic count
+      expect(config.starThresholds[0]).toBeLessThan(config.starThresholds[1]);
+      expect(config.starThresholds[1]).toBeLessThan(config.starThresholds[2]);
+    });
+
     it('produces deterministic configs', () => {
       const config1 = getLevel(42);
       const config2 = getLevel(42);

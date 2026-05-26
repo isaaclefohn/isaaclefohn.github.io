@@ -1,7 +1,17 @@
 /**
- * Hand-crafted boss levels that appear every 25 levels.
- * These serve as milestone challenges with higher difficulty
- * and more interesting objectives than procedural levels.
+ * Hand-crafted boss levels with higher difficulty + more interesting
+ * objectives than the procedural campaign. Historically every 25
+ * levels, but the schema is a sparse dictionary keyed by level number
+ * so chromatic-objective milestones can interleave on off-25 slots.
+ *
+ * Boss types:
+ *   - **Score bosses** (25/50/75/...) — reach N points before running
+ *     out of moves. The classic mode.
+ *   - **Chromatic challenges** (30/60/90) — clear N same-color lines.
+ *     The brand-signature mode. Stars still come off score so the
+ *     1-/2-/3-star economy is preserved; only the WIN line changes.
+ *     Placed right after each score boss so the player carries the
+ *     "milestone moment" feeling into a new mechanic.
  */
 
 import { LevelConfig } from '../engine/GameLoop';
@@ -16,6 +26,51 @@ export const BOSS_LEVELS: Record<number, LevelConfig> = {
     piecePool: PIECE_POOLS.medium,
     starThresholds: [1000, 1500, 2200],
     seed: hashSeed(25),
+  },
+
+  // ── Chromatic: Ignition ──────────────────────────────────────────
+  // First chromatic challenge — right after the level-25 score boss.
+  // Target 2 clears is gentle: at this stage the palette is already
+  // small enough that 2 chromatic clears in a single run is reachable
+  // with intentional play, not a fluke. Stars still based on score so
+  // the player isn't punished if they hit the chromatic target with a
+  // low score.
+  30: {
+    levelNumber: 30,
+    gridSize: 8,
+    objective: { type: 'chromatic', target: 2 },
+    piecePool: PIECE_POOLS.medium,
+    starThresholds: [600, 1000, 1500],
+    paletteSize: 4,
+    seed: hashSeed(30),
+  },
+
+  // ── Chromatic: Cascade ───────────────────────────────────────────
+  // Mid-chapter milestone after the level-50 score boss.
+  // Target 3 clears + slightly smaller palette to make chromatic
+  // line completion more frequent.
+  60: {
+    levelNumber: 60,
+    gridSize: 8,
+    objective: { type: 'chromatic', target: 3 },
+    piecePool: PIECE_POOLS.hard,
+    starThresholds: [1000, 1800, 2800],
+    paletteSize: 4,
+    seed: hashSeed(60),
+  },
+
+  // ── Chromatic: Resonance ─────────────────────────────────────────
+  // Late-chapter chromatic milestone after the level-75 score boss.
+  // Target 4 with palette 3 — at this density, near-chromatic hints
+  // fire constantly and chromatic clears chain into each other.
+  90: {
+    levelNumber: 90,
+    gridSize: 8,
+    objective: { type: 'chromatic', target: 4 },
+    piecePool: PIECE_POOLS.hard,
+    starThresholds: [1500, 2500, 4000],
+    paletteSize: 3,
+    seed: hashSeed(90),
   },
   50: {
     levelNumber: 50,
