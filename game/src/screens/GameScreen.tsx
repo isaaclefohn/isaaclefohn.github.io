@@ -16,6 +16,7 @@ import { NextPiecesPreview } from '../components/NextPiecesPreview';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { Piece, getPieceCells, getPieceCentroid } from '../game/engine/Piece';
 import { canPlace, findBestPlacement, getNearChromaticLines } from '../game/engine/Board';
+import { getChapterName, getChapterProgress } from '../game/levels/Chapters';
 import { getWorldForLevel } from '../game/levels/Worlds';
 import { ScoreDisplay } from '../components/ScoreDisplay';
 import { PowerUpBar } from '../components/PowerUpBar';
@@ -1101,9 +1102,31 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       {/* Win Modal */}
       <Modal visible={showWinModal} onClose={() => {}} dismissable={false}>
         <View style={styles.modalIconWrap}>
-          <GameIcon name="sparkle" size={48} color={COLORS.accentGold} />
+          <GameIcon
+            name={getChapterName(level) ? 'crown' : 'sparkle'}
+            size={48}
+            color={COLORS.accentGold}
+          />
         </View>
-        <Text style={styles.modalTitle}>Level Complete!</Text>
+        {/* Chromatic chapter wins get the chapter name as the headline
+            + a "Chapter 1 · N of 7 cleared" progress line. Non-chapter
+            wins get the standard "Level Complete!" — same level of
+            celebration, just no chapter-arc framing. */}
+        {(() => {
+          const chapterName = getChapterName(level);
+          if (chapterName) {
+            const progress = getChapterProgress(level + 1);
+            return (
+              <>
+                <Text style={styles.modalTitle}>{chapterName.toUpperCase()}</Text>
+                <Text style={styles.chapterProgressLine}>
+                  Chapter 1 · {progress.cleared} of {progress.total} cleared
+                </Text>
+              </>
+            );
+          }
+          return <Text style={styles.modalTitle}>Level Complete!</Text>;
+        })()}
         {/* World unlock celebration */}
         {!isEndless && level + 1 <= 500 && getWorldForLevel(level + 1).id !== getWorldForLevel(level).id && (
           <View style={styles.worldUnlockBanner}>
@@ -1520,6 +1543,14 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     marginBottom: 8,
     letterSpacing: 1,
+  },
+  chapterProgressLine: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.accentGold,
+    marginBottom: 8,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
   modalStars: {
     flexDirection: 'row',

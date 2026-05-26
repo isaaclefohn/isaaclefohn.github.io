@@ -13,6 +13,10 @@ import { Button } from './common/Button';
 import { Modal } from './common/Modal';
 import { COLORS, RADII, SPACING } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
+// Themed chapter names live in `src/game/levels/Chapters.ts` so the
+// win modal can use the same source of truth (avoid lookup duplication
+// with drift).
+import { CHROMATIC_CHAPTER_NAMES } from '../game/levels/Chapters';
 
 interface LevelPreviewProps {
   visible: boolean;
@@ -32,21 +36,6 @@ function getDifficultyLabel(level: number): { label: string; color: string } {
   if (level <= 350) return { label: 'Hard', color: COLORS.warning };
   return { label: 'Expert', color: COLORS.danger };
 }
-
-/** Themed names for the chromatic-challenge boss slots. The level
- *  preview surfaces these instead of "Level 30" so the chromatic-
- *  objective milestones feel like *chapters* in a story, not numbered
- *  procedural levels — the editorial-friendly framing per the
- *  competitive intel research. */
-const CHROMATIC_CHAPTER_NAMES: Record<number, string> = {
-  30: 'Chromatic: Ignition',
-  60: 'Chromatic: Cascade',
-  90: 'Chromatic: Resonance',
-  120: 'Chromatic: Convergence',
-  155: 'Chromatic: Saturation',
-  180: 'Chromatic: Spectrum',
-  210: 'Chromatic: Singularity',
-};
 
 export const LevelPreview: React.FC<LevelPreviewProps> = ({
   visible,
