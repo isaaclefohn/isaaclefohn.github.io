@@ -1124,7 +1124,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         {!isEndless && gameState.score > (levelHighScores[level] ?? 0) && (levelHighScores[level] ?? 0) > 0 && (
           <Text style={styles.newBestLabel}>NEW BEST!</Text>
         )}
-        {/* Detailed stats summary */}
+        {/* Detailed stats summary — Chromatic row is the FTUE-Move-3
+            anchor: every win attributes the signature mechanic by name
+            and count, so the player builds the brand vocabulary
+            without us having to ship more tutorial copy. */}
         <View style={styles.statsSummary}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Pieces</Text>
@@ -1134,6 +1137,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             <Text style={styles.summaryLabel}>Lines</Text>
             <Text style={styles.summaryValue}>{gameState.linesCleared}</Text>
           </View>
+          {gameState.chromaticClears > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Chromatic</Text>
+              <Text style={[styles.summaryValue, { color: COLORS.accentGold }]}>
+                🌈 {gameState.chromaticClears}
+              </Text>
+            </View>
+          )}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Combo</Text>
             <Text style={styles.summaryValue}>{gameState.combo}x</Text>
