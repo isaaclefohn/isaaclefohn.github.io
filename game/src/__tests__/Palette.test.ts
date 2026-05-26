@@ -25,7 +25,15 @@ describe('color palette control (chromatic achievability)', () => {
   });
 
   it('gives early levels a small, learnable palette and scales it up', () => {
-    expect(generateLevelConfig(1).paletteSize).toBe(4);
+    // Levels 1-5 use palette 3 (FTUE reinforcement zone: keeps chromatic
+    // clears frequent while the player is still learning the mechanic).
+    // Levels 6-20 step up to palette 4; 21-100 → 5; past 100 → 6.
+    // NB: this exercises the procedural DifficultyScaler path. The
+    // hand-crafted level 1 override in LevelGenerator returns palette 2
+    // — that's tested separately in LevelGenerator.test.ts.
+    expect(generateLevelConfig(1).paletteSize).toBe(3);
+    expect(generateLevelConfig(5).paletteSize).toBe(3);
+    expect(generateLevelConfig(6).paletteSize).toBe(4);
     expect(generateLevelConfig(15).paletteSize).toBe(4);
     expect(generateLevelConfig(60).paletteSize).toBe(5);
     expect(generateLevelConfig(250).paletteSize).toBe(6);

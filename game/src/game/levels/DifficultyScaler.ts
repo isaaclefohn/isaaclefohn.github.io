@@ -104,8 +104,17 @@ export function getDifficultyParams(levelNumber: number): DifficultyParams {
 }
 
 /** Distinct colors per level — fewer early so the chromatic clear is learnable,
- *  more later for a higher skill ceiling (kept <= 6 so the hook never dies). */
+ *  more later for a higher skill ceiling (kept <= 6 so the hook never dies).
+ *
+ *  The palette-2 + palette-3 reinforcement zone (levels 1-5) is doing
+ *  FTUE work: level 1 is hand-crafted at palette 2 (100% chromatic rate
+ *  — every line clear is chromatic by definition); levels 2-5 sit at
+ *  palette 3 (~33% chromatic rate, vs ~25% at palette 4) to keep
+ *  chromatic clears coming while the player is still learning the
+ *  mechanic. Past level 5 the curve steps up so the game gets harder
+ *  in a chromatic-aware way. */
 function getPaletteSize(levelNumber: number): number {
+  if (levelNumber <= 5) return 3;
   if (levelNumber <= 20) return 4;
   if (levelNumber <= 100) return 5;
   return 6;
