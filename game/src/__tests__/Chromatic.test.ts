@@ -1,4 +1,5 @@
-import { getChromaticColors, countChromaticClears, getNearChromaticLines, type Grid } from '../game/engine/Board';
+import { getChromaticColors, countChromaticClears, getNearChromaticLines, executePlacement, type Grid } from '../game/engine/Board';
+import { createPiece } from '../game/engine/Piece';
 
 describe('chromatic color capture (signature mechanic)', () => {
   it('returns the color index of a single-color full row', () => {
@@ -87,5 +88,63 @@ describe('near-chromatic detection (teaching cue)', () => {
       [0, 0, 0, 0], // col 0 has one empty, all purple(6)
     ];
     expect(getNearChromaticLines(grid).cols).toEqual([{ index: 0, color: 6 }]);
+  });
+});
+
+describe('board-wide chromatic cascade (somatic detonation)', () => {
+  it('detonates same-color cells across the board when a chromatic line clears', () => {
+    // Row 0 is one green(3) short of a chromatic clear; an extra green sits at
+    // (3,0) and should be swept off the board by the cascade when row 0 fires.
+    const grid: Grid = [
+      [3, 3, 3, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [3, 0, 0, 0],
+    ];
+    const piece = createPiece('single', 3);
+    const result = executePlacement(grid, piece, 0, 3);
+    expect(result.chromaticClears).toBe(1);
+    expect(result.chromaticColors).toEqual([3]);
+    expect(result.cascadeCellsCleared).toBe(1);
+    // The lone green at (3,0) was detonated by the cascade.
+    expect(result.grid[3][0]).toBe(0);
+  });
+
+  it('does NOT cascade when the cleared line is mixed-color (not chromatic)', () => {
+    // Row 0 fills but contains two colors — not chromatic, so no cascade.
+    // A green elsewhere should remain on the board.
+    const grid: Grid = [
+      [3, 5, 3, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [3, 0, 0, 0],
+    ];
+    const piece = createPiece('single', 3);
+    const result = executePlacement(grid, piece, 0, 3);
+    expect(result.linesCleared).toBe(1);
+    expect(result.chromaticClears).toBe(0);
+    expect(result.cascadeCellsCleared).toBe(0);
+    // The green at (3,0) is untouched.
+    expect(result.grid[3][0]).toBe(3);
+  });
+
+  it('cascades both colors when a single move clears two chromatic lines', () => {
+    // Place a green(3) at (0,3) that completes BOTH row 0 (all green) and
+    // col 3 (all green). Extra greens elsewhere all detonate.
+    const grid: Grid = [
+      [3, 3, 3, 0],
+      [0, 0, 0, 3],
+      [0, 0, 0, 3],
+      [3, 0, 3, 3],
+    ];
+    const piece = createPiece('single', 3);
+    const result = executePlacement(grid, piece, 0, 3);
+    // Two chromatic lines (row 0 + col 3) both fire.
+    expect(result.chromaticClears).toBe(2);
+    expect(result.chromaticColors.sort()).toEqual([3, 3]);
+    // The remaining greens at (3,0) and (3,2) both cascade away.
+    expect(result.cascadeCellsCleared).toBeGreaterThanOrEqual(2);
+    expect(result.grid[3][0]).toBe(0);
+    expect(result.grid[3][2]).toBe(0);
   });
 });

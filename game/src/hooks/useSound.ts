@@ -198,5 +198,47 @@ export function useSound() {
     }
   }, [hapticsEnabled, hapticIntensity, soundEnabled]);
 
-  return { playSound, playHaptic, playPlacement };
+  /**
+   * Rich cascade haptic for the board-wide chromatic detonation — the somatic
+   * payoff the casual audience loves (per the Color Blast teardown). Pattern:
+   * a sequence of escalating light impacts (each spaced ≥90ms — anything below
+   * ~80ms gets phase-cancelled by the Taptic Engine), terminated by a Success
+   * notification that lingers ~100ms past the visual. The haptic outlasting
+   * the explosion is the "addiction signature."
+   *
+   * Caller is expected to fire the initial heavy thump (e.g. via
+   * `playSound('combo')`) before this — those two together form the full
+   * "anticipation → climax → tail" arc.
+   */
+  const playChromaticCascade = useCallback(async (cellCount: number = 8) => {
+    if (!hapticsEnabled || hapticIntensity === 'off') return;
+    try {
+      // Stutter count scales modestly with cascade size, capped at 5 — beyond
+      // that the player can't perceive individual pulses anyway.
+      const stutters = Math.min(Math.max(3, Math.floor(cellCount / 2)), 5);
+      for (let i = 0; i < stutters; i++) {
+        // Last pulse is the heaviest (the "BUZZ" at the end of the cascade —
+        // a signature of polished mobile-game haptics).
+        const tier: 'light' | 'medium' = i === stutters - 1 ? 'medium' : 'light';
+        const style = scaleImpact(tier, hapticIntensity);
+        if (style) {
+          setTimeout(() => {
+            Haptics.impactAsync(style).catch(() => {});
+          }, i * 90);
+        }
+      }
+      // Tail: Success notification ~110ms after the last impact.
+      setTimeout(() => {
+        if (hapticIntensity === 'soft') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+        } else {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        }
+      }, stutters * 90 + 110);
+    } catch {
+      // Haptics not available — silent fail
+    }
+  }, [hapticsEnabled, hapticIntensity]);
+
+  return { playSound, playHaptic, playPlacement, playChromaticCascade };
 }

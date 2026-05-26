@@ -117,7 +117,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     continueGame,
   } = useGameEngine();
 
-  const { playSound, playPlacement, playHaptic } = useSound();
+  const { playSound, playPlacement, playHaptic, playChromaticCascade } = useSound();
   const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak } = usePlayerStore(useShallow((s) => ({
     powerUps: s.powerUps, usePowerUp: s.usePowerUp, coins: s.coins, gems: s.gems,
     addCoins: s.addCoins, addGems: s.addGems, addPowerUp: s.addPowerUp, spendGems: s.spendGems,
@@ -351,26 +351,38 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         setTimeout(() => setShowConfetti(false), 2500);
         setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.chromaticClears > 0) {
-        // Chromatic clear — our signature mechanic. Celebrate IN the color the
-        // player matched: a single-color clear bursts in that exact hue, while
-        // clearing multiple different colors at once earns a gold "RAINBOW!".
+        // Chromatic clear — our signature SOMATIC event. The chromatic line
+        // triggers a board-wide same-color detonation; we fire a layered haptic
+        // arc that maps directly to that explosion: heavy thump (anticipation)
+        // → stuttered cascade pulses (climax) → Success notification (tail).
+        // Shake + flash scale with the cascade size so a big detonation
+        // physically rocks the screen.
         const distinctColors = [...new Set(event.chromaticColors ?? [])];
         const isRainbow = distinctColors.length >= 2;
         const chromaColor = isRainbow
           ? COLORS.accentGold
           : COLORS.blocks[(distinctColors[0] ?? 1) - 1];
+        const cascadeCount = event.cascadeCellsCleared ?? 0;
+        // Heavy thump + combo sound (initial detonation).
         playSound('combo');
-        if (isRainbow) playHaptic('success'); // extra pulse for the rare multi-color clear
+        // Rich cascade haptic pattern — outlasts the visual by ~100ms (the
+        // "addiction signature" per the Color Blast teardown).
+        playChromaticCascade(cascadeCount + 6);
         setShowComboBanner(true);
         setClearFlashColor(chromaColor);
         setShowClearFlash(true);
-        shakeBoard(1.5 + event.chromaticClears * 0.5);
+        // Shake scales with cascade size (capped) — board-wide detonations
+        // physically rock the screen harder than tight clears.
+        const cascadeShakeBoost = Math.min(cascadeCount * 0.08, 1.5);
+        shakeBoard(1.8 + event.chromaticClears * 0.5 + cascadeShakeBoost);
         setHypeText(isRainbow ? 'RAINBOW!' : 'CHROMATIC!');
         setHypeColor(chromaColor);
         setShowHype(true);
         setBurstColor(chromaColor);
         setShowBurst(true);
-        setTimeout(() => setShowClearFlash(false), 400);
+        // Flash lingers longer for bigger cascades — the dopamine tail.
+        const flashDuration = 400 + Math.min(cascadeCount * 20, 300);
+        setTimeout(() => setShowClearFlash(false), flashDuration);
       } else if (event.linesCleared >= 3) {
         playSound('combo');
         setShowComboBanner(true);

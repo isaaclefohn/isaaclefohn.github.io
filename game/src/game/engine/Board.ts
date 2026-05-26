@@ -211,6 +211,39 @@ export interface PlacementResult {
   chromaticClears: number;
   /** Color index (1-7) of each chromatic line, so the UI can celebrate in-hue */
   chromaticColors: number[];
+  /** Cells removed by the board-wide same-color "cascade" detonation that
+   *  fires whenever a chromatic line clears. Same-color cells across the board
+   *  explode with the line, creating chain-reaction potential after gravity. */
+  cascadeCellsCleared: number;
+}
+
+/**
+ * Sweep every remaining cell whose color is in `colors` off the grid — the
+ * "board-wide chromatic detonation." Fires after a chromatic line clears so
+ * same-color cells everywhere explode with it: a single move can chain across
+ * the whole board, and the post-gravity state can trigger fresh clears in the
+ * same `executePlacement` loop. This is the somatic-detonation feature that
+ * turns the chromatic clear from a thinking-game bonus into a feeling-game
+ * event.
+ */
+function sweepCellsOfColors(
+  grid: Grid,
+  colors: number[],
+): { newGrid: Grid; removed: number } {
+  if (colors.length === 0) return { newGrid: grid, removed: 0 };
+  const colorSet = new Set(colors);
+  const newGrid = cloneGrid(grid);
+  let removed = 0;
+  for (let r = 0; r < newGrid.length; r++) {
+    for (let c = 0; c < newGrid[r].length; c++) {
+      const v = newGrid[r][c];
+      if (v !== 0 && colorSet.has(v)) {
+        newGrid[r][c] = 0;
+        removed++;
+      }
+    }
+  }
+  return { newGrid, removed };
 }
 
 export function executePlacement(
@@ -228,6 +261,7 @@ export function executePlacement(
   let allClearedCols: number[] = [];
   let cascadeCount = 0;
   let totalChromaticColors: number[] = [];
+  let totalCascadeCells = 0;
 
   // Clear + gravity cascade loop
   while (true) {
@@ -235,10 +269,8 @@ export function executePlacement(
     if (rows.length === 0 && cols.length === 0) break;
 
     // Capture chromatic colors BEFORE clearing (need the colors still in grid)
-    totalChromaticColors = [
-      ...totalChromaticColors,
-      ...getChromaticColors(currentGrid, rows, cols),
-    ];
+    const roundChromaticColors = getChromaticColors(currentGrid, rows, cols);
+    totalChromaticColors = [...totalChromaticColors, ...roundChromaticColors];
 
     const result = clearLines(currentGrid, rows, cols);
     totalLinesCleared += rows.length + cols.length;
@@ -246,8 +278,19 @@ export function executePlacement(
     allClearedRows = [...allClearedRows, ...rows];
     allClearedCols = [...allClearedCols, ...cols];
 
-    // Apply gravity after clearing
-    currentGrid = applyGravity(result.newGrid);
+    // BOARD-WIDE CHROMATIC DETONATION: if any chromatic line just cleared, sweep
+    // remaining cells of those colors off the entire board. One move can ripple
+    // across the grid; post-gravity, the board may trigger fresh clears in the
+    // next iteration — emergent chain reactions are the dopamine payoff.
+    let postClearGrid = result.newGrid;
+    if (roundChromaticColors.length > 0) {
+      const cascade = sweepCellsOfColors(postClearGrid, roundChromaticColors);
+      postClearGrid = cascade.newGrid;
+      totalCascadeCells += cascade.removed;
+    }
+
+    // Apply gravity after line clear + cascade
+    currentGrid = applyGravity(postClearGrid);
 
     if (cascadeCount > 0) {
       // This was a cascade (not the first clear)
@@ -269,6 +312,7 @@ export function executePlacement(
       cascadeCount: 0,
       chromaticClears: 0,
       chromaticColors: [],
+      cascadeCellsCleared: 0,
     };
   }
 
@@ -284,6 +328,7 @@ export function executePlacement(
     cascadeCount: actualCascades,
     chromaticClears: totalChromaticColors.length,
     chromaticColors: totalChromaticColors,
+    cascadeCellsCleared: totalCascadeCells,
   };
 }
 

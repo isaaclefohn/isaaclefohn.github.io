@@ -25,6 +25,10 @@ export interface ScoreEvent {
   chromaticClears: number;
   /** Color index (1-7) of each chromatic line, so the UI can celebrate in-hue */
   chromaticColors: number[];
+  /** Cells cleared by the board-wide chromatic cascade (the "somatic detonation"
+   *  — every remaining same-color cell explodes with a chromatic line). Drives
+   *  haptic intensity and score-tail length. */
+  cascadeCellsCleared: number;
   /** Breakdown of how points were earned */
   breakdown: {
     placementBonus: number;
@@ -33,11 +37,18 @@ export interface ScoreEvent {
     perfectClearBonus: number;
     multiLineBonus: number;
     chromaticBonus: number;
+    /** Modest per-cell bonus for cells removed by the chromatic cascade. */
+    cascadeBonus: number;
   };
 }
 
 /** Bonus points per chromatic (same-color) clear. Unique to Chroma Drop. */
 export const CHROMATIC_BONUS_PER_LINE = 120;
+
+/** Bonus points per cell removed by the board-wide chromatic cascade. Modest
+ *  enough not to break level/star balance, visible enough to drive the score
+ *  count-up tail that extends the dopamine plateau past the action. */
+export const CASCADE_BONUS_PER_CELL = 5;
 
 /** Perfect clear bonus: clearing the entire board */
 const PERFECT_CLEAR_BONUS = 500;
@@ -65,6 +76,7 @@ export function scorePlacement(cellCount: number): ScoreEvent {
     linesCleared: 0,
     chromaticClears: 0,
     chromaticColors: [],
+    cascadeCellsCleared: 0,
     breakdown: {
       placementBonus,
       clearBonus: 0,
@@ -72,6 +84,7 @@ export function scorePlacement(cellCount: number): ScoreEvent {
       perfectClearBonus: 0,
       multiLineBonus: 0,
       chromaticBonus: 0,
+      cascadeBonus: 0,
     },
   };
 }
@@ -84,6 +97,7 @@ export function scoreClear(
   isPerfectClear: boolean = false,
   chromaticClears: number = 0,
   chromaticColors: number[] = [],
+  cascadeCellsCleared: number = 0,
 ): ScoreEvent {
   const newCombo = currentCombo + 1;
   const multiplierIndex = Math.min(newCombo - 1, COMBO_MULTIPLIERS.length - 1);
@@ -102,9 +116,13 @@ export function scoreClear(
   // Chromatic bonus (single-color lines) — unique mechanic
   const chromaticBonus = chromaticClears * CHROMATIC_BONUS_PER_LINE;
 
-  // Apply combo multiplier to base + multi-line + chromatic, then add flat perfect bonus
+  // Cascade bonus — every cell the chromatic detonation swept off the board
+  // pays a modest amount, score-counts-up visibly without breaking balance.
+  const cascadeBonus = cascadeCellsCleared * CASCADE_BONUS_PER_CELL;
+
+  // Apply combo multiplier to base + multi-line + chromatic + cascade, then add flat perfect bonus
   const totalPoints =
-    Math.round((clearBonus + multiLineBonus + chromaticBonus) * multiplier) + perfectClearBonus;
+    Math.round((clearBonus + multiLineBonus + chromaticBonus + cascadeBonus) * multiplier) + perfectClearBonus;
 
   return {
     points: totalPoints,
@@ -114,6 +132,7 @@ export function scoreClear(
     linesCleared,
     chromaticClears,
     chromaticColors,
+    cascadeCellsCleared,
     breakdown: {
       placementBonus: 0,
       clearBonus,
@@ -121,6 +140,7 @@ export function scoreClear(
       perfectClearBonus,
       multiLineBonus,
       chromaticBonus,
+      cascadeBonus,
     },
   };
 }
