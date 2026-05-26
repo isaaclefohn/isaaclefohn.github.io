@@ -12,6 +12,24 @@ describe('LevelGenerator', () => {
       expect(config.piecePool.length).toBeGreaterThan(0);
     });
 
+    it('level 1 is the hand-crafted tutorial with a 2-color palette', () => {
+      // The FTUE audit binary: procedural level 1 means ~75% of first-
+      // time players never see the chromatic clear, ~25% see it without
+      // attribution. Hand-crafted level 1 forces the teach by shrinking
+      // the palette to 2 — at palette 2 every line clear is chromatic
+      // by definition. This test fails if someone reverts to procedural.
+      const config = getLevel(1);
+      expect(config.paletteSize).toBe(2);
+    });
+
+    it('level 1 is NOT flagged as a boss level', () => {
+      // The override lives outside BOSS_LEVELS so the player does not
+      // see the BOSS badge or trigger boss-completion reward paths on
+      // their first level. Pin both branches: getLevel returns the
+      // tutorial config, isBossLevel still says false.
+      expect(isBossLevel(1)).toBe(false);
+    });
+
     it('returns boss level config for level 25', () => {
       const config = getLevel(25);
       expect(config.levelNumber).toBe(25);
