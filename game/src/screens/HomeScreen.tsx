@@ -8,7 +8,6 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, Animated, Easing, Dim
 import { usePlayerStore } from '../store/playerStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { Button } from '../components/common/Button';
-import { Tutorial } from '../components/Tutorial';
 import { DailyRewardModal } from '../components/DailyRewardModal';
 import { AchievementModal } from '../components/AchievementModal';
 import { StatsModal } from '../components/StatsModal';
@@ -74,15 +73,15 @@ const TITLE_BLOCKS = [
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { highestLevel, coins, gems, totalScore, currentStreak, streakShields, dailyRewardLastClaimed, unlockedAchievements, checkAchievements, lastSpinDate, collectedStickers, collectSticker, totalLinesCleared, bestCombo, totalGamesPlayed, longestStreak, rouletteLastDate, dailyPuzzleLastPlayedId, dailyPuzzleLastPlayedScore, dailyPuzzleStreak, canClaimStreakShieldAd, addStreakShieldFromAd } = usePlayerStore();
-  const { tutorialCompleted, completeTutorial, notificationsEnabled } = useSettingsStore();
+  const { tutorialCompleted, notificationsEnabled } = useSettingsStore();
   // Floating "+N" indicators for the COINS / GEMS stat chips — the
   // dopamine moment when the daily reward + wheel land back here.
   const coinDelta = useIncreaseDelta(coins);
   const gemDelta = useIncreaseDelta(gems);
   // Onboarding is taught in-context on the game board (TutorialOverlay on
-  // level 1), so we don't front-load a modal here. Kept for a future manual
-  // "How to play" entry point; never auto-shown to first-timers.
-  const [showTutorial, setShowTutorial] = useState(false);
+  // level 1), so we don't front-load a modal here. The old Tutorial
+  // component + showTutorial state was dead code (never set true) per
+  // the 2026-06 FTUE audit and has been removed.
   const [showDailyReward, setShowDailyReward] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -137,13 +136,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   });
   const vipActive = isVIPActive(vipUntil);
 
-  // Seed the welcome inbox message on first launch
+  // Seed the welcome inbox message — gated on `highestLevel >= 1` per
+  // the 2026-06 FTUE audit. Showing an unread-inbox dot to a player
+  // who hasn't played a level yet is manufactured-task noise that
+  // dilutes the wordmark/tagline/Play moment on the first home view.
   useEffect(() => {
+    if (highestLevel < 1) return;
     if (inboxMessages.length === 0 && !inboxDismissed.includes('welcome')) {
       addInboxMessage(generateWelcomeMessage());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [highestLevel]);
 
   // Auto-unlock starter pack timer once the player hits the unlock level
   useEffect(() => {
@@ -183,17 +186,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     for (const id of newStickers) {
       collectSticker(id);
     }
-    // Request notification permissions (non-blocking)
-    requestNotificationPermissions().catch(() => {});
-    // Clear badge on app open
+    // Clear badge on app open (cheap, no perms required)
     clearBadge().catch(() => {});
-    if (notificationsEnabled) {
-      if (currentStreak >= 2) {
-        scheduleStreakReminder(currentStreak).catch(() => {});
+    // Notification permission prompt + retention scheduling gated on
+    // `highestLevel >= 1` per the 2026-06 FTUE audit + Apple editorial
+    // review: prompting for notifications on the very first home view
+    // (before the player has played a single piece) is a documented
+    // rejection trigger and a documented retention dropoff. Defer
+    // until the player has actually engaged with one level.
+    if (highestLevel >= 1) {
+      requestNotificationPermissions().catch(() => {});
+      if (notificationsEnabled) {
+        if (currentStreak >= 2) {
+          scheduleStreakReminder(currentStreak).catch(() => {});
+        }
+        scheduleRetentionNotifications().catch(() => {});
       }
-      scheduleRetentionNotifications().catch(() => {});
     }
-  }, []);
+  }, [highestLevel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Entrance animations
   const titleOpacity = useRef(new Animated.Value(0)).current;
@@ -284,10 +294,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     ).start();
   }, []);
 
-  const handleTutorialComplete = useCallback(() => {
-    setShowTutorial(false);
-    completeTutorial();
-  }, [completeTutorial]);
 
   /** Watch a rewarded ad in exchange for restoring the consumed streak
    *  shield. Player-positive (saves a real loss moment), throttled to
@@ -373,7 +379,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </Animated.View>
         )}
 
-        {/* Stats bar — tap to open stats dashboard */}
+        {/* Stats bar — tap to open stats dashboard. Hidden for the
+            first-time player (highestLevel === 0): showing 0/0/0
+            counters before they have played a single level is FTUE
+            noise that primes them for grind, per the 2026-06 audit. */}
+        {highestLevel >= 1 && (
         <TouchableOpacity activeOpacity={0.7} onPress={() => setShowStats(true)} style={{ width: '100%' }}>
         <Animated.View style={[styles.statsBar, { opacity: statsOpacity }]}>
           <View style={styles.statItem}>
@@ -425,6 +435,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           )}
         </Animated.View>
         </TouchableOpacity>
+        )}
 
         {/* Rewarded shield refill CTA — only renders when streak ≥ 1,
             no shield held, throttle elapsed, AND the ad cap allows.
@@ -477,9 +488,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
           {/* Daily Puzzle — one shared seed per day. Shows today's status
               (not played / played with score) and launches the run-until-
-              stuck game. Visible to everyone — no feature gate — because
-              it's the primary retention hook. */}
-          {(() => {
+              stuck game.
+              Hidden for first-time players (highestLevel === 0) per the
+              2026-06 FTUE audit: the daily banner is the strongest
+              retention hook in the app, but wasted on someone who has
+              not yet played level 1. Showing it as one of N CTAs on the
+              first home view dilutes the wordmark/tagline/Play moment. */}
+          {highestLevel >= 1 && (() => {
             const todayId = getDailyPuzzleId();
             const playedToday = dailyPuzzleLastPlayedId === todayId;
             // nowTick ticks every 30s (for the VIP/offer cards above) —
@@ -561,7 +576,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {/* Live event banners */}
           <EventBanner />
 
-          {/* ── Hub Buttons ──────────────────────────────── */}
+          {/* ── Hub Buttons + utility row — hidden for first-time
+              players (highestLevel === 0). Per the 2026-06 FTUE audit:
+              8 CTAs around the Play button for someone who has not yet
+              played a single level signals "this is a heavy F2P game"
+              before they decide whether they like the gameplay loop.
+              Returns on visit 2 onward, untouched. */}
+          {highestLevel >= 1 && (
           <View style={styles.hubButtonRow}>
             <TouchableOpacity style={styles.hubButton} onPress={() => setShowRewardsHub(true)}>
               <View style={[styles.hubIconWrap, { backgroundColor: `${COLORS.accentGold}18` }]}>
@@ -592,8 +613,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               <Text style={styles.hubButtonLabel}>More</Text>
             </TouchableOpacity>
           </View>
+          )}
 
-          {/* Bottom utility row */}
+          {/* Bottom utility row — same first-time gating as hubs. */}
+          {highestLevel >= 1 && (
           <View style={styles.utilRow}>
             <TouchableOpacity style={styles.utilButton} onPress={() => setShowProfile(true)}>
               <GameIcon name="gamepad" size={14} color={COLORS.textMuted} />
@@ -612,6 +635,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               <Text style={styles.utilText}>Settings</Text>
             </TouchableOpacity>
           </View>
+          )}
 
           {/* Next unlock hint for new players */}
           {highestLevel > 0 && highestLevel < 15 && getNextUnlock(highestLevel) && (
@@ -619,6 +643,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               <GameIcon name="star" size={12} color={COLORS.textMuted} />
               <Text style={styles.unlockHintText}>
                 Level {getNextUnlock(highestLevel)!.unlockLevel}: {getNextUnlock(highestLevel)!.name}
+              </Text>
+            </View>
+          )}
+
+          {/* Chapter horizon — Chromatic: Ignition lives at level 30.
+              For a player between levels 1 and 29 we surface the
+              chapter name as a goal-to-reach. Per the 2026-06 FTUE
+              audit: named chapters give the early campaign a narrative
+              arc instead of a numbered grind. Shows alongside the
+              feature-unlock hint above so both gates remain visible. */}
+          {highestLevel >= 1 && highestLevel < 30 && (
+            <View style={styles.unlockHint}>
+              <GameIcon name="sparkle" size={12} color={COLORS.accentGold} />
+              <Text style={[styles.unlockHintText, { color: COLORS.accentGold }]}>
+                Chapter 1 — Chromatic: Ignition at Level 30
               </Text>
             </View>
           )}
@@ -637,7 +676,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <Text style={styles.versionText}>v1.0.0</Text>
       </ScrollView>
 
-      {showTutorial && <Tutorial onComplete={handleTutorialComplete} />}
 
       {/* Daily reward modal */}
       <DailyRewardModal
