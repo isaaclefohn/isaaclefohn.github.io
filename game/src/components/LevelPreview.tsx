@@ -33,6 +33,17 @@ function getDifficultyLabel(level: number): { label: string; color: string } {
   return { label: 'Expert', color: COLORS.danger };
 }
 
+/** Themed names for the chromatic-challenge boss slots. The level
+ *  preview surfaces these instead of "Level 30" so the chromatic-
+ *  objective milestones feel like *chapters* in a story, not numbered
+ *  procedural levels — the editorial-friendly framing per the
+ *  competitive intel research. */
+const CHROMATIC_CHAPTER_NAMES: Record<number, string> = {
+  30: 'Chromatic: Ignition',
+  60: 'Chromatic: Cascade',
+  90: 'Chromatic: Resonance',
+};
+
 export const LevelPreview: React.FC<LevelPreviewProps> = ({
   visible,
   level,
@@ -48,19 +59,44 @@ export const LevelPreview: React.FC<LevelPreviewProps> = ({
 
   return (
     <Modal visible={visible} onClose={onClose} dismissable>
-      {/* Level header */}
-      <View style={styles.header}>
-        {isBoss && (
-          <View style={[styles.bossBadge, { backgroundColor: world.color }]}>
-            <Text style={styles.bossBadgeText}>BOSS</Text>
+      {/* Level header — chromatic-chapter levels show the chapter name
+          as the headline; everything else shows "Level N." Boss badge
+          gets the CHROMATIC tint when this is a chapter slot so the
+          surface signals "different mode" before the player even
+          reads the objective. */}
+      {(() => {
+        const chapterName = CHROMATIC_CHAPTER_NAMES[level];
+        const isChromaticChapter = config.objective.type === 'chromatic';
+        return (
+          <View style={styles.header}>
+            {isBoss && (
+              <View
+                style={[
+                  styles.bossBadge,
+                  {
+                    backgroundColor: isChromaticChapter
+                      ? COLORS.accentGold
+                      : world.color,
+                  },
+                ]}
+              >
+                <Text style={styles.bossBadgeText}>
+                  {isChromaticChapter ? 'CHROMATIC' : 'BOSS'}
+                </Text>
+              </View>
+            )}
+            <Text style={styles.levelNumber}>
+              {chapterName ?? `Level ${level}`}
+            </Text>
+            <View style={styles.worldRow}>
+              <GameIcon name={world.icon as any} size={14} color={world.color} />
+              <Text style={[styles.worldName, { color: world.color }]}>
+                {chapterName ? `Level ${level} · ${world.name}` : world.name}
+              </Text>
+            </View>
           </View>
-        )}
-        <Text style={styles.levelNumber}>Level {level}</Text>
-        <View style={styles.worldRow}>
-          <GameIcon name={world.icon as any} size={14} color={world.color} />
-          <Text style={[styles.worldName, { color: world.color }]}>{world.name}</Text>
-        </View>
-      </View>
+        );
+      })()}
 
       {/* Difficulty & Grid info */}
       <View style={styles.infoRow}>
