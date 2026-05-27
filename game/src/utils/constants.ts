@@ -178,5 +178,16 @@ export const PUBLIC_URLS = {
   // Unlike `SKStoreReviewController` this has NO 3-prompt-per-year
   // limit; it just opens the App Store. Use for the Settings link
   // that catches motivated raters outside the system-prompt window.
-  appStoreReviewUrl: 'https://apps.apple.com/app/idXXXXX?action=write-review',
+  //
+  // Null when the App Store ID is still a placeholder (pre-enrollment
+  // builds). The consumer hides the rating button when this is null
+  // — sending a motivated rater to a broken Apple URL is the worst
+  // possible UX at the exact moment we want them to engage. The check
+  // is intentionally narrow (`/id[X0]+\?/` only matches literal
+  // placeholder forms like `idXXXXX` or `id0000`); a real numeric ID
+  // like `id1234567890` falls through and the URL is usable.
+  appStoreReviewUrl: ((): string | null => {
+    const url = 'https://apps.apple.com/app/idXXXXX?action=write-review';
+    return /id[X0]+\?/.test(url) ? null : url;
+  })(),
 } as const;

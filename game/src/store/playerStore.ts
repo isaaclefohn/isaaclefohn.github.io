@@ -340,6 +340,24 @@ interface PlayerStore extends PlayerStoreState {
   recordCreditedTransaction: (txnId: string) => void;
   claimBattlePassTier: (tier: number) => void;
   upgradeBattlePass: () => void;
+  /**
+   * Roll the Battle Pass to a new season. Increments `battlePassSeason`,
+   * resets XP to 0, and clears the claimed-tier list so the player
+   * starts the new season at tier 0 with everything unclaimed.
+   *
+   * Premium status (`battlePassPremium`) is preserved — that's a
+   * persistent entitlement that should carry across seasons unless
+   * explicitly revoked.
+   *
+   * The audit caught the absence of this: without a season-rollover
+   * action, incrementing `battlePassSeason` anywhere else would leave
+   * the old `battlePassClaimedTiers` in place, and every tier in the
+   * new season would render as already-claimed (because the
+   * `claimedTiers.includes(tier)` check in the UI doesn't know about
+   * season identity). The player would never claim anything in
+   * season 2+.
+   */
+  startNewBattlePassSeason: (newSeason: number) => void;
   // Weekly Challenge
   completeWeeklyChallenge: (weekId: string, stars: number, score: number) => void;
   // Gift Box
@@ -776,9 +794,16 @@ export const usePlayerStore = create<PlayerStore>()(
             totalGems += a.reward.gems ?? 0;
           }
 
+          // Achievement rewards are gameplay-earned, so the coin
+          // multiplier applies (same class as quest rewards, daily
+          // puzzle payouts, etc.). Previously this bypassed
+          // `applyBoost` by mutating `s.coins` directly, which
+          // meant a player on an active "Double Time" boost got
+          // single coins on achievement unlock instead of doubled
+          // — a silent gap in the boost feature contract.
           set((s) => ({
             unlockedAchievements: [...s.unlockedAchievements, ...newIds],
-            coins: s.coins + totalCoins,
+            coins: s.coins + applyBoost(totalCoins, s.activeBoostUntil, 'coins', Date.now()),
             gems: s.gems + totalGems,
           }));
         }
@@ -908,13 +933,36 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       claimBattlePassTier: (tier: number) => {
+        // Idempotency guard matching the pattern used by every other
+        // claim action in this store. The audit caught this as the
+        // only Battle Pass action without the guard — a rapid double-
+        // tap on the Claim button (or a re-render that calls
+        // handleClaim twice before state settles) could push the
+        // same tier number twice and let a downstream consumer that
+        // reads `claimedTiers.includes(tier)` silently double-credit.
         set((s) => ({
-          battlePassClaimedTiers: [...s.battlePassClaimedTiers, tier],
+          battlePassClaimedTiers: s.battlePassClaimedTiers.includes(tier)
+            ? s.battlePassClaimedTiers
+            : [...s.battlePassClaimedTiers, tier],
         }));
       },
 
       upgradeBattlePass: () => {
         set({ battlePassPremium: true });
+      },
+
+      startNewBattlePassSeason: (newSeason) => {
+        // Reset XP + claimed-tier ledger; PRESERVE premium status
+        // (a persistent entitlement that carries across seasons).
+        // Idempotent: setting to the same season twice produces the
+        // same end state (XP 0, no claims). Going BACKWARDS in season
+        // number is allowed but probably never wanted — no guard
+        // here because it would just complicate testing.
+        set({
+          battlePassSeason: newSeason,
+          battlePassXP: 0,
+          battlePassClaimedTiers: [],
+        });
       },
 
       completeWeeklyChallenge: (weekId: string, stars: number, score: number) => {

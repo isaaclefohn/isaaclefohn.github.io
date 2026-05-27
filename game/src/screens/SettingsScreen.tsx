@@ -345,19 +345,25 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
               composer via deep link. Unlimited (unlike the 3-per-year
               SKStoreReviewController prompt) so catches motivated
               raters outside the system-prompt window per the 2026-06
-              growth plan. Pre-launch the URL has a placeholder
-              app-id — swap in the real ID after App Store Connect
-              creates the listing. */}
-          <TouchableOpacity
-            onPress={() => Linking.openURL(PUBLIC_URLS.appStoreReviewUrl).catch(() => {})}
-            hitSlop={8}
-            accessibilityRole="link"
-            accessibilityLabel="Rate CHROMA on the App Store"
-            style={styles.rateRow}
-          >
-            <GameIcon name="star" size={14} color={COLORS.accentGold} />
-            <Text style={styles.rateLink}>Loving CHROMA? Tell us.</Text>
-          </TouchableOpacity>
+              growth plan.
+
+              Renders only when `appStoreReviewUrl` is non-null. The
+              constants module returns null for pre-enrollment builds
+              (the placeholder `idXXXXX` URL is detected and replaced
+              with null), so this button doesn't render and ship a
+              broken link before the App Store listing exists. */}
+          {PUBLIC_URLS.appStoreReviewUrl && (
+            <TouchableOpacity
+              onPress={() => Linking.openURL(PUBLIC_URLS.appStoreReviewUrl!).catch(() => {})}
+              hitSlop={8}
+              accessibilityRole="link"
+              accessibilityLabel="Rate CHROMA on the App Store"
+              style={styles.rateRow}
+            >
+              <GameIcon name="star" size={14} color={COLORS.accentGold} />
+              <Text style={styles.rateLink}>Loving CHROMA? Tell us.</Text>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.legalLinkRow}>
             <TouchableOpacity
