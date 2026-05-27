@@ -54,6 +54,15 @@ export interface GameState {
   /** Running count of single-color (chromatic) line clears this game */
   chromaticClears: number;
   /**
+   * Peak combo value reached during THIS run. Distinct from
+   * `state.combo` which is the *active* chain (resets to 0 on any
+   * placement that doesn't clear). Surfaces in the game-over modal
+   * as "Peak combo: N" so the player sees their personal best of
+   * the session even after a final no-clear placement zeroed the
+   * live counter. Pairs naturally with the run-trace share card.
+   */
+  maxComboThisRun: number;
+  /**
    * Index (0-2) of the "golden" piece in the current `availablePieces`
    * tray, or null when no piece is golden. Endless-only — randomized
    * (~10% per fresh tray) and reset on each new piece set. When the
@@ -107,6 +116,7 @@ export function initGame(config: LevelConfig): GameState {
     swapsUsed: 0,
     paletteSize: config.paletteSize ?? COLORS.blocks.length,
     chromaticClears: 0,
+    maxComboThisRun: 0,
     goldenPieceIndex,
   };
 }
@@ -282,6 +292,12 @@ export function processTurn(
   const newScore = state.score + scoreEvent.points;
   const newPiecesPlaced = state.piecesPlaced + 1;
   const newLinesCleared = state.linesCleared + result.linesCleared;
+  // Track the peak combo reached this run. `newCombo` is the active
+  // chain after this turn — zero on a no-clear placement, otherwise
+  // the prior chain + 1. Math.max means the per-run peak only ever
+  // grows, never decays mid-run, regardless of how the live counter
+  // resets.
+  const newMaxCombo = Math.max(state.maxComboThisRun, newCombo);
 
   // Remove the placed piece from available pieces
   const newAvailable = [...state.availablePieces];
@@ -324,6 +340,7 @@ export function processTurn(
       grid: result.grid,
       score: newScore,
       combo: newCombo,
+      maxComboThisRun: newMaxCombo,
       piecesPlaced: newPiecesPlaced,
       linesCleared: newLinesCleared,
       availablePieces: newSet,
@@ -348,6 +365,7 @@ export function processTurn(
     grid: result.grid,
     score: newScore,
     combo: newCombo,
+    maxComboThisRun: newMaxCombo,
     piecesPlaced: newPiecesPlaced,
     linesCleared: newLinesCleared,
     availablePieces: newAvailable,

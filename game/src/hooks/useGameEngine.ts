@@ -147,7 +147,7 @@ export function useGameEngine() {
         }
       }
 
-      recordGamePlayed(gameState.combo ?? 0);
+      recordGamePlayed(gameState.maxComboThisRun ?? 0);
       incrementGamesPlayedToday();
       resetFailures();
       checkAchievements();
@@ -242,7 +242,13 @@ export function useGameEngine() {
     } else if (gameState.status === 'lost') {
       trackGameEvent({ type: 'level_fail', level: levelConfig.levelNumber, score: gameState.score });
       if (isZen) {
-        recordZenGame(gameState.score, gameState.linesCleared, gameState.combo ?? 0);
+        // Use maxComboThisRun (per-run peak) not the live combo —
+        // the live counter is almost always 0 at game-over because
+        // game-over fires on a no-clear placement that reset the
+        // chain. Pre-this-fix, lifetime bestCombo almost never
+        // updated even when the player landed FEVER or GODLIKE
+        // chains mid-run.
+        recordZenGame(gameState.score, gameState.linesCleared, gameState.maxComboThisRun ?? 0);
         // Record lifetime best wave reached. Computed from the final
         // pieces-placed count using the wave system's own boundary
         // math, so this is the only place that needs to know about
@@ -254,7 +260,7 @@ export function useGameEngine() {
         // Weekly challenge loss still records score
         const weekId = getCurrentWeekId();
         completeWeeklyChallenge(weekId, 0, gameState.score);
-        recordGamePlayed(gameState.combo ?? 0);
+        recordGamePlayed(gameState.maxComboThisRun ?? 0);
       } else if (isDaily) {
         // Daily puzzle "loss" = run ended (stuck). We still lock in the
         // score, award participation coins, and advance the streak.
@@ -269,9 +275,9 @@ export function useGameEngine() {
           const xpMult = getXPMultiplier();
           addBattlePassXP(Math.round((30 + stars * 15) * xpMult), { boostable: true });
         }
-        recordGamePlayed(gameState.combo ?? 0);
+        recordGamePlayed(gameState.maxComboThisRun ?? 0);
       } else {
-        recordGamePlayed(gameState.combo ?? 0);
+        recordGamePlayed(gameState.maxComboThisRun ?? 0);
         recordFailure(levelConfig.levelNumber);
         // Update Skill Rating on loss
         const srChange = calculateSRChange({

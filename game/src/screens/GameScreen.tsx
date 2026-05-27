@@ -1319,7 +1319,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         {isDaily ? (
           <View style={styles.endlessStats}>
             <Text style={styles.endlessStatText}>Lines cleared: {gameState.linesCleared}</Text>
-            <Text style={styles.endlessStatText}>Best combo: {gameState.combo}x</Text>
+            {/* Same peak-vs-live combo fix as the endless branch
+                below — show the highest chain reached this run, not
+                the (almost always 0) live counter. */}
+            <Text style={styles.endlessStatText}>Peak combo: {gameState.maxComboThisRun}x</Text>
             {dailyPuzzleStreak > 1 && (
               <Text style={[styles.endlessStatText, { color: COLORS.accentGold, fontWeight: '800' }]}>
                 {dailyPuzzleStreak}-day streak
@@ -1330,7 +1333,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           <View style={styles.endlessStats}>
             <Text style={styles.endlessStatText}>Pieces placed: {gameState.piecesPlaced}</Text>
             <Text style={styles.endlessStatText}>Lines cleared: {gameState.linesCleared}</Text>
-            <Text style={styles.endlessStatText}>Best combo: {gameState.combo}x</Text>
+            {/* Peak combo this run — uses maxComboThisRun (the run-
+                local high-water mark) instead of gameState.combo
+                (the *live* counter, which is almost always 0 by
+                game-over because game-over fires on a no-clear
+                placement that just reset the chain). Without this
+                fix, "Best combo: 0x" would show on every game-over,
+                erasing the entire combo arc the player just lived
+                through. */}
+            <Text style={styles.endlessStatText}>Peak combo: {gameState.maxComboThisRun}x</Text>
             {/* Wave reached this run + lifetime best. The wave system
                 gives endless mode a progression dimension separate from
                 raw score — a fast / efficient player might reach a
