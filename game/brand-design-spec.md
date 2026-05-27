@@ -321,10 +321,19 @@ Export at 1290×2796 PNG, sRGB color profile.
 | `generate_screenshot_slot5.py` | Slot 5 (ritual — Daily Puzzle card + weekly leaderboard) | ✅ Drafted |
 | `screenshot-slot5.png` / `-thumb.png` | "One puzzle. Whole world." composition, purple hero | ✅ Drafted |
 
-**Still TODO** (smaller, polish-tier):
-- Splash screen variants (1242×2688 iPhone) — derive from the BrandSplash component
-- Press kit zip — icon set + wordmark variants + 6 screenshots + tagline + dev bio + plain-text fact sheet
-- Slot 6 wordmark inset (~5% canvas margin so the letterforms don't graze the edge at 280px font)
+| `generate_splash.py` | Splash assets — Expo splash-icon + full custom splash | ✅ Drafted |
+| `splash-icon-1024.png` | Expo splash plugin image (bead-only, 1024×1024) | ✅ Drafted |
+| `splash-1284x2778.png` / `-thumb.png` | Full splash with wordmark + tagline (1284×2778) | ✅ Drafted |
+| `generate_expo_ready.py` | Build the Expo-ready icon set in `expo-ready/` | ✅ Drafted |
+| `expo-ready/icon.png` | App Store + iOS icon, deploy-ready | ✅ Drafted |
+| `expo-ready/adaptive-icon.png` | Android adaptive icon (bead at 80% scale in safe zone) | ✅ Drafted |
+| `expo-ready/splash-icon.png` | Expo splash plugin image | ✅ Drafted |
+| `expo-ready/favicon{,-32,-48,-64}.png` | Web favicons | ✅ Drafted |
+| `expo-ready/README.md` | One-paragraph deploy guide (cp into assets/) | ✅ Drafted |
+| `generate_press_kit.py` | Bundle everything into a press-kit zip | ✅ Drafted |
+| `chroma-press-kit.zip` | 16-file press kit (~1 MB) for journalists / editorial / testers | ✅ Drafted |
+
+**Done as drafts.** The remaining work is the Figma typography pass (replace Helvetica fallback with Space Grotesk Bold) and the `cp` quartet from `expo-ready/README.md` to deploy Concept E into production. Both are 30-minute jobs once you commit to the icon direction.
 
 ---
 

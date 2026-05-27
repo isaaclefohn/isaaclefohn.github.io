@@ -91,7 +91,11 @@ def render() -> Image.Image:
     draw = ImageDraw.Draw(img, "RGBA")
 
     # ── Massive wordmark, centered vertically in upper 55% ──
-    wm_font = find_font(280, bold=True)
+    # Stepped down from 280px → 230px so the letterforms have
+    # ~6% canvas margin on each side. At 280px the C and A were
+    # grazing the edges (a Figma-pass inset that's cheaper to do
+    # in the generator than to manually correct later).
+    wm_font = find_font(230, bold=True)
     spacing = 18
     widths = []
     for ltr, _ in LETTERS:
@@ -106,12 +110,15 @@ def render() -> Image.Image:
         cur_x += widths[i] + spacing
 
     # ── Subtitle ──
+    # Subtitle Y derived from the wordmark height + a fixed gap.
+    # Reading the font size dynamically means this stays correct
+    # if the wordmark size changes again later.
     subtitle = "Color puzzle. Shrink palette."
     sub_font = find_font(60, bold=False)
     sub_bbox = draw.textbbox((0, 0), subtitle, font=sub_font)
     sub_w = sub_bbox[2] - sub_bbox[0]
     draw.text(
-        ((W - sub_w) // 2, wm_y + 360),
+        ((W - sub_w) // 2, wm_y + 290),
         subtitle, fill=(*MUTED, 230), font=sub_font,
     )
 
