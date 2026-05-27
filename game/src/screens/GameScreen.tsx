@@ -448,9 +448,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         setShowBurst(true);
         setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.combo >= 4) {
-        setHypeText('MEGA COMBO!');
-        setHypeColor(COLORS.accentGold);
-        setShowHype(true);
+        // ComboBanner now carries the "AMAZING!" / "FEVER!" /
+        // "UNSTOPPABLE!" label per ComboChain.ts, so the legacy
+        // "MEGA COMBO!" HypeText would visually collide. Keep the
+        // burst + flash but let the banner own the verbal beat.
         setBurstColor(COLORS.accentGold);
         setShowBurst(true);
         playSound('combo');
@@ -458,6 +459,20 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         setClearFlashColor(COLORS.accent);
         setShowClearFlash(true);
         shakeBoard(Math.min(event.combo * 0.5, 2.5));
+        // FEVER (chain >= 5) and UNSTOPPABLE (chain >= 6) get a
+        // distinct haptic so the moment feels different in the
+        // player's hand — not just visually-louder, materially
+        // different. 'success' is a double-tap pattern that
+        // reads as "achievement unlocked"; 'heavy' is the maximum
+        // impulse iOS allows and lands as a punctuation. The
+        // chromatic-clear path already handles its own haptic
+        // cascade so this branch only fires on non-chromatic
+        // combos.
+        if (event.combo >= 6) {
+          playHaptic('heavy');
+        } else if (event.combo >= 5) {
+          playHaptic('success');
+        }
         setTimeout(() => setShowClearFlash(false), 400);
       } else if (event.combo > 1) {
         playSound('combo');
