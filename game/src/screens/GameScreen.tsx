@@ -533,6 +533,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       setShowBurst(true);
       playHaptic('success');
       playSound('combo');
+      // Record the lifetime-best wave AT THE MOMENT of crossing,
+      // not at game-over. This makes the wave-tier achievements
+      // (wave_5 / wave_10 / wave_20) unlock right next to the
+      // WAVE N! toast — dopamine peak timing, not the dopamine
+      // valley of game-over. `recordBestWave` is idempotent via
+      // Math.max so calling it on a non-improving wave is a no-op,
+      // and `checkAchievements` is idempotent via its includes-
+      // guard on `unlockedAchievements` so duplicate calls don't
+      // double-credit. The pair of calls is the canonical
+      // "milestone moment" pattern the rest of the codebase uses.
+      usePlayerStore.getState().recordBestWave(newWave);
+      usePlayerStore.getState().checkAchievements();
     }
     prevPiecesPlacedRef.current = next;
   }, [gameState?.piecesPlaced, isEndless, gameState, playHaptic, playSound]);
