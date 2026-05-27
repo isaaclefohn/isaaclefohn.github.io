@@ -27,6 +27,26 @@ let IAP: any = null;
 let iapInitialized = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let purchaseUpdateSubscription: any = null;
+
+/**
+ * Same-session dedup of processed Apple transactions.
+ *
+ * react-native-iap's `purchaseUpdatedListener` can legitimately fire
+ * twice for the same transaction within a single app session — Apple
+ * sometimes redelivers transaction state during the `finishTransaction`
+ * acknowledgement race. Without dedup, the second fire re-credits.
+ *
+ * In-memory `Set` is deliberately not persisted across app restarts:
+ *   - Cross-restart double-fire is rare in practice because Apple
+ *     holds queued transactions until `finishTransaction` acks.
+ *   - Persisting would require an AsyncStorage migration with careful
+ *     credit-then-persist ordering to avoid "user paid, got nothing"
+ *     in the crash-between-persist-and-credit window.
+ *   - Same-session catches the actual common race; the rare cross-
+ *     restart case errs in the user's favor (slight over-credit on a
+ *     pathological crash window) which is acceptable.
+ */
+const processedTransactionIds = new Set<string>();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let purchaseErrorSubscription: any = null;
 
@@ -90,6 +110,26 @@ export async function initializePurchases(): Promise<void> {
         // forever, which would silently double-credit on every restart).
         const product = getProduct(purchase.productId);
         const isConsumable = product?.type === 'consumable';
+
+        // Same-session dedup. Apple may redeliver a transaction's state
+        // during the finishTransaction race — without this guard, the
+        // second fire would re-credit. CRITICAL: we still call
+        // finishTransaction on the duplicate path. Skipping it would
+        // leave the transaction in Apple's queue, which would just
+        // redeliver again on the next listener fire — making this
+        // dedup the cause of an infinite re-credit loop.
+        const txnId = (purchase as { transactionId?: string }).transactionId;
+        if (txnId && processedTransactionIds.has(txnId)) {
+          console.warn('[IAP] dedup: transaction already processed', txnId);
+          try {
+            await IAP.finishTransaction({ purchase, isConsumable });
+          } catch {
+            /* ignore */
+          }
+          return;
+        }
+        if (txnId) processedTransactionIds.add(txnId);
+
         try {
           const result = await validateReceipt(receipt, purchase.productId);
           if (result.valid) {
