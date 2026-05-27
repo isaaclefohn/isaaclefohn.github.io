@@ -4,6 +4,7 @@
  */
 
 import { Grid, createGrid, executePlacement, canPlace, placePiece, findFullLines, getGridSize } from './Board';
+import { getWaveForPieces } from '../levels/EndlessWaves';
 import { Piece, PieceType, createPiece, getPieceCells, PIECE_POOLS } from './Piece';
 import { ScoreEvent, scorePlacement, scoreClear, calculateStars } from './Scoring';
 import { isGameOver } from './GameOver';
@@ -296,8 +297,17 @@ export function processTurn(
     // modes stay on the deterministic path so seeds remain reproducible
     // for shared leaderboards. See `generatePieceSetSmart` doc comment
     // for the full rationale.
+    // Endless mode (level 0): recompute the active palette from the
+    // wave system before generating the next set. Crossing a wave
+    // boundary expands the palette (4 → 5 → 6 → 7), which makes
+    // chromatic clears progressively harder and gives the player a
+    // visible "I'm advancing" arc beyond just score. Non-endless
+    // modes keep their fixed paletteSize.
+    const nextPaletteSize = state.level === 0
+      ? getWaveForPieces(newPiecesPlaced).paletteSize
+      : state.paletteSize;
     const newSet = state.level === 0
-      ? generatePieceSetSmart(rng, piecePool, state.paletteSize, result.grid)
+      ? generatePieceSetSmart(rng, piecePool, nextPaletteSize, result.grid)
       : generatePieceSet(rng, piecePool, state.paletteSize);
     // Roll a fresh golden index for the new set (endless-only). Daily-
     // puzzle / level modes stay null so seeds remain deterministic.
@@ -324,6 +334,7 @@ export function processTurn(
       lastClearedCols: result.clearedCols,
       lastPlacedCells: placedCellPositions,
       goldenPieceIndex: newGoldenPieceIndex,
+      paletteSize: nextPaletteSize,
     };
   }
 

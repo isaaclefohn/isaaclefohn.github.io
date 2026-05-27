@@ -76,7 +76,11 @@ export function isBossLevel(levelNumber: number): boolean {
   return BOSS_LEVELS[levelNumber] !== undefined;
 }
 
-/** Get an endless/zen mode config (no score target, play until stuck) */
+/** Get an endless/zen mode config (no score target, play until stuck).
+ *  Starts at the wave-1 palette so the wave system has somewhere to
+ *  escalate from. See `game/levels/EndlessWaves.ts` for the wave
+ *  progression — by default pieces 0-49 are wave 1 (palette 4), and
+ *  each subsequent 50-piece block bumps the palette by 1 up to 7. */
 export function getEndlessConfig(): LevelConfig {
   const seed = Date.now();
   return {
@@ -86,6 +90,7 @@ export function getEndlessConfig(): LevelConfig {
     starThresholds: [1000, 3000, 6000] as [number, number, number],
     piecePool: [...PIECE_POOLS.medium, ...PIECE_POOLS.hard],
     seed,
+    paletteSize: 4, // STARTING_PALETTE from EndlessWaves.ts — wave 1
   };
 }
 

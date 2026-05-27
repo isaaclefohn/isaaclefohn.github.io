@@ -31,6 +31,7 @@ import { ScoreFlyUp } from '../components/animations/ScoreFlyUp';
 import { ComboBanner } from '../components/animations/ComboBanner';
 import { NearMissCallout } from '../components/NearMissCallout';
 import { PersonalBestCelebration } from '../components/PersonalBestCelebration';
+import { didCrossWaveBoundary, getWaveForPieces } from '../game/levels/EndlessWaves';
 import { Confetti } from '../components/animations/Confetti';
 import { PowerUpType, previewBomb, previewRowClear, previewColorClear } from '../game/powerups/PowerUpManager';
 import { MilestoneBanner } from '../components/animations/MilestoneBanner';
@@ -490,6 +491,34 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       }
     }
   }, [gameState?.lastScoreEvent, playSound, shakeBoard]);
+
+  // Endless-mode wave advancement: every 50 pieces placed, the player
+  // crosses into a harder wave (bigger palette). Detect that boundary
+  // crossing and fire a "WAVE N!" celebration moment so the
+  // escalation feels like a milestone, not a silent difficulty bump.
+  // Non-endless modes don't have waves — this useEffect is a no-op
+  // for them (didCrossWaveBoundary returns false, and even if it
+  // didn't, the inner check on isEndless gates further).
+  const prevPiecesPlacedRef = useRef(0);
+  useEffect(() => {
+    if (!gameState || !isEndless) {
+      prevPiecesPlacedRef.current = gameState?.piecesPlaced ?? 0;
+      return;
+    }
+    const prev = prevPiecesPlacedRef.current;
+    const next = gameState.piecesPlaced;
+    if (didCrossWaveBoundary(prev, next)) {
+      const newWave = getWaveForPieces(next).wave;
+      setHypeText(`WAVE ${newWave}!`);
+      setHypeColor(COLORS.accentGold);
+      setShowHype(true);
+      setBurstColor(COLORS.accentGold);
+      setShowBurst(true);
+      playHaptic('success');
+      playSound('combo');
+    }
+    prevPiecesPlacedRef.current = next;
+  }, [gameState?.piecesPlaced, isEndless, gameState, playHaptic, playSound]);
 
   // Idle hint system — show best placement after 8s of inactivity
   const resetIdleTimer = useCallback(() => {
