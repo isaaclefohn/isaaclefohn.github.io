@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CHROMA wordmark — 6 letters, 6 hues, one per letter.
+
+  Letter→hue mapping uses an initial-letter mnemonic where possible
+  (C=Cyan/Teal, R=Red, O=Orange, M=Magenta/Purple) and falls back to
+  brand-palette completeness for the two letters without a natural
+  color word (H=Yellow as "Hue", A=Blue as "Azure"). This is the
+  recommended starting point; alternates listed in brand-design-spec.md.
+
+  Typeface placeholder: 'Inter ExtraBold' — open-source (SIL OFL),
+  free for App Store use, available on Google Fonts. Substitute in
+  Figma with a stronger display face if budget allows (recommended:
+  Druk Wide, Founders Grotesk Cond Mono).
+
+  Sized at viewBox 800×200 so it composes cleanly into any header,
+  splash, or marketing surface. Letters use a single fill per glyph
+  so re-coloring in Figma is one click per letter.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" preserveAspectRatio="xMidYMid meet">
+  <style>
+    .letter {
+      font-family: 'Inter', 'Helvetica Neue', 'Arial Black', sans-serif;
+      font-weight: 900;
+      font-size: 156px;
+      letter-spacing: 12px;
+    }
+  </style>
+
+  <!-- Optional dark backplate (commented out for transparent export) -->
+  <!-- <rect width="800" height="200" fill="#0F0E1A" /> -->
+
+  <!--
+    CHROMA wordmark, one letter per hue.
+
+    Letter→hue mapping uses the canonical BrandSplash sequence
+    (Red→Yellow→Blue→Teal→Purple→Orange) so the wordmark and the
+    splash animation map identically — six color drops, six letters,
+    same order. The 2026-06 icon research argued this beats an
+    "initial-letter mnemonic" (C=Cyan etc.) because (a) only C, R, O, M
+    have natural color words anyway, and (b) the sequential order
+    creates a deliberate warm-warm-cool-cool-cool-warm valley that
+    reads as composition rather than rainbow.
+  -->
+  <text x="58"  y="148" class="letter" fill="#FF3B5C">C</text>
+  <text x="170" y="148" class="letter" fill="#FACC15">H</text>
+  <text x="296" y="148" class="letter" fill="#3B82F6">R</text>
+  <text x="416" y="148" class="letter" fill="#00D4AA">O</text>
+  <text x="540" y="148" class="letter" fill="#A855F7">M</text>
+  <text x="680" y="148" class="letter" fill="#FF6B2B">A</text>
+</svg>
