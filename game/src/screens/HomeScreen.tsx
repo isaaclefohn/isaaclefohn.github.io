@@ -197,13 +197,27 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     // rejection trigger and a documented retention dropoff. Defer
     // until the player has actually engaged with one level.
     if (highestLevel >= 1) {
-      requestNotificationPermissions().catch(() => {});
-      if (notificationsEnabled) {
-        if (currentStreak >= 2) {
-          scheduleStreakReminder(currentStreak).catch(() => {});
+      // Apple Guideline 4.5.4: notifications can only be sent with
+      // permission. `requestNotificationPermissions` triggers the iOS
+      // system dialog and resolves to the *actual* granted state.
+      //
+      // Previously this call was fire-and-forget and the schedule
+      // calls below ran immediately against the persisted
+      // `notificationsEnabled` settings flag — which could be `true`
+      // from a previous install while iOS permission had been
+      // revoked. The schedule calls would silently no-op, but the
+      // logic state was inconsistent (we'd "schedule" on every home
+      // mount forever). The IIFE awaits the permission result and
+      // gates the schedule calls on (granted AND user-enabled).
+      void (async () => {
+        const granted = await requestNotificationPermissions().catch(() => false);
+        if (granted && notificationsEnabled) {
+          if (currentStreak >= 2) {
+            scheduleStreakReminder(currentStreak).catch(() => {});
+          }
+          scheduleRetentionNotifications().catch(() => {});
         }
-        scheduleRetentionNotifications().catch(() => {});
-      }
+      })();
       // Rating-prompt Slot 2 (streak_day_7) per the 2026-06 growth
       // plan: streak just crossed 7 days with the shield intact = the
       // single strongest "this app stuck for me" signal the engine
