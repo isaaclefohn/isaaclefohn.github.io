@@ -40,6 +40,7 @@ function resetRouletteFields() {
     lastLifeLostAt: null,
     powerUps: { bomb: 0, rowClear: 0, colorClear: 0 },
     rouletteLastDate: null,
+    activeBoostUntil: {},
   });
 }
 
@@ -116,20 +117,100 @@ describe('claimDailyRouletteAtomic', () => {
     expect(s.rouletteLastDate).toBe('2026-05-27');
   });
 
-  it('ignores boostDurationMs (flagged for follow-up — see spawn-task)', () => {
-    // boostDurationMs is in the payload type for parity with
-    // DailyRoulette.ts but is currently unhandled — the "Double Time"
-    // and "XP Surge" rewards land in the action with no effect. A
-    // separate spawn-task tracks wiring this through an active-boost
-    // system. This test pins the current behavior so a future change
-    // is intentional, not accidental.
+  it('ignores boostDurationMs when `kind` is not provided (back-compat)', () => {
+    // The `kind` parameter is what disambiguates Double Time vs XP
+    // Surge — without it the action can't tell which axis the
+    // duration belongs to and treats the boost branch as a no-op.
+    // This is the safe failure mode for any caller that doesn't pass
+    // `kind` (e.g. an unknown future reward type).
     usePlayerStore.getState().claimDailyRouletteAtomic('2026-05-27', {
       boostDurationMs: 30 * 60 * 1000,
     });
     const s = usePlayerStore.getState();
     expect(s.coins).toBe(0);
     expect(s.gems).toBe(0);
+    expect(s.activeBoostUntil).toEqual({});
     expect(s.rouletteLastDate).toBe('2026-05-27');
+  });
+
+  it('activates the coins boost for the Double Time reward', () => {
+    const before = Date.now();
+    usePlayerStore.getState().claimDailyRouletteAtomic(
+      '2026-05-27',
+      { boostDurationMs: 30 * 60 * 1000 },
+      'double_coins',
+    );
+    const s = usePlayerStore.getState();
+    expect(s.activeBoostUntil.coins).toBeGreaterThanOrEqual(before + 30 * 60 * 1000);
+    expect(s.activeBoostUntil.xp).toBeUndefined();
+  });
+
+  it('activates the xp boost for the XP Surge reward', () => {
+    const before = Date.now();
+    usePlayerStore.getState().claimDailyRouletteAtomic(
+      '2026-05-27',
+      { boostDurationMs: 30 * 60 * 1000 },
+      'xp_boost',
+    );
+    const s = usePlayerStore.getState();
+    expect(s.activeBoostUntil.xp).toBeGreaterThanOrEqual(before + 30 * 60 * 1000);
+    expect(s.activeBoostUntil.coins).toBeUndefined();
+  });
+
+  it('idempotency holds for boost activation too (same-day re-claim is a no-op)', () => {
+    // The atomic claim's idempotency guard short-circuits BEFORE
+    // touching activeBoostUntil. So a duplicate fire of the
+    // animation callback can't compound the boost into a 60-minute
+    // window by accident.
+    const date = '2026-05-27';
+    usePlayerStore
+      .getState()
+      .claimDailyRouletteAtomic(date, { boostDurationMs: 30 * 60 * 1000 }, 'double_coins');
+    const firstExpiry = usePlayerStore.getState().activeBoostUntil.coins!;
+    usePlayerStore
+      .getState()
+      .claimDailyRouletteAtomic(date, { boostDurationMs: 30 * 60 * 1000 }, 'double_coins');
+    const secondExpiry = usePlayerStore.getState().activeBoostUntil.coins!;
+    expect(secondExpiry).toBe(firstExpiry);
+  });
+});
+
+describe('addCoins / addBattlePassXP boost integration', () => {
+  beforeEach(() => {
+    usePlayerStore.setState({
+      coins: 0,
+      battlePassXP: 0,
+      activeBoostUntil: {},
+    });
+  });
+
+  it('addCoins applies the 2x boost only with `{ boostable: true }`', () => {
+    usePlayerStore.setState({ activeBoostUntil: { coins: Date.now() + 60_000 } });
+    usePlayerStore.getState().addCoins(100); // no opts → not boostable
+    expect(usePlayerStore.getState().coins).toBe(100);
+    usePlayerStore.getState().addCoins(100, { boostable: true });
+    expect(usePlayerStore.getState().coins).toBe(300); // +200
+  });
+
+  it('addCoins does NOT boost when the window has expired', () => {
+    usePlayerStore.setState({ activeBoostUntil: { coins: Date.now() - 1 } });
+    usePlayerStore.getState().addCoins(100, { boostable: true });
+    expect(usePlayerStore.getState().coins).toBe(100);
+  });
+
+  it('addBattlePassXP applies the 2x XP boost only with `{ boostable: true }`', () => {
+    usePlayerStore.setState({ activeBoostUntil: { xp: Date.now() + 60_000 } });
+    usePlayerStore.getState().addBattlePassXP(50); // no opts → not boostable
+    expect(usePlayerStore.getState().battlePassXP).toBe(50);
+    usePlayerStore.getState().addBattlePassXP(50, { boostable: true });
+    expect(usePlayerStore.getState().battlePassXP).toBe(150); // +100
+  });
+
+  it('coin and xp boosts are independent — Double Time doesn’t boost XP', () => {
+    usePlayerStore.setState({ activeBoostUntil: { coins: Date.now() + 60_000 } });
+    usePlayerStore.getState().addBattlePassXP(50, { boostable: true });
+    // Coins-only boost: XP credit is not doubled.
+    expect(usePlayerStore.getState().battlePassXP).toBe(50);
   });
 });
 
