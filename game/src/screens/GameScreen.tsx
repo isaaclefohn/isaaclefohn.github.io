@@ -121,7 +121,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     continueGame,
   } = useGameEngine();
 
-  const { playSound, playPlacement, playHaptic, playChromaticCascade } = useSound();
+  const { playSound, playPlacement, playHaptic, playChromaticCascade, playColorChord } = useSound();
   const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak, chromaticClearsSincePremium, setChromaticClearsSincePremium, incrementTotalChromaticClears } = usePlayerStore(useShallow((s) => ({
     powerUps: s.powerUps, usePowerUp: s.usePowerUp, coins: s.coins, gems: s.gems,
     addCoins: s.addCoins, addGems: s.addGems, addPowerUp: s.addPowerUp, spendGems: s.spendGems,
@@ -401,6 +401,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         const cascadeCount = event.cascadeCellsCleared ?? 0;
         // Heavy thump + combo sound (initial detonation).
         playSound('combo');
+        // Pentatonic chord of the detonating colors — supplemental
+        // "color voice" on top of the combo SFX. Pentatonic mapping
+        // guarantees consonance for any subset of hues; see
+        // generate-sounds.js header for the full rationale. The hue
+        // indices in `event.chromaticColors` are 1-indexed (matches
+        // grid values where 0 = empty), so subtract 1 to align with
+        // COLORS.blocks / COLOR_NOTE_ASSETS in useSound.ts.
+        playColorChord(distinctColors.map((c) => c - 1));
         // Rich cascade haptic pattern — outlasts visual by ~100ms ("addiction
         // signature" per Color Blast teardown).
         playChromaticCascade(cascadeCount + 6);

@@ -62,9 +62,33 @@ const SOUND_ASSETS: Partial<Record<SoundType, number>> = {
   select: require('../../assets/sounds/select.wav'),
 };
 
+/**
+ * Per-color pentatonic note assets. Each brand hue maps to one note
+ * of the C major pentatonic scale (C, D, E, G, A, C′) — see the
+ * generate-sounds.js header comment for the rationale (pentatonic
+ * = any combination consonant, so a multi-color cascade plays a
+ * chord that stays musical). Index matches COLORS.blocks order in
+ * `src/utils/constants.ts`. Indices 0..5 are the brand hues; index
+ * 3 (Green) is skipped because Green is a gameplay-only color, not
+ * a brand hue, and would clash with the pentatonic mapping.
+ */
+const COLOR_NOTE_ASSETS: Record<number, number> = {
+  0: require('../../assets/sounds/color-red.wav'),    // Red    → C5
+  1: require('../../assets/sounds/color-teal.wav'),   // Teal   → G5
+  2: require('../../assets/sounds/color-blue.wav'),   // Blue   → E5
+  // 3 (Green) intentionally omitted — gameplay-only color
+  4: require('../../assets/sounds/color-yellow.wav'), // Yellow → D5
+  5: require('../../assets/sounds/color-purple.wav'), // Purple → A5
+  6: require('../../assets/sounds/color-orange.wav'), // Orange → C6
+};
+
 export function useSound() {
   const { soundEnabled, hapticsEnabled, hapticIntensity, soundVolume } = useSettingsStore();
   const soundsRef = useRef<Map<SoundType, Audio.Sound>>(new Map());
+  // Parallel cache for the per-color pentatonic notes. Keyed by
+  // colorIndex (COLORS.blocks index) so playColorChord can look them
+  // up from the engine's `chromaticColors` array without a re-map.
+  const colorNotesRef = useRef<Map<number, Audio.Sound>>(new Map());
   const loadedRef = useRef(false);
 
   // Preload audio assets on mount
@@ -91,6 +115,24 @@ export function useSound() {
           // Asset not found or load failed — skip this sound
         }
       }
+
+      // Load color notes into a parallel ref. Lower volume by default
+      // (0.7×) so the chord layered on top of the regular cascade SFX
+      // doesn't overwhelm — the color note is supplemental flavor, not
+      // a replacement for the existing chromatic clear sound.
+      for (const [idxStr, asset] of Object.entries(COLOR_NOTE_ASSETS)) {
+        if (cancelled) return;
+        const idx = Number(idxStr);
+        try {
+          const { sound } = await Audio.Sound.createAsync(asset as number, {
+            volume: soundVolume * 0.7,
+            shouldPlay: false,
+          });
+          colorNotesRef.current.set(idx, sound);
+        } catch {
+          // Note asset missing — chromatic chord just skips that hue
+        }
+      }
       loadedRef.current = true;
     }
 
@@ -106,6 +148,11 @@ export function useSound() {
     for (const sound of soundsRef.current.values()) {
       sound.setVolumeAsync(soundVolume).catch(() => {});
     }
+    // Color notes sit at 0.7× to leave headroom for the layered
+    // chromatic-clear SFX — match the load-time ratio here.
+    for (const sound of colorNotesRef.current.values()) {
+      sound.setVolumeAsync(soundVolume * 0.7).catch(() => {});
+    }
   }, [soundVolume]);
 
   // Cleanup on unmount
@@ -115,6 +162,10 @@ export function useSound() {
         sound.unloadAsync().catch(() => {});
       }
       soundsRef.current.clear();
+      for (const sound of colorNotesRef.current.values()) {
+        sound.unloadAsync().catch(() => {});
+      }
+      colorNotesRef.current.clear();
       loadedRef.current = false;
     };
   }, []);
@@ -240,5 +291,40 @@ export function useSound() {
     }
   }, [hapticsEnabled, hapticIntensity]);
 
-  return { playSound, playHaptic, playPlacement, playChromaticCascade };
+  /**
+   * Play a pentatonic chord of one or more color notes simultaneously.
+   * Called on chromatic-clear events with the array of color indices
+   * that just detonated.
+   *
+   * Why this works musically: notes from the C major pentatonic scale
+   * (C, D, E, G, A) are mutually consonant — any subset of them played
+   * together forms a chord that sounds harmonious. So when a cascade
+   * detonates 3 different colors at once, the resulting 3-note chord
+   * stays musical instead of becoming dissonant noise. That's why
+   * pentatonic was chosen over diatonic/chromatic scales.
+   *
+   * Skips silently if `soundEnabled` is off or notes haven't loaded.
+   * Deduplicates color indices so a 5-cell clear of all-red plays the
+   * red note once, not 5 times (per-cell would mask the haptic and
+   * sound percussive). The chromatic-cascade haptic + the regular
+   * `combo` SFX fire separately — this is supplemental "color voice."
+   */
+  const playColorChord = useCallback(async (colorIndices: number[]) => {
+    if (!soundEnabled) return;
+    const unique = Array.from(new Set(colorIndices));
+    await Promise.all(
+      unique.map(async (idx) => {
+        const sound = colorNotesRef.current.get(idx);
+        if (!sound) return;
+        try {
+          await sound.setPositionAsync(0);
+          await sound.playAsync();
+        } catch {
+          // Playback collision is fine — the audio engine queues
+        }
+      }),
+    );
+  }, [soundEnabled]);
+
+  return { playSound, playHaptic, playPlacement, playChromaticCascade, playColorChord };
 }
