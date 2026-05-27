@@ -316,11 +316,15 @@ Export at 1290×2796 PNG, sRGB color profile.
 | `favicon-{16,32,64,180,512}.png` | Browser favicon + iOS add-to-home + manifest icon | ✅ Drafted |
 | `favicon.ico` | Multi-resolution .ico (16/32/64) for legacy `/favicon.ico` | ✅ Drafted |
 
-**Still TODO** (use the existing slot 1/2/3/6 generators as the pattern):
-- Slot 4 (depth) — combo peak + odometer mid-tick + particle wake. Hero hue: green is NOT a brand hue per the research; use **Orange** (#FF6B2B) to read as "chained heat." Caption: "Chain the cascades."
-- Slot 5 (ritual) — daily puzzle card + leaderboard sliver. Hero hue: **Purple** (#A855F7). Caption: "One puzzle. Whole world."
+| `generate_screenshot_slot4.py` | Slot 4 (depth — combo peak + score odometer + particle wake) | ✅ Drafted |
+| `screenshot-slot4.png` / `-thumb.png` | "Chain the cascades." composition, orange hero hue | ✅ Drafted |
+| `generate_screenshot_slot5.py` | Slot 5 (ritual — Daily Puzzle card + weekly leaderboard) | ✅ Drafted |
+| `screenshot-slot5.png` / `-thumb.png` | "One puzzle. Whole world." composition, purple hero | ✅ Drafted |
+
+**Still TODO** (smaller, polish-tier):
 - Splash screen variants (1242×2688 iPhone) — derive from the BrandSplash component
 - Press kit zip — icon set + wordmark variants + 6 screenshots + tagline + dev bio + plain-text fact sheet
+- Slot 6 wordmark inset (~5% canvas margin so the letterforms don't graze the edge at 280px font)
 
 ---
 
