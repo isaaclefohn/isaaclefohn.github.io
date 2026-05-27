@@ -1030,6 +1030,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         <PieceTray
           pieces={gameState.availablePieces}
           selectedIndex={isPowerUpMode ? null : selectedPieceIndex}
+          goldenIndex={gameState.goldenPieceIndex}
           onSelectPiece={handleSelectPiece}
           onDragStart={handleDragStart}
           onDragMove={handleDragMove}

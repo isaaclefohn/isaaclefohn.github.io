@@ -29,6 +29,14 @@ export interface ScoreEvent {
    *  — every remaining same-color cell explodes with a chromatic line). Drives
    *  haptic intensity and score-tail length. */
   cascadeCellsCleared: number;
+  /**
+   * Extra points applied because the golden piece (a rare ~10% mid-run
+   * variable reward in endless mode) was the placed piece AND it
+   * triggered a clear. Already factored into `points`; surfaced
+   * separately so the UI can show a "+GOLDEN!" floating callout.
+   * Always 0 outside endless mode.
+   */
+  goldenBonus: number;
   /** Breakdown of how points were earned */
   breakdown: {
     placementBonus: number;
@@ -77,6 +85,7 @@ export function scorePlacement(cellCount: number): ScoreEvent {
     chromaticClears: 0,
     chromaticColors: [],
     cascadeCellsCleared: 0,
+    goldenBonus: 0,
     breakdown: {
       placementBonus,
       clearBonus: 0,
@@ -133,6 +142,7 @@ export function scoreClear(
     chromaticClears,
     chromaticColors,
     cascadeCellsCleared,
+    goldenBonus: 0, // populated downstream by processTurn when golden piece triggers the clear
     breakdown: {
       placementBonus: 0,
       clearBonus,

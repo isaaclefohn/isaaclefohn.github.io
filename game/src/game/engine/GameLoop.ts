@@ -52,6 +52,16 @@ export interface GameState {
   paletteSize: number;
   /** Running count of single-color (chromatic) line clears this game */
   chromaticClears: number;
+  /**
+   * Index (0-2) of the "golden" piece in the current `availablePieces`
+   * tray, or null when no piece is golden. Endless-only — randomized
+   * (~10% per fresh tray) and reset on each new piece set. When the
+   * golden piece is placed AND its placement creates a line clear,
+   * the score from that turn is doubled via `goldenBonus` on the
+   * resulting ScoreEvent. The variable-reward "mid-run" lever per
+   * the Block Blast research wave.
+   */
+  goldenPieceIndex: number | null;
 }
 
 export interface LevelConfig {
@@ -70,6 +80,12 @@ export function initGame(config: LevelConfig): GameState {
   const rng = new SeededRandom(config.seed);
   const grid = createGrid(config.gridSize);
   const availablePieces = generatePieceSet(rng, config.piecePool, config.paletteSize);
+
+  // Golden-piece roll is endless-only (level === 0). Other modes rely
+  // on deterministic seeding for shared leaderboards; the gold roll
+  // consumes RNG and varies per session, so non-endless modes stay null.
+  const goldenPieceIndex =
+    config.levelNumber === 0 ? maybeRollGoldenPieceIndex(rng) : null;
 
   return {
     grid,
@@ -90,7 +106,31 @@ export function initGame(config: LevelConfig): GameState {
     swapsUsed: 0,
     paletteSize: config.paletteSize ?? COLORS.blocks.length,
     chromaticClears: 0,
+    goldenPieceIndex,
   };
+}
+
+/** Probability that a fresh piece tray contains a golden piece. */
+export const GOLDEN_PIECE_SPAWN_RATE = 0.1;
+
+/** Bonus multiplier applied to the line-clear score when the golden
+ *  piece is the one that triggered the clear. */
+export const GOLDEN_PIECE_MULTIPLIER = 2;
+
+/**
+ * 10% chance to mark one of the 3 pieces as golden. Returns the index
+ * (0/1/2) or null. Designed for endless-mode use only — consumes RNG
+ * draws so it cannot be on the deterministic seed path.
+ *
+ * The 10% rate is the load-bearing constant: too high and golden
+ * pieces become routine (lose specialness); too low and players
+ * never see them. 10% means ~1 golden every 3 piece-sets, frequent
+ * enough to be a learnable pattern, rare enough to feel like an
+ * event when it appears.
+ */
+export function maybeRollGoldenPieceIndex(rng: SeededRandom): number | null {
+  if (rng.next() >= GOLDEN_PIECE_SPAWN_RATE) return null;
+  return rng.nextInt(0, PIECES_PER_TURN - 1);
 }
 
 /** Generate a set of 3 random pieces from the pool */
@@ -218,6 +258,21 @@ export function processTurn(
       result.cascadeCellsCleared,
     );
     newCombo = scoreEvent.combo;
+
+    // Golden-piece bonus: if the placed piece was the golden one AND
+    // it triggered a clear, double the points for this turn. The
+    // bonus is the *extra* portion (post-multiplied - base) so the UI
+    // can surface "+N GOLDEN" as a distinct callout. Golden state
+    // never persists across piece sets — bonus fires once or is lost.
+    if (pieceIndex === state.goldenPieceIndex) {
+      const basePoints = scoreEvent.points;
+      const goldenBonus = basePoints * (GOLDEN_PIECE_MULTIPLIER - 1);
+      scoreEvent = {
+        ...scoreEvent,
+        points: basePoints + goldenBonus,
+        goldenBonus,
+      };
+    }
   } else {
     scoreEvent = scorePlacement(piece.cellCount);
     newCombo = 0; // Reset combo when no lines cleared
@@ -244,6 +299,10 @@ export function processTurn(
     const newSet = state.level === 0
       ? generatePieceSetSmart(rng, piecePool, state.paletteSize, result.grid)
       : generatePieceSet(rng, piecePool, state.paletteSize);
+    // Roll a fresh golden index for the new set (endless-only). Daily-
+    // puzzle / level modes stay null so seeds remain deterministic.
+    const newGoldenPieceIndex =
+      state.level === 0 ? maybeRollGoldenPieceIndex(rng) : null;
     // Check for game over with the new set (plus any held piece)
     const gameOverPool = heldPiece ? [...newSet, heldPiece] : newSet;
     const gameOver = isGameOver(result.grid, gameOverPool);
@@ -264,6 +323,7 @@ export function processTurn(
       lastClearedRows: result.clearedRows,
       lastClearedCols: result.clearedCols,
       lastPlacedCells: placedCellPositions,
+      goldenPieceIndex: newGoldenPieceIndex,
     };
   }
 

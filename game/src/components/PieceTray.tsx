@@ -28,6 +28,14 @@ export interface DragEvent {
 interface PieceTrayProps {
   pieces: (Piece | null)[];
   selectedIndex: number | null;
+  /**
+   * Index of the "golden" piece in this tray. The endless-mode
+   * golden-piece feature randomly marks one piece each fresh tray
+   * (~10% probability); when placed AND it creates a clear, that
+   * turn's score is doubled. The visual ring tells the player
+   * which placement to optimize before they commit.
+   */
+  goldenIndex?: number | null;
   onSelectPiece: (index: number) => void;
   onDragStart?: (event: DragEvent) => void;
   onDragMove?: (event: DragEvent) => void;
@@ -39,16 +47,20 @@ const DRAG_THRESHOLD = 8;
 const PieceSlot: React.FC<{
   piece: Piece | null;
   isSelected: boolean;
+  isGolden: boolean;
   onPress: () => void;
   index: number;
   onDragStart?: (event: DragEvent) => void;
   onDragMove?: (event: DragEvent) => void;
   onDragEnd?: (event: DragEvent) => void;
-}> = ({ piece, isSelected, onPress, index, onDragStart, onDragMove, onDragEnd }) => {
+}> = ({ piece, isSelected, isGolden, onPress, index, onDragStart, onDragMove, onDragEnd }) => {
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
   const glowOpacity = useRef(new Animated.Value(0)).current;
   const idlePulse = useRef(new Animated.Value(1)).current;
   const shimmerX = useRef(new Animated.Value(-1)).current;
+  // Golden piece pulses independently of the idle pulse — a stronger,
+  // faster oscillation that draws the eye to the high-value slot.
+  const goldenPulse = useRef(new Animated.Value(1)).current;
   const isDraggingRef = useRef(false);
   const startPosRef = useRef({ x: 0, y: 0 });
 
@@ -108,6 +120,35 @@ const PieceSlot: React.FC<{
       ).start();
     }
   }, [isSelected, glowOpacity, shimmerX]);
+
+  // Golden-piece breathing pulse. Faster and bigger than the regular
+  // idle pulse so the eye locks onto the high-value slot. Runs only
+  // when isGolden — stops on placement (piece becomes null) or when
+  // a new tray resets the index away.
+  useEffect(() => {
+    if (!isGolden || !piece) {
+      goldenPulse.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(goldenPulse, {
+          toValue: 1.10,
+          duration: 480,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(goldenPulse, {
+          toValue: 1,
+          duration: 480,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [isGolden, piece, goldenPulse]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -177,18 +218,44 @@ const PieceSlot: React.FC<{
   ).current;
 
   return (
-    <Animated.View style={{ transform: [{ scale: Animated.multiply(scaleAnim, idlePulse) }] }}>
+    <Animated.View
+      style={{
+        // Compose all three scale axes: entrance bounce, idle breath,
+        // and golden pulse (1.0 when not golden, oscillating 1.0↔1.10
+        // when golden). Putting the multiply here means the gold pulse
+        // visually amplifies through the piece, the ring, and shimmer
+        // all at once — they all read as one breathing object.
+        transform: [
+          {
+            scale: Animated.multiply(
+              Animated.multiply(scaleAnim, idlePulse),
+              goldenPulse,
+            ),
+          },
+        ],
+      }}
+    >
       <View
         {...panResponder.panHandlers}
         accessible
         accessibilityRole="button"
-        accessibilityLabel={piece ? `Piece ${index + 1}${isSelected ? ', selected' : ''}. Tap to select, drag to place.` : `Piece ${index + 1}, already placed`}
+        accessibilityLabel={piece ? `${isGolden ? 'Golden piece. ' : ''}Piece ${index + 1}${isSelected ? ', selected' : ''}. Tap to select, drag to place.` : `Piece ${index + 1}, already placed`}
         style={[
           styles.pieceSlot,
           isSelected && styles.selectedSlot,
           !piece && styles.emptySlot,
+          isGolden && piece && styles.goldenSlot,
         ]}
       >
+        {/* Golden ring — rendered behind the piece, in front of the
+            slot background. Solid border + halo shadow so the gold
+            reads even at small piece sizes. Combined with the
+            goldenPulse breathing animation on the outer Animated.View,
+            this is what makes the rare ~10% golden piece visually
+            unmistakable in the tray. */}
+        {isGolden && piece && (
+          <View style={styles.goldenRing} pointerEvents="none" />
+        )}
         {/* Selection glow border */}
         {isSelected && (
           <Animated.View
@@ -235,6 +302,7 @@ const PieceSlot: React.FC<{
 export const PieceTray: React.FC<PieceTrayProps> = ({
   pieces,
   selectedIndex,
+  goldenIndex = null,
   onSelectPiece,
   onDragStart,
   onDragMove,
@@ -248,6 +316,7 @@ export const PieceTray: React.FC<PieceTrayProps> = ({
             key={index}
             piece={piece}
             isSelected={selectedIndex === index}
+            isGolden={goldenIndex === index && piece !== null}
             onPress={() => onSelectPiece(index)}
             index={index}
             onDragStart={onDragStart}
@@ -297,6 +366,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 14,
+  },
+  goldenSlot: {
+    backgroundColor: `${COLORS.accentGold}18`,
+    shadowColor: COLORS.accentGold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 18,
+  },
+  goldenRing: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: RADII.md + 2,
+    borderWidth: 3,
+    borderColor: COLORS.accentGold,
   },
   selectionGlow: {
     position: 'absolute',
