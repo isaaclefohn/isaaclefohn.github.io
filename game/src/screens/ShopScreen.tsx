@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   Alert,
   Animated,
+  Platform,
 } from 'react-native';
 import { usePlayerStore } from '../store/playerStore';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
@@ -208,8 +209,29 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
    * here in the UI handler, which Apple Guideline 3.1.1 would reject
    * (digital goods must use IAP) and which also meant a reviewer or
    * beta tester tapping "Buy" would get currency without paying.
+   *
+   * Platform branch: React Native Web's `Alert.alert` is a documented
+   * no-op (literally `static alert() {}` in react-native-web's source).
+   * That means on the public portfolio demo at
+   * `isaaclefohn.github.io/game/preview/`, the Alert never rendered and
+   * the "Buy" onPress callback never fired — the demo shop has been
+   * silently broken since it shipped. The web branch below skips the
+   * Alert and calls requestPurchase directly so the demo UX actually
+   * works. iOS keeps the soft confirmation step before Apple's StoreKit
+   * sheet.
    */
   const handleBuyIAP = (product: Product) => {
+    if (Platform.OS === 'web') {
+      // Web demo path: no Alert (it's a no-op), credit immediately via
+      // the purchases.web.ts stub. Errors fall back to console.warn
+      // since user-facing Alert.alert is unavailable.
+      requestPurchase(product.id).then((ok) => {
+        if (!ok) {
+          console.warn('[Shop] web demo purchase failed', product.id);
+        }
+      });
+      return;
+    }
     Alert.alert(
       'Purchase',
       `Buy ${product.title} for ${product.price}?`,
@@ -227,7 +249,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
             }
             // On success, crediting happens inside services/purchases.ts:
             //   - Real iOS: purchaseUpdatedListener → validateReceipt → creditFromProduct
-            //   - Dev / web: requestPurchase short-circuit → creditFromProduct
+            //   - Dev: requestPurchase short-circuit → creditFromProduct
             // Either way the player's balance updates via the store, and
             // the UI reflects it automatically via the Zustand subscription.
           },
