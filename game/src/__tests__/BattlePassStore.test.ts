@@ -112,6 +112,70 @@ describe('startNewBattlePassSeason', () => {
   });
 });
 
+describe('wave-tier achievements', () => {
+  beforeEach(() => {
+    usePlayerStore.setState({
+      coins: 0,
+      gems: 0,
+      unlockedAchievements: [],
+      activeBoostUntil: {},
+      bestWaveReached: 0,
+      totalLinesCleared: 0,
+      highestLevel: 0,
+      totalScore: 0,
+      longestStreak: 0,
+      totalChromaticClears: 0,
+      totalPowerUpsUsed: 0,
+      levelStars: {},
+    });
+  });
+
+  it('does NOT unlock wave achievements at bestWaveReached 0', () => {
+    usePlayerStore.getState().checkAchievements();
+    const unlocked = usePlayerStore.getState().unlockedAchievements;
+    expect(unlocked).not.toContain('wave_5');
+    expect(unlocked).not.toContain('wave_10');
+    expect(unlocked).not.toContain('wave_20');
+  });
+
+  it('unlocks wave_5 at exactly wave 5', () => {
+    usePlayerStore.setState({ bestWaveReached: 5 });
+    usePlayerStore.getState().checkAchievements();
+    expect(usePlayerStore.getState().unlockedAchievements).toContain('wave_5');
+    // wave_10 should NOT unlock yet
+    expect(usePlayerStore.getState().unlockedAchievements).not.toContain('wave_10');
+  });
+
+  it('unlocks wave_5 and wave_10 at wave 10', () => {
+    usePlayerStore.setState({ bestWaveReached: 10 });
+    usePlayerStore.getState().checkAchievements();
+    const unlocked = usePlayerStore.getState().unlockedAchievements;
+    expect(unlocked).toContain('wave_5');
+    expect(unlocked).toContain('wave_10');
+    expect(unlocked).not.toContain('wave_20');
+  });
+
+  it('unlocks all three at wave 20+', () => {
+    usePlayerStore.setState({ bestWaveReached: 25 });
+    usePlayerStore.getState().checkAchievements();
+    const unlocked = usePlayerStore.getState().unlockedAchievements;
+    expect(unlocked).toContain('wave_5');
+    expect(unlocked).toContain('wave_10');
+    expect(unlocked).toContain('wave_20');
+  });
+
+  it('credits scaled rewards: 50 + 150 + 500 = 700 coins on first wave 20 run', () => {
+    // If a player goes from never-played to wave 20 in one session,
+    // all three achievements unlock at once and the rewards are
+    // additive. 50 (wave_5) + 150 (wave_10) + 500 (wave_20) = 700.
+    usePlayerStore.setState({ bestWaveReached: 20 });
+    usePlayerStore.getState().checkAchievements();
+    const s = usePlayerStore.getState();
+    expect(s.coins).toBe(700);
+    expect(s.gems).toBe(25); // 5 from wave_10 + 20 from wave_20
+  });
+});
+
 describe('checkAchievements coin boost integration', () => {
   beforeEach(() => {
     usePlayerStore.setState({
@@ -127,6 +191,7 @@ describe('checkAchievements coin boost integration', () => {
       longestStreak: 0,
       totalChromaticClears: 0,
       totalPowerUpsUsed: 0,
+      bestWaveReached: 0,
       levelStars: {},
     });
   });

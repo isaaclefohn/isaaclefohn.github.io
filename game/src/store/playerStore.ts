@@ -66,6 +66,16 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'first_chromatic', name: 'First Spark', description: 'Trigger your first chromatic clear', icon: 'sparkle', reward: { coins: 25 }, check: (s) => s.totalChromaticClears >= 1 },
   { id: 'chromatic_25', name: 'Chromatic Adept', description: 'Trigger 25 chromatic clears', icon: 'palette', reward: { coins: 100, gems: 3 }, check: (s) => s.totalChromaticClears >= 25 },
   { id: 'chromatic_100', name: 'Color Master', description: 'Trigger 100 chromatic clears', icon: 'crown', reward: { coins: 400, gems: 15 }, check: (s) => s.totalChromaticClears >= 100 },
+  // Endless wave milestones — tie the wave system shipped in 711a0fa
+  // into the achievement framework. Each tier maps to a meaningful
+  // moment: wave 5 = "I left the early waves behind" (palette is
+  // already maxed); wave 10 = "I'm grinding endlessly"; wave 20 =
+  // "this is my game now." Rewards scale to match the chromatic
+  // tier rewards roughly — wave 20 is comparable to chromatic_100
+  // in commitment.
+  { id: 'wave_5', name: 'Surge Survivor', description: 'Reach wave 5 in endless mode', icon: 'lightning', reward: { coins: 50 }, check: (s) => s.bestWaveReached >= 5 },
+  { id: 'wave_10', name: 'Wave Rider', description: 'Reach wave 10 in endless mode', icon: 'fire', reward: { coins: 150, gems: 5 }, check: (s) => s.bestWaveReached >= 10 },
+  { id: 'wave_20', name: 'Wave Master', description: 'Reach wave 20 in endless mode', icon: 'crown', reward: { coins: 500, gems: 20 }, check: (s) => s.bestWaveReached >= 20 },
 ];
 
 interface PlayerStoreState {
