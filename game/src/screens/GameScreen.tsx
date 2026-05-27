@@ -30,6 +30,7 @@ import { RadialBurst } from '../components/animations/RadialBurst';
 import { ScoreFlyUp } from '../components/animations/ScoreFlyUp';
 import { ComboBanner } from '../components/animations/ComboBanner';
 import { NearMissCallout } from '../components/NearMissCallout';
+import { PersonalBestCelebration } from '../components/PersonalBestCelebration';
 import { Confetti } from '../components/animations/Confetti';
 import { PowerUpType, previewBomb, previewRowClear, previewColorClear } from '../game/powerups/PowerUpManager';
 import { MilestoneBanner } from '../components/animations/MilestoneBanner';
@@ -1328,19 +1329,31 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         {/* "SO CLOSE!" near-miss callout — the loss-aversion lever.
             Renders only when the run was 85%+ of personal best but
             didn't quite beat it. Converts regret into "one more try"
-            energy at the dopamine valley of game-over. Modes use
-            different best-score sources:
+            energy at the dopamine valley of game-over.
+
+            "NEW PERSONAL BEST!" celebration — the symmetric peak
+            moment for runs that exceeded the prior best. Mutually
+            exclusive with the near-miss callout by construction (one
+            gates on score < best, the other on score > best), so
+            rendering both unconditionally always yields at most one.
+
+            Modes use different best-score sources:
               - Endless: zenHighScore (lifetime best)
-              - Daily Puzzle: dailyPuzzleBestScore (today's run only)
-              - Level mode: skipped — the Continue-for-gems button and
-                stars system already provide near-miss framing.
-            The component returns null in non-applicable cases, so the
-            call site can be unconditional. */}
+              - Daily Puzzle: dailyPuzzleBestScore
+              - Level mode: skipped — the Continue-for-gems button
+                and stars system already provide near-miss framing,
+                and the win modal handles new-best celebration. */}
         {isEndless && (
-          <NearMissCallout score={gameState.score} best={zenHighScore} />
+          <>
+            <NearMissCallout score={gameState.score} best={zenHighScore} />
+            <PersonalBestCelebration score={gameState.score} best={zenHighScore} />
+          </>
         )}
         {isDaily && (
-          <NearMissCallout score={gameState.score} best={dailyPuzzleBestScore} />
+          <>
+            <NearMissCallout score={gameState.score} best={dailyPuzzleBestScore} />
+            <PersonalBestCelebration score={gameState.score} best={dailyPuzzleBestScore} />
+          </>
         )}
 
         {/* Rescue offer after 2+ failures on same level */}
