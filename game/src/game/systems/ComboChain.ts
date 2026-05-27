@@ -4,11 +4,20 @@
  * The "chain" resets when a piece is placed without clearing any lines.
  *
  * Chain levels:
- *   2x combo: 1.5x score multiplier
- *   3x combo: 2.0x
- *   4x combo: 2.5x
- *   5x combo: 3.0x (FEVER mode)
- *   6x+ combo: 3.5x
+ *   2x combo: 1.5x score multiplier — "Nice!"
+ *   3x combo: 2.0x                   — "Great!"
+ *   4x combo: 2.5x                   — "Amazing!"
+ *   5x combo: 3.0x                   — "FEVER!"     (isFever flips true)
+ *   6x combo: 4.0x                   — "UNSTOPPABLE!"
+ *   7x+ combo: 5.0x                  — "GODLIKE!"   (top tier)
+ *
+ * IMPORTANT: these multipliers must match `COMBO_MULTIPLIERS` in
+ * utils/constants.ts. That array is what the actual scoring math
+ * uses; this table is what the ComboBanner displays. Pre-2026-05-27
+ * they had drifted (UNSTOPPABLE was labeled 3.5x while the score
+ * was actually 4x), which was a banner-under-reports-bug — the
+ * player got more score than the label suggested. Now aligned, and
+ * the new GODLIKE tier exposes the previously-hidden 5x peak.
  *
  * Chain bonuses stack with other multipliers (events, etc.)
  */
@@ -26,7 +35,8 @@ export const COMBO_THRESHOLDS: { minChain: number; multiplier: number; label: st
   { minChain: 3, multiplier: 2.0, label: 'Great!', color: '#60A5FA' },
   { minChain: 4, multiplier: 2.5, label: 'Amazing!', color: '#C084FC' },
   { minChain: 5, multiplier: 3.0, label: 'FEVER!', color: '#FACC15' },
-  { minChain: 6, multiplier: 3.5, label: 'UNSTOPPABLE!', color: '#FF4500' },
+  { minChain: 6, multiplier: 4.0, label: 'UNSTOPPABLE!', color: '#FF4500' },
+  { minChain: 7, multiplier: 5.0, label: 'GODLIKE!', color: '#FF1493' },
 ];
 
 /** Get the current combo chain state */

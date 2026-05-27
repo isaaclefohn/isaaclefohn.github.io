@@ -58,20 +58,34 @@ describe('getComboChainState', () => {
     expect(s.isFever).toBe(true);
   });
 
-  it('promotes to "UNSTOPPABLE!" at chain 6+ with 3.5x', () => {
+  it('promotes to "UNSTOPPABLE!" at chain 6 with 4.0x', () => {
+    // Multiplier matches utils/constants.ts COMBO_MULTIPLIERS[5]=4
+    // — the actual scoring multiplier the engine applies. Earlier
+    // versions had this at 3.5 in the banner but 4.0 in the score,
+    // which under-reported the actual reward.
     const s = getComboChainState(6);
     expect(s.label).toBe('UNSTOPPABLE!');
-    expect(s.multiplier).toBe(3.5);
-    expect(s.isFever).toBe(true); // still fever-class
+    expect(s.multiplier).toBe(4.0);
+    expect(s.isFever).toBe(true);
   });
 
-  it('clamps at the top threshold for very long chains', () => {
-    // Chain 99 doesn't unlock a secret eleventh threshold — the
-    // ladder saturates at UNSTOPPABLE. Test pins that we don't
+  it('promotes to "GODLIKE!" at chain 7+ with 5.0x (top tier)', () => {
+    // GODLIKE was added in 2026-05-27 to expose the previously-hidden
+    // 5x peak that COMBO_MULTIPLIERS[6+] used. Players at chain 7+
+    // now see the actual multiplier they're earning.
+    const s = getComboChainState(7);
+    expect(s.label).toBe('GODLIKE!');
+    expect(s.multiplier).toBe(5.0);
+    expect(s.isFever).toBe(true);
+  });
+
+  it('clamps at the GODLIKE tier for very long chains', () => {
+    // Chain 99 doesn't unlock a secret eighth threshold — the
+    // ladder saturates at GODLIKE. Test pins that we don't
     // off-by-one into undefined territory.
     const s = getComboChainState(99);
-    expect(s.label).toBe('UNSTOPPABLE!');
-    expect(s.multiplier).toBe(3.5);
+    expect(s.label).toBe('GODLIKE!');
+    expect(s.multiplier).toBe(5.0);
   });
 
   it('uses distinct colors per tier for cohesive UI signaling', () => {
