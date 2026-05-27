@@ -308,6 +308,19 @@ Export at 1290×2796 PNG, sRGB color profile.
 | `screenshot-slot2-thumb.png` | 4× downscaled preview | ✅ Drafted |
 | `generate_og_card.py` | Reproducible Open Graph card renderer (1200×630) | ✅ Drafted |
 | `og-card.png` | OG / Twitter card image for social sharing | ✅ Drafted (Figma needs to pull bead inward 30px) |
+| `generate_screenshot_slot3.py` | Slot 3 (wedge — palette-shrink ladder + 3-color dense board) | ✅ Drafted |
+| `screenshot-slot3.png` / `-thumb.png` | "Fewer colors. Harder choices." composition | ✅ Drafted |
+| `generate_screenshot_slot6.py` | Slot 6 (identity close — huge wordmark + board fragment) | ✅ Drafted |
+| `screenshot-slot6.png` / `-thumb.png` | Wordmark close at 280px (Figma needs ~5% inset) | ✅ Drafted |
+| `generate_favicons.py` | Favicon + apple-touch-icon set from icon-e-bead | ✅ Drafted |
+| `favicon-{16,32,64,180,512}.png` | Browser favicon + iOS add-to-home + manifest icon | ✅ Drafted |
+| `favicon.ico` | Multi-resolution .ico (16/32/64) for legacy `/favicon.ico` | ✅ Drafted |
+
+**Still TODO** (use the existing slot 1/2/3/6 generators as the pattern):
+- Slot 4 (depth) — combo peak + odometer mid-tick + particle wake. Hero hue: green is NOT a brand hue per the research; use **Orange** (#FF6B2B) to read as "chained heat." Caption: "Chain the cascades."
+- Slot 5 (ritual) — daily puzzle card + leaderboard sliver. Hero hue: **Purple** (#A855F7). Caption: "One puzzle. Whole world."
+- Splash screen variants (1242×2688 iPhone) — derive from the BrandSplash component
+- Press kit zip — icon set + wordmark variants + 6 screenshots + tagline + dev bio + plain-text fact sheet
 
 ---
 
