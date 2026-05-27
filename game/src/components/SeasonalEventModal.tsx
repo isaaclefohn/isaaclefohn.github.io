@@ -66,7 +66,7 @@ export const SeasonalEventModal: React.FC<SeasonalEventModalProps> = ({
     if (!isMilestoneReached(milestone, points)) return;
     const key = `${instanceId}_${index}`;
     if (seasonalMilestonesClaimed.includes(key)) return;
-    if (milestone.reward.coins) addCoins(milestone.reward.coins);
+    if (milestone.reward.coins) addCoins(milestone.reward.coins, { boostable: true });
     if (milestone.reward.gems) addGems(milestone.reward.gems);
     if (milestone.reward.bomb) addPowerUp('bomb', milestone.reward.bomb);
     if (milestone.reward.rowClear) addPowerUp('rowClear', milestone.reward.rowClear);

@@ -50,7 +50,7 @@ export const FreeChestModal: React.FC<FreeChestModalProps> = ({ visible, onClose
 
   const handleClaim = () => {
     if (!ready || !reward) return;
-    addCoins(reward.coins);
+    addCoins(reward.coins, { boostable: true });
     if (reward.gems > 0) addGems(reward.gems);
     if (reward.powerUp) addPowerUp(reward.powerUp.type, reward.powerUp.count);
     claimFreeChest();

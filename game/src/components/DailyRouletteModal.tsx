@@ -66,7 +66,7 @@ export const DailyRouletteModal: React.FC<DailyRouletteModalProps> = ({
       // atomic variant is idempotent: re-calling with the same date is
       // a no-op, so a rare double-fire of this callback can't double-
       // credit either.
-      claimDailyRouletteAtomic(today, todaysReward.payload);
+      claimDailyRouletteAtomic(today, todaysReward.payload, todaysReward.kind);
     });
   };
 

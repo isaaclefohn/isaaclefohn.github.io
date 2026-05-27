@@ -70,7 +70,7 @@ export const LuckySpinModal: React.FC<LuckySpinModalProps> = ({ visible, onClose
 
       // Award prize
       if (prize.type === 'coins') {
-        addCoins(prize.amount);
+        addCoins(prize.amount, { boostable: true });
       } else if (prize.type === 'gems') {
         addGems(prize.amount);
       } else if (prize.type === 'powerup' && prize.powerUp) {

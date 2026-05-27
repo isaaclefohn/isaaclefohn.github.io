@@ -40,7 +40,7 @@ export const StreakMilestoneModal: React.FC<StreakMilestoneModalProps> = ({ visi
 
   const handleClaim = () => {
     if (!milestone || claimed) return;
-    addCoins(milestone.coins);
+    addCoins(milestone.coins, { boostable: true });
     if (milestone.gems > 0) addGems(milestone.gems);
     setClaimed(true);
   };

@@ -767,7 +767,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     if (!canShowRewarded()) return;
     const earned = await showRewardedAd();
     if (earned) {
-      addCoins(AD_REWARDS.coins.amount);
+      addCoins(AD_REWARDS.coins.amount, { boostable: true });
       playSound('select');
     }
   }, [addCoins, playSound]);
@@ -834,7 +834,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     const earned = await showRewardedAd();
     if (!earned) return;
     const bonus = calculateCoinReward(stars);
-    addCoins(bonus);
+    addCoins(bonus, { boostable: true });
     setDoubleCoinsUsed(true);
     playSound('combo');
   }, [doubleCoinsUsed, stars, addCoins, playSound]);
@@ -1422,7 +1422,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         onClaim={() => {
           if (worldReward) {
             const rewardData = worldRewardPerfect ? worldReward.perfectReward : worldReward.clearReward;
-            addCoins(rewardData.coins);
+            addCoins(rewardData.coins, { boostable: true });
             addGems(rewardData.gems);
             if (worldRewardPerfect) {
               addPowerUp('bomb', worldReward.perfectReward.powerUps.bomb);

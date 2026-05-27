@@ -60,7 +60,7 @@ export const PiggyBankModal: React.FC<PiggyBankModalProps> = ({ visible, onClose
     ]).start(() => {
       const amount = breakPiggyBank();
       if (amount > 0) {
-        addCoins(amount);
+        addCoins(amount, { boostable: true });
       }
     });
   };
@@ -70,7 +70,7 @@ export const PiggyBankModal: React.FC<PiggyBankModalProps> = ({ visible, onClose
     if (!spendGems(5)) return;
     const amount = breakPiggyBank();
     if (amount > 0) {
-      addCoins(amount);
+      addCoins(amount, { boostable: true });
     }
   };
 

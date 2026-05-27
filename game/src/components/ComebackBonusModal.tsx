@@ -43,7 +43,7 @@ export const ComebackBonusModal: React.FC<ComebackBonusModalProps> = ({ visible,
   const handleClaim = () => {
     if (!reward || claimed) return;
 
-    addCoins(reward.coins);
+    addCoins(reward.coins, { boostable: true });
     if (reward.gems > 0) addGems(reward.gems);
     if (reward.powerUp) {
       addPowerUp(reward.powerUp.type, reward.powerUp.count);

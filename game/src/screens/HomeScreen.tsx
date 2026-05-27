@@ -38,6 +38,7 @@ import { HubMenuModal } from '../components/HubMenuModal';
 import { getActiveEvent } from '../game/events/SeasonalEvent';
 import { BlockMasteryModal } from '../components/BlockMasteryModal';
 import { hasSpunToday } from '../game/challenges/DailyRoulette';
+import { BoostPill } from '../components/BoostPill';
 import { getDailyPuzzleId, getDailyPuzzleLabel, formatCountdown, getMsUntilNextPuzzle } from '../game/challenges/DailyPuzzle';
 import { DailyStatsModal } from '../components/DailyStatsModal';
 import { isFreeChestReady, getFreeChestTimeRemaining } from '../game/rewards/FreeChest';
@@ -453,6 +454,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </Animated.View>
         </TouchableOpacity>
         )}
+
+        {/* Active boost indicator — renders only when a Daily Roulette
+            "Double Time" / "XP Surge" boost is currently active. Returns
+            null otherwise, so it's safe to drop unconditionally here.
+            The countdown component closes the cause-effect loop: a
+            player who just won the boost SEES it on their next return
+            to home, with a live mm:ss countdown. Without this, the 2x
+            multiplier silently applies inside addCoins/addBattlePassXP
+            and the boost feels phantom. */}
+        <BoostPill />
 
         {/* Rewarded shield refill CTA — only renders when streak ≥ 1,
             no shield held, throttle elapsed, AND the ad cap allows.

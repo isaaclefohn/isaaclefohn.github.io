@@ -14,6 +14,12 @@ import {
   type StreakShieldResult,
 } from '../game/engine/streakShield';
 import { getDailyTiles, rollWheel, type WheelTile } from '../game/engine/dailyWheel';
+import {
+  applyBoost,
+  extendBoost,
+  type ActiveBoostUntil,
+  type BoostKind,
+} from '../game/rewards/ActiveBoosts';
 
 /** Daily reward amounts — day 7 is more valuable than days 1-6 combined */
 export const DAILY_REWARDS = [
@@ -224,11 +230,21 @@ interface PlayerStoreState {
   flashOfferPurchases: string[];
   // Free chest — recurring reward timer
   freeChestLastClaimedAt: number | null;
+  // Daily Roulette boost expirations (unix ms). Absent / past = no boost.
+  // `coins` is set by the "Double Time" reward, `xp` by "XP Surge".
+  activeBoostUntil: ActiveBoostUntil;
 }
 
 interface PlayerStore extends PlayerStoreState {
   // Actions
-  addCoins: (amount: number) => void;
+  /**
+   * Credit coins. Pass `{ boostable: true }` for gameplay rewards
+   * (level rewards, quests, etc.) — that opts the credit into the
+   * Daily Roulette "Double Time" 2x multiplier when one is active.
+   * IAP/shop grants OMIT the flag so real-money purchases are never
+   * doubled (revenue-safety default).
+   */
+  addCoins: (amount: number, opts?: { boostable?: boolean }) => void;
   spendCoins: (amount: number) => boolean;
   addGems: (amount: number) => void;
   spendGems: (amount: number) => boolean;
@@ -287,7 +303,19 @@ interface PlayerStore extends PlayerStoreState {
   resetFailures: () => void;
   addPiggyBankCoins: (amount: number) => void;
   breakPiggyBank: () => number;
-  addBattlePassXP: (amount: number) => void;
+  /**
+   * Credit Battle Pass XP. Pass `{ boostable: true }` for gameplay
+   * rewards so the Daily Roulette "XP Surge" 2x multiplier applies
+   * when active. Default omits to be conservative.
+   */
+  addBattlePassXP: (amount: number, opts?: { boostable?: boolean }) => void;
+  /**
+   * Activate (or extend) a Daily Roulette boost — used by
+   * `claimDailyRouletteAtomic` and exposed for tests. See
+   * `extendBoost` in `game/rewards/ActiveBoosts.ts` for the
+   * chained-spin policy.
+   */
+  activateBoost: (kind: BoostKind, durationMs: number) => void;
   claimBattlePassTier: (tier: number) => void;
   upgradeBattlePass: () => void;
   // Weekly Challenge
@@ -370,9 +398,6 @@ interface PlayerStore extends PlayerStoreState {
   claimDailyRouletteAtomic: (
     date: string,
     // Shape mirrors `RouletteReward['payload']` in DailyRoulette.ts.
-    // boostDurationMs is currently ignored by the action (parity with
-    // the previous sequential handler) — there is a separate flagged
-    // task to wire active boosts through the store.
     payload: {
       coins?: number;
       gems?: number;
@@ -382,6 +407,10 @@ interface PlayerStore extends PlayerStoreState {
       lives?: number;
       boostDurationMs?: number;
     },
+    // The reward `kind` disambiguates `boostDurationMs` — without it,
+    // the store can't tell whether Double Time (`double_coins`) or XP
+    // Surge (`xp_boost`) was rolled, since both ship the same shape.
+    kind?: import('../game/challenges/DailyRoulette').RouletteRewardKind,
   ) => void;
   // Starter Pack
   unlockStarterPack: () => void;
@@ -494,9 +523,16 @@ export const usePlayerStore = create<PlayerStore>()(
       starterPackClaimed: false,
       flashOfferPurchases: [],
       freeChestLastClaimedAt: null,
+      activeBoostUntil: {},
 
-      addCoins: (amount) =>
-        set((s) => ({ coins: s.coins + amount })),
+      addCoins: (amount, opts) =>
+        set((s) => ({
+          coins:
+            s.coins +
+            (opts?.boostable
+              ? applyBoost(amount, s.activeBoostUntil, 'coins', Date.now())
+              : amount),
+        })),
 
       spendCoins: (amount) => {
         const { coins } = get();
@@ -817,8 +853,23 @@ export const usePlayerStore = create<PlayerStore>()(
         return piggyBankCoins;
       },
 
-      addBattlePassXP: (amount: number) => {
-        set((s) => ({ battlePassXP: s.battlePassXP + amount }));
+      addBattlePassXP: (amount: number, opts) => {
+        set((s) => ({
+          battlePassXP:
+            s.battlePassXP +
+            (opts?.boostable
+              ? applyBoost(amount, s.activeBoostUntil, 'xp', Date.now())
+              : amount),
+        }));
+      },
+
+      activateBoost: (kind, durationMs) => {
+        set((s) => ({
+          activeBoostUntil: {
+            ...s.activeBoostUntil,
+            [kind]: extendBoost(s.activeBoostUntil[kind], durationMs, Date.now()),
+          },
+        }));
       },
 
       claimBattlePassTier: (tier: number) => {
@@ -1150,7 +1201,7 @@ export const usePlayerStore = create<PlayerStore>()(
        * fire (animation callback racing with a re-mount, replay, etc.)
        * never double-credits.
        */
-      claimDailyRouletteAtomic: (date, payload) => {
+      claimDailyRouletteAtomic: (date, payload, kind) => {
         set((s) => {
           if (s.rouletteLastDate === date) return s;
           const next: Partial<typeof s> = { rouletteLastDate: date };
@@ -1166,6 +1217,25 @@ export const usePlayerStore = create<PlayerStore>()(
           if (payload.lives) {
             next.lives = 5;
             next.lastLifeLostAt = null;
+          }
+          // Wire boost rewards. The `kind` arg disambiguates which boost
+          // axis the duration belongs to. If a future reward adds a new
+          // boost kind without updating this switch, the boost silently
+          // does nothing — same failure mode as before this fix, but
+          // now scoped to a clearly-marked branch.
+          if (payload.boostDurationMs && kind) {
+            const boostKind: BoostKind | null =
+              kind === 'double_coins' ? 'coins' : kind === 'xp_boost' ? 'xp' : null;
+            if (boostKind) {
+              next.activeBoostUntil = {
+                ...s.activeBoostUntil,
+                [boostKind]: extendBoost(
+                  s.activeBoostUntil[boostKind],
+                  payload.boostDurationMs,
+                  Date.now(),
+                ),
+              };
+            }
           }
           return next;
         });

@@ -31,7 +31,7 @@ export const LoginCalendarModal: React.FC<LoginCalendarModalProps> = ({ visible,
     const dayData = calendar[nextDay - 1];
     if (!dayData) return;
 
-    if (dayData.coins > 0) addCoins(dayData.coins);
+    if (dayData.coins > 0) addCoins(dayData.coins, { boostable: true });
     if (dayData.gems > 0) addGems(dayData.gems);
     if (dayData.powerUp && dayData.powerUpCount) {
       addPowerUp(dayData.powerUp, dayData.powerUpCount);

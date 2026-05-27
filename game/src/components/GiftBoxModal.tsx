@@ -71,7 +71,7 @@ export const GiftBoxModal: React.FC<GiftBoxModalProps> = ({ visible, gift, onClo
     for (const reward of gift.rewards) {
       switch (reward.type) {
         case 'coins':
-          addCoins(reward.amount);
+          addCoins(reward.amount, { boostable: true });
           break;
         case 'gems':
           addGems(reward.amount);

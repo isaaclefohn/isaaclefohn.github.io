@@ -38,7 +38,7 @@ export const InboxModal: React.FC<InboxModalProps> = ({ visible, onClose }) => {
     if (!msg.reward) return;
     if (state.claimedIds.includes(msg.id)) return;
 
-    if (msg.reward.coins) addCoins(msg.reward.coins);
+    if (msg.reward.coins) addCoins(msg.reward.coins, { boostable: true });
     if (msg.reward.gems) addGems(msg.reward.gems);
     if (msg.reward.bomb) addPowerUp('bomb', msg.reward.bomb);
     if (msg.reward.rowClear) addPowerUp('rowClear', msg.reward.rowClear);

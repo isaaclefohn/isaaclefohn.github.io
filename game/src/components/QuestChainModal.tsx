@@ -57,7 +57,7 @@ export const QuestChainModal: React.FC<QuestChainModalProps> = ({ visible, onClo
     if (!isChainComplete(chain, stats)) return;
 
     const reward = chain.reward;
-    addCoins(reward.coins);
+    addCoins(reward.coins, { boostable: true });
     if (reward.gems) addGems(reward.gems);
     if (reward.bomb) addPowerUp('bomb', reward.bomb);
     if (reward.rowClear) addPowerUp('rowClear', reward.rowClear);

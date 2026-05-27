@@ -127,7 +127,7 @@ export const BattlePassScreen: React.FC<BattlePassScreenProps> = ({ navigation }
   const handleClaim = useCallback((tier: BattlePassReward) => {
     // Award free reward
     if (tier.freeReward) {
-      if (tier.freeReward.type === 'coins') addCoins(tier.freeReward.amount);
+      if (tier.freeReward.type === 'coins') addCoins(tier.freeReward.amount, { boostable: true });
       else if (tier.freeReward.type === 'gems') addGems(tier.freeReward.amount);
       else if (tier.freeReward.type === 'powerup' && tier.freeReward.itemId) {
         addPowerUp(tier.freeReward.itemId as any, tier.freeReward.amount);
@@ -137,7 +137,7 @@ export const BattlePassScreen: React.FC<BattlePassScreenProps> = ({ navigation }
     // Award premium reward if applicable
     if (battlePassPremium) {
       const pr = tier.premiumReward;
-      if (pr.type === 'coins') addCoins(pr.amount);
+      if (pr.type === 'coins') addCoins(pr.amount, { boostable: true });
       else if (pr.type === 'gems') addGems(pr.amount);
       else if (pr.type === 'powerup' && pr.itemId) {
         addPowerUp(pr.itemId as any, pr.amount);

@@ -41,9 +41,9 @@ export const DailyQuestsCard: React.FC<DailyQuestsCardProps> = ({ visible }) => 
 
   const handleClaim = useCallback((quest: Quest) => {
     if (isClaimed(quest)) return;
-    if (quest.reward.coins) addCoins(quest.reward.coins);
+    if (quest.reward.coins) addCoins(quest.reward.coins, { boostable: true });
     if (quest.reward.gems) addGems(quest.reward.gems);
-    if (quest.reward.xp) addBattlePassXP(quest.reward.xp);
+    if (quest.reward.xp) addBattlePassXP(quest.reward.xp, { boostable: true });
     claimDailyQuest(quest.id);
   }, [addCoins, addGems, addBattlePassXP, claimDailyQuest, isClaimed]);
 

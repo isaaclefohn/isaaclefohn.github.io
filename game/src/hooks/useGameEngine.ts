@@ -92,21 +92,21 @@ export function useGameEngine() {
         completeWeeklyChallenge(weekId, stars, gameState.score);
         const weeklyCoins = WEEKLY_COIN_REWARDS[stars as 1 | 2 | 3] ?? 0;
         if (weeklyCoins > 0) {
-          addCoins(Math.round(weeklyCoins * coinMult));
+          addCoins(Math.round(weeklyCoins * coinMult), { boostable: true });
         }
         if (stars === 3) {
           addGems(WEEKLY_GEM_BONUS);
         }
-        addBattlePassXP(Math.round(75 * xpMult)); // Weekly challenge XP bonus
+        addBattlePassXP(Math.round(75 * xpMult), { boostable: true }); // Weekly challenge XP bonus
       } else if (isDaily) {
         // Daily puzzle completion — 3-star target reached (rare).
         const puzzleId = getDailyPuzzleId();
         const result = recordDailyPuzzleResult(puzzleId, gameState.score, stars);
         if (result.isFirstCompletion) {
           const reward = DAILY_COIN_REWARDS[stars as 0 | 1 | 2 | 3] ?? 0;
-          if (reward > 0) addCoins(Math.round(reward * coinMult));
+          if (reward > 0) addCoins(Math.round(reward * coinMult), { boostable: true });
           if (stars === 3) addGems(DAILY_GEM_REWARD_3_STAR);
-          addBattlePassXP(Math.round((40 + stars * 20) * xpMult));
+          addBattlePassXP(Math.round((40 + stars * 20) * xpMult), { boostable: true });
         }
       } else {
         // Normal level completion
@@ -120,14 +120,14 @@ export function useGameEngine() {
 
         if (coinReward > 0) {
           const boostedCoins = Math.round(coinReward * coinMult);
-          addCoins(boostedCoins);
+          addCoins(boostedCoins, { boostable: true });
           const piggyBonus = Math.max(1, Math.round(boostedCoins * (0.1 + stars * 0.03)));
           addPiggyBankCoins(piggyBonus);
         }
 
         // Battle Pass XP: 50 base + 15 per star + 5 per line cleared (with event boost)
         const bpXP = Math.round((50 + stars * 15 + Math.min(gameState.linesCleared * 5, 100)) * xpMult);
-        addBattlePassXP(bpXP);
+        addBattlePassXP(bpXP, { boostable: true });
 
         // Replay reward — bonus coins for improving on a previously completed level
         const prevBest = levelHighScores[levelConfig.levelNumber] ?? 0;
@@ -141,7 +141,7 @@ export function useGameEngine() {
             threeStarThreshold: levelConfig.starThresholds?.[2] ?? 0,
           });
           if (replayReward) {
-            addCoins(replayReward.coins);
+            addCoins(replayReward.coins, { boostable: true });
           }
         }
       }
@@ -243,7 +243,7 @@ export function useGameEngine() {
       if (isZen) {
         recordZenGame(gameState.score, gameState.linesCleared, gameState.combo ?? 0);
         const zenXpMult = getXPMultiplier();
-        addBattlePassXP(Math.round((20 + Math.min(gameState.linesCleared * 3, 60)) * zenXpMult));
+        addBattlePassXP(Math.round((20 + Math.min(gameState.linesCleared * 3, 60)) * zenXpMult), { boostable: true });
       } else if (isWeekly) {
         // Weekly challenge loss still records score
         const weekId = getCurrentWeekId();
@@ -258,10 +258,10 @@ export function useGameEngine() {
         if (result.isFirstCompletion) {
           const coinMult = getCoinMultiplier();
           const reward = DAILY_COIN_REWARDS[stars as 0 | 1 | 2 | 3] ?? 0;
-          if (reward > 0) addCoins(Math.round(reward * coinMult));
+          if (reward > 0) addCoins(Math.round(reward * coinMult), { boostable: true });
           if (stars === 3) addGems(DAILY_GEM_REWARD_3_STAR);
           const xpMult = getXPMultiplier();
-          addBattlePassXP(Math.round((30 + stars * 15) * xpMult));
+          addBattlePassXP(Math.round((30 + stars * 15) * xpMult), { boostable: true });
         }
         recordGamePlayed(gameState.combo ?? 0);
       } else {

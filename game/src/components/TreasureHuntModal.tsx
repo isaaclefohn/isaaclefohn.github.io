@@ -49,7 +49,7 @@ export const TreasureHuntModal: React.FC<TreasureHuntModalProps> = ({ visible, o
     const reward = rollTreasure(Date.now());
     setRevealed(reward);
 
-    if (reward.coins > 0) addCoins(reward.coins);
+    if (reward.coins > 0) addCoins(reward.coins, { boostable: true });
     if (reward.gems > 0) addGems(reward.gems);
     if (reward.powerUps.bomb > 0) addPowerUp('bomb', reward.powerUps.bomb);
     if (reward.powerUps.rowClear > 0) addPowerUp('rowClear', reward.powerUps.rowClear);

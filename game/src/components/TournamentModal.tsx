@@ -60,7 +60,7 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({ visible, onClo
       activeTournament.startedAt,
     );
     const prize = getPrizeForRank(rank, config);
-    addCoins(prize.coins);
+    addCoins(prize.coins, { boostable: true });
     if (prize.gems > 0) addGems(prize.gems);
     finishTournament(rank);
   }, [visible, activeTournament, addCoins, addGems, finishTournament]);
