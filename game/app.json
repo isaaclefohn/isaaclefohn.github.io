@@ -33,8 +33,7 @@
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-9923892524770034~9844822777",
-          "iosAppId": "ca-app-pub-9923892524770034~9844822777",
-          "userTrackingPermission": "Allow tracking to see ads relevant to your interests instead of generic ones. CHROMA is fully playable either way — declining just shows less personalized ads."
+          "iosAppId": "ca-app-pub-9923892524770034~9844822777"
         }
       ],
       "@sentry/react-native/expo",
