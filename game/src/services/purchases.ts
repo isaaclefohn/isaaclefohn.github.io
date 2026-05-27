@@ -42,6 +42,32 @@ function loadIAP(): boolean {
   }
 }
 
+/**
+ * Lazy-require'd analytics helper for the IAP funnel.
+ *
+ * Why lazy: importing `./analytics` at the top of this file would chain
+ * through to `expo-crypto` and `@react-native-async-storage/async-storage`,
+ * which crash in jest's node test environment. By deferring the require to
+ * the moment of the actual track call, the unit tests that exercise
+ * `creditFromProduct` directly (and never hit `requestPurchase` /
+ * `purchaseUpdatedListener` / `restorePurchases`) stay green without
+ * needing analytics mocks.
+ *
+ * The try/catch is also a deliberate trust posture: analytics is
+ * best-effort observability, never a hard dependency. A PostHog outage,
+ * a Sentry rate-limit, or a malformed event payload should never block
+ * a player's purchase from completing.
+ */
+function track(name: string, data: Record<string, unknown>): void {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { trackEvent } = require('./analytics');
+    trackEvent(name, data);
+  } catch {
+    /* best-effort; never block a purchase on a tracking error */
+  }
+}
+
 /** Initialize the IAP connection and fetch the product catalog. */
 export async function initializePurchases(): Promise<void> {
   if (isExpoGo) return;
@@ -72,11 +98,21 @@ export async function initializePurchases(): Promise<void> {
             // it does NOT decide reward amounts. See creditFromProduct
             // notes for why we deliberately ignore `result.credits`.
             creditFromProduct(purchase.productId);
+            track('iap.purchase_credited', {
+              productId: purchase.productId,
+              price: product?.price,
+              source: 'storekit',
+            });
           } else {
             console.warn(
               '[IAP] receipt validation failed — NOT crediting',
               purchase.productId,
             );
+            track('iap.purchase_failed', {
+              productId: purchase.productId,
+              source: 'storekit',
+              reason: 'receipt_invalid',
+            });
           }
         } finally {
           try {
@@ -139,6 +175,8 @@ export async function teardownPurchases(): Promise<void> {
  * false if neither path could run.
  */
 export async function requestPurchase(productId: string): Promise<boolean> {
+  const product = getProduct(productId);
+  const price = product?.price;
   if (isExpoGo || !loadIAP() || !IAP) {
     // DEV STUB. Without the platform IAP module we have no way to charge
     // the user, so we just hand them the goods. This branch ONLY runs in
@@ -147,14 +185,34 @@ export async function requestPurchase(productId: string): Promise<boolean> {
     // user. The credit goes through the same function as the real path
     // so swapping in real StoreKit is a one-line change at the listener.
     console.warn('[IAP] dev stub: crediting without StoreKit charge', productId);
-    return creditFromProduct(productId);
+    track('iap.purchase_initiated', { productId, price, source: 'stub' });
+    const credited = creditFromProduct(productId);
+    track(credited ? 'iap.purchase_credited' : 'iap.purchase_failed', {
+      productId,
+      price,
+      source: 'stub',
+      ...(credited ? {} : { reason: 'unknown_product' }),
+    });
+    return credited;
   }
   if (!iapInitialized) await initializePurchases();
+  track('iap.purchase_initiated', { productId, price, source: 'storekit' });
   try {
     await IAP.requestPurchase({ sku: productId, andDangerouslyFinishTransactionAutomaticallyIOS: false });
+    // NB: success/failure of the actual purchase fires later in
+    // `purchaseUpdatedListener`. Here we only know we handed the request
+    // off to StoreKit — the user could still cancel, the receipt could
+    // still fail validation, etc.
     return true;
   } catch (err) {
     console.warn('[IAP] requestPurchase failed', err);
+    track('iap.purchase_failed', {
+      productId,
+      price,
+      source: 'storekit',
+      reason: 'request_failed',
+      error: err instanceof Error ? err.message : String(err),
+    });
     return false;
   }
 }
@@ -179,6 +237,7 @@ export async function restorePurchases(): Promise<string[]> {
   }
   if (!iapInitialized) await initializePurchases();
   try {
+    track('iap.restore_initiated', {});
     // react-native-iap's `getAvailablePurchases` returns the user's
     // restorable transactions on iOS. Each non-consumable they own
     // shows up exactly once.
@@ -202,10 +261,15 @@ export async function restorePurchases(): Promise<string[]> {
       // bonus content is NOT re-granted on restore.
       applyEntitlementOnly(sku);
       ids.push(sku);
+      track('iap.restore_credited', { productId: sku });
     }
     return ids;
   } catch (err) {
     console.warn('[IAP] restorePurchases failed', err);
+    track('iap.restore_failed', {
+      reason: 'getAvailablePurchases_threw',
+      error: err instanceof Error ? err.message : String(err),
+    });
     return [];
   }
 }

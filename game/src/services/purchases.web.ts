@@ -145,6 +145,22 @@ export async function teardownPurchases(): Promise<void> {
 }
 
 /**
+ * Best-effort funnel event for the web demo. Lazy-required so tests
+ * against this module (IapCrediting.test.ts) don't pull the analytics
+ * → expo-crypto chain at import time. See native purchases.ts for the
+ * full rationale.
+ */
+function track(name: string, data: Record<string, unknown>): void {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { trackEvent } = require('./analytics');
+    trackEvent(name, data);
+  } catch {
+    /* best-effort */
+  }
+}
+
+/**
  * Web preview "demo purchase" — no real money, no platform. Credits
  * immediately so the portfolio demo lets visitors experience the shop UX.
  * Local-storage persistence means the credit only affects the visitor's
@@ -152,7 +168,17 @@ export async function teardownPurchases(): Promise<void> {
  */
 export async function requestPurchase(productId: string): Promise<boolean> {
   console.warn('[IAP] web preview demo crediting', productId);
-  return creditFromProduct(productId);
+  const product = getProduct(productId);
+  const price = product?.price;
+  track('iap.purchase_initiated', { productId, price, source: 'web_demo' });
+  const credited = creditFromProduct(productId);
+  track(credited ? 'iap.purchase_credited' : 'iap.purchase_failed', {
+    productId,
+    price,
+    source: 'web_demo',
+    ...(credited ? {} : { reason: 'unknown_product' }),
+  });
+  return credited;
 }
 
 export async function restorePurchases(): Promise<string[]> {
