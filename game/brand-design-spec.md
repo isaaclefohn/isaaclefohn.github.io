@@ -303,6 +303,11 @@ Export at 1290×2796 PNG, sRGB color profile.
 | `generate_screenshot_slot1.py` | Reproducible slot 1 mockup renderer | ✅ Drafted |
 | `screenshot-slot1.png` | Slot 1 composition mockup at 1290×2796 | ✅ Drafted |
 | `screenshot-slot1-thumb.png` | 4× downscaled preview | ✅ Drafted |
+| `generate_screenshot_slot2.py` | Reproducible slot 2 (3-panel mechanic explainer) | ✅ Drafted |
+| `screenshot-slot2.png` | Slot 2 mockup — "Clear a color. Detonate them all." | ✅ Drafted |
+| `screenshot-slot2-thumb.png` | 4× downscaled preview | ✅ Drafted |
+| `generate_og_card.py` | Reproducible Open Graph card renderer (1200×630) | ✅ Drafted |
+| `og-card.png` | OG / Twitter card image for social sharing | ✅ Drafted (Figma needs to pull bead inward 30px) |
 
 ---
 
