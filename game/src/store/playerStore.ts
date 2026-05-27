@@ -76,6 +76,18 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'wave_5', name: 'Surge Survivor', description: 'Reach wave 5 in endless mode', icon: 'lightning', reward: { coins: 50 }, check: (s) => s.bestWaveReached >= 5 },
   { id: 'wave_10', name: 'Wave Rider', description: 'Reach wave 10 in endless mode', icon: 'fire', reward: { coins: 150, gems: 5 }, check: (s) => s.bestWaveReached >= 10 },
   { id: 'wave_20', name: 'Wave Master', description: 'Reach wave 20 in endless mode', icon: 'crown', reward: { coins: 500, gems: 20 }, check: (s) => s.bestWaveReached >= 20 },
+  // Combo-tier milestones — mirror to wave tiers, tied to the
+  // ComboChain ladder shipped in fd133be (and the GODLIKE top tier
+  // added in 4632210). Each maps to crossing a verbal threshold:
+  // FEVER (chain 5) is the "this game is on fire" moment;
+  // UNSTOPPABLE (chain 6) is the rare planned-and-executed moment;
+  // GODLIKE (chain 7+) is the screenshot-worthy peak. The persisted
+  // `bestCombo` stat (now correctly tracking peaks per b13581f) is
+  // the basis. Three parallel achievement tracks: chromatic / wave
+  // / combo, all reachable through different play styles.
+  { id: 'combo_fever', name: 'Caught Fire', description: 'Land a FEVER combo (5-chain)', icon: 'fire', reward: { coins: 50 }, check: (s) => s.bestCombo >= 5 },
+  { id: 'combo_unstoppable', name: 'Unstoppable', description: 'Land an UNSTOPPABLE combo (6-chain)', icon: 'lightning', reward: { coins: 150, gems: 5 }, check: (s) => s.bestCombo >= 6 },
+  { id: 'combo_godlike', name: 'Godlike', description: 'Land a GODLIKE combo (7-chain)', icon: 'crown', reward: { coins: 500, gems: 20 }, check: (s) => s.bestCombo >= 7 },
 ];
 
 interface PlayerStoreState {

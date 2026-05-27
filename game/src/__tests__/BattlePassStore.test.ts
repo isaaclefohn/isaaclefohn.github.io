@@ -120,6 +120,7 @@ describe('wave-tier achievements', () => {
       unlockedAchievements: [],
       activeBoostUntil: {},
       bestWaveReached: 0,
+      bestCombo: 0,
       totalLinesCleared: 0,
       highestLevel: 0,
       totalScore: 0,
@@ -176,6 +177,78 @@ describe('wave-tier achievements', () => {
   });
 });
 
+describe('combo-tier achievements (FEVER / UNSTOPPABLE / GODLIKE)', () => {
+  beforeEach(() => {
+    usePlayerStore.setState({
+      coins: 0,
+      gems: 0,
+      unlockedAchievements: [],
+      activeBoostUntil: {},
+      bestWaveReached: 0,
+      bestCombo: 0,
+      totalLinesCleared: 0,
+      highestLevel: 0,
+      totalScore: 0,
+      longestStreak: 0,
+      totalChromaticClears: 0,
+      totalPowerUpsUsed: 0,
+      levelStars: {},
+    });
+  });
+
+  it('does NOT unlock combo achievements at bestCombo 0', () => {
+    usePlayerStore.getState().checkAchievements();
+    const unlocked = usePlayerStore.getState().unlockedAchievements;
+    expect(unlocked).not.toContain('combo_fever');
+    expect(unlocked).not.toContain('combo_unstoppable');
+    expect(unlocked).not.toContain('combo_godlike');
+  });
+
+  it('unlocks combo_fever at exactly bestCombo 5', () => {
+    usePlayerStore.setState({ bestCombo: 5 });
+    usePlayerStore.getState().checkAchievements();
+    const unlocked = usePlayerStore.getState().unlockedAchievements;
+    expect(unlocked).toContain('combo_fever');
+    expect(unlocked).not.toContain('combo_unstoppable');
+  });
+
+  it('unlocks fever + unstoppable at bestCombo 6', () => {
+    usePlayerStore.setState({ bestCombo: 6 });
+    usePlayerStore.getState().checkAchievements();
+    const unlocked = usePlayerStore.getState().unlockedAchievements;
+    expect(unlocked).toContain('combo_fever');
+    expect(unlocked).toContain('combo_unstoppable');
+    expect(unlocked).not.toContain('combo_godlike');
+  });
+
+  it('unlocks all three at bestCombo 7+', () => {
+    usePlayerStore.setState({ bestCombo: 8 });
+    usePlayerStore.getState().checkAchievements();
+    const unlocked = usePlayerStore.getState().unlockedAchievements;
+    expect(unlocked).toContain('combo_fever');
+    expect(unlocked).toContain('combo_unstoppable');
+    expect(unlocked).toContain('combo_godlike');
+  });
+
+  it('parallel tracks: combo + wave + chromatic can all unlock independently', () => {
+    // A skill flex: a player who hits GODLIKE chain in a single
+    // run but never reaches wave 5 or 25 chromatic clears
+    // unlocks the combo tier and ONLY the combo tier. This pins
+    // that the three achievement axes are genuinely independent
+    // and don't accidentally co-trigger.
+    usePlayerStore.setState({
+      bestCombo: 7,
+      bestWaveReached: 2,
+      totalChromaticClears: 3,
+    });
+    usePlayerStore.getState().checkAchievements();
+    const unlocked = usePlayerStore.getState().unlockedAchievements;
+    expect(unlocked).toContain('combo_godlike');
+    expect(unlocked).not.toContain('wave_5');
+    expect(unlocked).not.toContain('chromatic_25');
+  });
+});
+
 describe('checkAchievements coin boost integration', () => {
   beforeEach(() => {
     usePlayerStore.setState({
@@ -192,6 +265,7 @@ describe('checkAchievements coin boost integration', () => {
       totalChromaticClears: 0,
       totalPowerUpsUsed: 0,
       bestWaveReached: 0,
+      bestCombo: 0,
       levelStars: {},
     });
   });
