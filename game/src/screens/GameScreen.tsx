@@ -29,6 +29,7 @@ import { HypeText } from '../components/animations/HypeText';
 import { RadialBurst } from '../components/animations/RadialBurst';
 import { ScoreFlyUp } from '../components/animations/ScoreFlyUp';
 import { ComboBanner } from '../components/animations/ComboBanner';
+import { NearMissCallout } from '../components/NearMissCallout';
 import { Confetti } from '../components/animations/Confetti';
 import { PowerUpType, previewBomb, previewRowClear, previewColorClear } from '../game/powerups/PowerUpManager';
 import { MilestoneBanner } from '../components/animations/MilestoneBanner';
@@ -122,10 +123,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   } = useGameEngine();
 
   const { playSound, playPlacement, playHaptic, playChromaticCascade, playColorChord } = useSound();
-  const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak, chromaticClearsSincePremium, setChromaticClearsSincePremium, incrementTotalChromaticClears } = usePlayerStore(useShallow((s) => ({
+  const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, dailyPuzzleBestScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak, chromaticClearsSincePremium, setChromaticClearsSincePremium, incrementTotalChromaticClears } = usePlayerStore(useShallow((s) => ({
     powerUps: s.powerUps, usePowerUp: s.usePowerUp, coins: s.coins, gems: s.gems,
     addCoins: s.addCoins, addGems: s.addGems, addPowerUp: s.addPowerUp, spendGems: s.spendGems,
     levelHighScores: s.levelHighScores, levelStars: s.levelStars, zenHighScore: s.zenHighScore,
+    dailyPuzzleBestScore: s.dailyPuzzleBestScore,
     consecutiveFailures: s.consecutiveFailures, lastFailedLevel: s.lastFailedLevel,
     displayName: s.displayName, highestLevel: s.highestLevel, skillRating: s.skillRating,
     claimedWorldClears: s.claimedWorldClears, claimedWorldPerfects: s.claimedWorldPerfects,
@@ -1322,6 +1324,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             </Text>
           </View>
         )}
+
+        {/* "SO CLOSE!" near-miss callout — the loss-aversion lever.
+            Renders only when the run was 85%+ of personal best but
+            didn't quite beat it. Converts regret into "one more try"
+            energy at the dopamine valley of game-over. Modes use
+            different best-score sources:
+              - Endless: zenHighScore (lifetime best)
+              - Daily Puzzle: dailyPuzzleBestScore (today's run only)
+              - Level mode: skipped — the Continue-for-gems button and
+                stars system already provide near-miss framing.
+            The component returns null in non-applicable cases, so the
+            call site can be unconditional. */}
+        {isEndless && (
+          <NearMissCallout score={gameState.score} best={zenHighScore} />
+        )}
+        {isDaily && (
+          <NearMissCallout score={gameState.score} best={dailyPuzzleBestScore} />
+        )}
+
         {/* Rescue offer after 2+ failures on same level */}
         {!isEndless && !isDaily && consecutiveFailures >= 2 && lastFailedLevel === level && !rescueClaimed && (
           <View style={styles.rescueCard}>
