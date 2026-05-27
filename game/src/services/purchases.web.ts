@@ -106,6 +106,36 @@ export function creditFromProduct(productId: string): boolean {
   return true;
 }
 
+/**
+ * Web mirror of the native `applyEntitlementOnly`. Restore is a no-op on
+ * web (the demo doesn't expose a Restore button surface), but keeping the
+ * function present lets unit tests cover the entitlement-only branch
+ * shape across both purchase variants.
+ */
+export function applyEntitlementOnly(productId: string): boolean {
+  const product = getProduct(productId);
+  if (!product) return false;
+  if (product.type !== 'non_consumable') return false;
+  const store = usePlayerStore.getState();
+  const { reward } = product;
+
+  if (reward.type === 'ad_free') {
+    store.setAdFree(true);
+    return true;
+  }
+  if (reward.type === 'vip') {
+    store.setAdFree(true);
+    return true;
+  }
+  if (reward.type === 'bundle') {
+    if (reward.bonus?.adFree) {
+      store.setAdFree(true);
+    }
+    return true;
+  }
+  return false;
+}
+
 export async function initializePurchases(): Promise<void> {
   return;
 }

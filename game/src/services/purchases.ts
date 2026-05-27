@@ -189,13 +189,19 @@ export async function restorePurchases(): Promise<string[]> {
       if (!sku) continue;
       const product = PRODUCTS.find((p) => p.id === sku);
       // Only non-consumables are restorable — consumables (coins, gems,
-      // bundles) cannot and should not be re-granted on restore.
+      // power bundles) cannot and should not be re-granted on restore.
       if (!product || product.type !== 'non_consumable') continue;
+
+      // Apply the entitlement ourselves. `getAvailablePurchases` does
+      // NOT fire `purchaseUpdatedListener` — that listener only fires
+      // for queue-state transitions (new purchases and interrupted
+      // transactions). Restore needs explicit crediting, otherwise the
+      // user sees "Restored N purchases" but ad-free / VIP state is
+      // never re-applied. Using `applyEntitlementOnly` (not
+      // `creditFromProduct`) ensures the bundle's one-time consumable
+      // bonus content is NOT re-granted on restore.
+      applyEntitlementOnly(sku);
       ids.push(sku);
-      // The purchaseUpdatedListener wired in initializePurchases will
-      // see this and re-grant the entitlement (e.g., flip ad-free back
-      // on). We do not need to call finishTransaction here — the
-      // platform tracks "already restored" automatically.
     }
     return ids;
   } catch (err) {
@@ -496,4 +502,55 @@ export function creditFromProduct(productId: string): boolean {
     }
   }
   return true;
+}
+
+/**
+ * Restore-path companion to creditFromProduct: apply only the PERSISTENT
+ * entitlement portion of a non-consumable purchase, skipping consumable
+ * bonuses (coins/gems/power-ups) that were one-time grants at the
+ * original purchase moment.
+ *
+ * Why this exists as a separate function: Apple's IAP model only restores
+ * non-consumable purchases — consumables (coin packs, gem packs, power
+ * bundles) are not restorable by design. For non-consumable BUNDLES like
+ * Starter Pack and VIP Pass, the "non-consumable" wrapper grants the
+ * entitlement (ad-free, VIP theme), but the bundle's consumable contents
+ * (2,000 coins, 200 gems, etc.) were single-shot at purchase. Re-running
+ * `creditFromProduct` on restore would silently re-credit those one-time
+ * bonuses every time the user reinstalled the app — a meaningful
+ * over-grant exploit.
+ *
+ * This function applies ONLY the entitlement. Bundle/VIP bonus content
+ * is deliberately skipped.
+ *
+ * Returns true if an entitlement was applied, false if the product is
+ * unknown, consumable (not restorable), or has no entitlement portion.
+ */
+export function applyEntitlementOnly(productId: string): boolean {
+  const product = getProduct(productId);
+  if (!product) return false;
+  // Consumables are never restored — Apple's `getAvailablePurchases`
+  // shouldn't even return them, but defending in depth here.
+  if (product.type !== 'non_consumable') return false;
+
+  const store = usePlayerStore.getState();
+  const { reward } = product;
+
+  if (reward.type === 'ad_free') {
+    store.setAdFree(true);
+    return true;
+  }
+  if (reward.type === 'vip') {
+    store.setAdFree(true);
+    // Bonus coins/gems were one-time at purchase. DO NOT restore them.
+    return true;
+  }
+  if (reward.type === 'bundle') {
+    if (reward.bonus?.adFree) {
+      store.setAdFree(true);
+    }
+    // Bonus coins/gems/power-ups were one-time at purchase. DO NOT restore.
+    return true;
+  }
+  return false;
 }

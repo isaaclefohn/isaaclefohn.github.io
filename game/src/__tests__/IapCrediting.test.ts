@@ -35,7 +35,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   },
 }));
 
-import { creditFromProduct, getProduct } from '../services/purchases.web';
+import { applyEntitlementOnly, creditFromProduct, getProduct } from '../services/purchases.web';
 import { usePlayerStore } from '../store/playerStore';
 
 /** Reset just the fields creditFromProduct touches. The rest of the
@@ -170,6 +170,100 @@ describe('creditFromProduct', () => {
     creditFromProduct('com.isaaclefohn.chromadrop.coins500');
     creditFromProduct('com.isaaclefohn.chromadrop.coins500');
     expect(usePlayerStore.getState().coins).toBe(1000);
+  });
+
+  // ── Apple restore semantics ───────────────────────────────────
+  //
+  // `applyEntitlementOnly` is the companion to `creditFromProduct` for
+  // the restore flow. The contract: only re-apply the PERSISTENT
+  // entitlement of a non-consumable purchase. Consumable bonuses bundled
+  // inside a non-consumable SKU (e.g. Starter Pack's 2,000 coins, VIP
+  // Pass's 5,000 coins) were one-time grants at the original purchase
+  // moment and Apple does not restore them. If we accidentally re-credit
+  // them on every reinstall, a player gets free duplicate currency
+  // every device hop — a meaningful exploit. The asserts below pin
+  // that boundary.
+
+  describe('applyEntitlementOnly (restore path)', () => {
+    beforeEach(() => {
+      resetCreditFields();
+    });
+
+    it('re-applies ad-free for Remove Ads on restore', () => {
+      const ok = applyEntitlementOnly('com.isaaclefohn.chromadrop.remove_ads');
+      expect(ok).toBe(true);
+      const s = usePlayerStore.getState();
+      expect(s.adFree).toBe(true);
+      expect(s.coins).toBe(0);
+      expect(s.gems).toBe(0);
+    });
+
+    it('re-applies VIP entitlement but does NOT re-grant bonus coins/gems', () => {
+      // The over-credit guard: VIP Pass purchases include 5,000 bonus
+      // coins + 500 bonus gems at the original buy. On RESTORE, those
+      // bonuses must NOT re-fire.
+      const ok = applyEntitlementOnly('com.isaaclefohn.chromadrop.vip_pass');
+      expect(ok).toBe(true);
+      const s = usePlayerStore.getState();
+      expect(s.adFree).toBe(true);
+      expect(s.coins).toBe(0); // NOT 5000
+      expect(s.gems).toBe(0); // NOT 500
+    });
+
+    it('re-applies Starter Pack entitlement but skips coins/gems/power-ups', () => {
+      // Starter Pack is the highest-stakes bundle: at original purchase
+      // it grants 2000 coins, 200 gems, 3x of each power-up, AND ad-free.
+      // On restore we MUST re-apply ad-free (the persistent entitlement)
+      // but skip everything else — those were single-shot grants.
+      const ok = applyEntitlementOnly('com.isaaclefohn.chromadrop.starter_pack');
+      expect(ok).toBe(true);
+      const s = usePlayerStore.getState();
+      expect(s.adFree).toBe(true);
+      expect(s.coins).toBe(0); // NOT 2000
+      expect(s.gems).toBe(0); // NOT 200
+      expect(s.powerUps.bomb).toBe(0); // NOT 3
+      expect(s.powerUps.rowClear).toBe(0); // NOT 3
+      expect(s.powerUps.colorClear).toBe(0); // NOT 3
+    });
+
+    it('returns false for consumable SKUs (Apple does not restore them)', () => {
+      // Coin packs, gem packs, Power Bundle, Mega Bundle — all consumable.
+      // getAvailablePurchases on iOS shouldn't return them, but defending
+      // in depth: the function must refuse to credit them on restore.
+      const consumableIds = [
+        'com.isaaclefohn.chromadrop.coins500',
+        'com.isaaclefohn.chromadrop.coins50000',
+        'com.isaaclefohn.chromadrop.gems100',
+        'com.isaaclefohn.chromadrop.gems1500',
+        'com.isaaclefohn.chromadrop.power_bundle',
+        'com.isaaclefohn.chromadrop.mega_bundle',
+      ];
+      for (const id of consumableIds) {
+        resetCreditFields();
+        const ok = applyEntitlementOnly(id);
+        expect(ok).toBe(false);
+        const s = usePlayerStore.getState();
+        expect(s.coins).toBe(0);
+        expect(s.gems).toBe(0);
+      }
+    });
+
+    it('returns false for unknown product IDs', () => {
+      const ok = applyEntitlementOnly('com.isaaclefohn.chromadrop.does_not_exist');
+      expect(ok).toBe(false);
+    });
+
+    it('restoring twice is idempotent (matches Apple replay behavior)', () => {
+      // Apple may re-deliver a restored transaction (multiple device
+      // hops, listener races). `setAdFree(true)` twice is a no-op — the
+      // shape of the entitlement guarantees idempotency.
+      applyEntitlementOnly('com.isaaclefohn.chromadrop.remove_ads');
+      applyEntitlementOnly('com.isaaclefohn.chromadrop.remove_ads');
+      const s = usePlayerStore.getState();
+      expect(s.adFree).toBe(true);
+      expect(s.coins).toBe(0);
+      expect(s.gems).toBe(0);
+    });
   });
 
   it('every product in the catalog credits successfully', () => {

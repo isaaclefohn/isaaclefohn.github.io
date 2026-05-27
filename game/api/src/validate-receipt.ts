@@ -65,6 +65,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // TODO: Extract user from JWT in Authorization header
     // TODO: Record purchase in Supabase
 
+    // STUB-MODE WARNING — the receipt is NOT actually validated against
+    // Apple yet. Until the TODOs above land (blocked on Apple Developer
+    // enrollment), this endpoint is a SKU allow-list, not a receipt
+    // validator. A jailbroken or tampered client could POST any string
+    // as `receiptData` and get back `valid: true`, then have
+    // `creditFromProduct` run client-side. The exploit surface is bounded
+    // by the client's local catalog (the worst case is a player giving
+    // themselves coins on their own device), but it's a real gap. Log
+    // every request loudly so the size of the exposure is visible in
+    // Vercel logs while we're in this transition state.
+    console.error(
+      '[STUB MODE] validate-receipt accepted without Apple verification',
+      JSON.stringify({
+        productId,
+        platform,
+        receiptLen: typeof receiptData === 'string' ? receiptData.length : null,
+        ts: new Date().toISOString(),
+      }),
+    );
+
     // Crediting deliberately omitted — see file header. The client owns
     // the credit table via `getPurchaseReward(productId)` and dispatches
     // through `creditFromProduct` after this returns `valid: true`.
