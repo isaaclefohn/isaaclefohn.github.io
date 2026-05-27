@@ -50,6 +50,52 @@ function resetCreditFields() {
   });
 }
 
+describe('recordCreditedTransaction (cross-restart dedup)', () => {
+  // The persisted transaction ID list is the cross-restart half of
+  // the IAP idempotency story (same-session was already covered by
+  // the in-memory Set in purchases.ts, now replaced by reading this
+  // persisted list). Tests pin the idempotent-append behavior and
+  // the includes-check semantics the listener relies on.
+  beforeEach(() => {
+    usePlayerStore.setState({ creditedTransactionIds: [] });
+  });
+
+  it('records a new transaction id', () => {
+    usePlayerStore.getState().recordCreditedTransaction('txn-1');
+    expect(usePlayerStore.getState().creditedTransactionIds).toEqual(['txn-1']);
+  });
+
+  it('is idempotent — recording the same id twice does not duplicate', () => {
+    const record = usePlayerStore.getState().recordCreditedTransaction;
+    record('txn-1');
+    record('txn-1');
+    record('txn-1');
+    expect(usePlayerStore.getState().creditedTransactionIds).toEqual(['txn-1']);
+  });
+
+  it('accumulates distinct ids in order', () => {
+    const record = usePlayerStore.getState().recordCreditedTransaction;
+    record('txn-1');
+    record('txn-2');
+    record('txn-3');
+    expect(usePlayerStore.getState().creditedTransactionIds).toEqual([
+      'txn-1',
+      'txn-2',
+      'txn-3',
+    ]);
+  });
+
+  it('the listener-side dedup check (includes) finds recorded ids', () => {
+    // This is the exact lookup the purchaseUpdatedListener does
+    // before crediting. If a future refactor changes the storage
+    // shape to a Set or Map, this test fails loudly.
+    usePlayerStore.getState().recordCreditedTransaction('txn-already-credited');
+    const list = usePlayerStore.getState().creditedTransactionIds;
+    expect(list.includes('txn-already-credited')).toBe(true);
+    expect(list.includes('txn-fresh')).toBe(false);
+  });
+});
+
 describe('creditFromProduct', () => {
   beforeEach(() => {
     resetCreditFields();

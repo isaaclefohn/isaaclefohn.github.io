@@ -233,6 +233,20 @@ interface PlayerStoreState {
   // Daily Roulette boost expirations (unix ms). Absent / past = no boost.
   // `coins` is set by the "Double Time" reward, `xp` by "XP Surge".
   activeBoostUntil: ActiveBoostUntil;
+  /**
+   * Cross-restart dedup for Apple IAP transactions. Each Apple
+   * transactionId is recorded here AFTER `creditFromProduct` runs,
+   * so a listener fire for the same transaction on a subsequent app
+   * launch (which can happen if the app crashed before
+   * `finishTransaction` acked Apple) sees the ID and skips re-credit.
+   *
+   * Replaces the previous in-memory Set which only covered same-
+   * session dedup. The persisted list covers both — same-session
+   * lookups read from this in-memory copy of the persisted array
+   * (still O(n) but n is bounded by purchase volume per user, which
+   * for a paying user maxes out around 50-100 entries).
+   */
+  creditedTransactionIds: string[];
 }
 
 interface PlayerStore extends PlayerStoreState {
@@ -316,6 +330,14 @@ interface PlayerStore extends PlayerStoreState {
    * chained-spin policy.
    */
   activateBoost: (kind: BoostKind, durationMs: number) => void;
+  /**
+   * Record an Apple IAP transactionId as credited. Idempotent via
+   * `includes` guard. Called from `purchaseUpdatedListener` AFTER
+   * `creditFromProduct` succeeds so a subsequent listener fire for
+   * the same transaction (cross-restart or in-session redelivery)
+   * sees the ID and skips re-credit.
+   */
+  recordCreditedTransaction: (txnId: string) => void;
   claimBattlePassTier: (tier: number) => void;
   upgradeBattlePass: () => void;
   // Weekly Challenge
@@ -524,6 +546,7 @@ export const usePlayerStore = create<PlayerStore>()(
       flashOfferPurchases: [],
       freeChestLastClaimedAt: null,
       activeBoostUntil: {},
+      creditedTransactionIds: [],
 
       addCoins: (amount, opts) =>
         set((s) => ({
@@ -869,6 +892,18 @@ export const usePlayerStore = create<PlayerStore>()(
             ...s.activeBoostUntil,
             [kind]: extendBoost(s.activeBoostUntil[kind], durationMs, Date.now()),
           },
+        }));
+      },
+
+      recordCreditedTransaction: (txnId: string) => {
+        // Idempotent via includes-guard. The dedup check in
+        // purchaseUpdatedListener also reads this list, so calling
+        // record twice for the same id is a no-op rather than a
+        // duplicate entry that would bloat the persisted state.
+        set((s) => ({
+          creditedTransactionIds: s.creditedTransactionIds.includes(txnId)
+            ? s.creditedTransactionIds
+            : [...s.creditedTransactionIds, txnId],
         }));
       },
 

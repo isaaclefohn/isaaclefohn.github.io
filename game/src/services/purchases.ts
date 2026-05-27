@@ -29,24 +29,25 @@ let iapInitialized = false;
 let purchaseUpdateSubscription: any = null;
 
 /**
- * Same-session dedup of processed Apple transactions.
+ * Dedup of processed Apple transactions — both same-session AND
+ * cross-restart. Backed by `playerStore.creditedTransactionIds`
+ * which is persisted to AsyncStorage by Zustand's persist middleware.
  *
- * react-native-iap's `purchaseUpdatedListener` can legitimately fire
- * twice for the same transaction within a single app session — Apple
- * sometimes redelivers transaction state during the `finishTransaction`
- * acknowledgement race. Without dedup, the second fire re-credits.
+ * react-native-iap's `purchaseUpdatedListener` can fire twice for the
+ * same transaction in two scenarios:
+ *   1. Same-session: Apple redelivers transaction state during the
+ *      `finishTransaction` race (millisecond-scale).
+ *   2. Cross-restart: app crashed (or was force-quit) between
+ *      `creditFromProduct` and `finishTransaction`. Apple keeps the
+ *      transaction in the queue until acknowledged, so on the next
+ *      app launch the listener fires again for the same txn.
  *
- * In-memory `Set` is deliberately not persisted across app restarts:
- *   - Cross-restart double-fire is rare in practice because Apple
- *     holds queued transactions until `finishTransaction` acks.
- *   - Persisting would require an AsyncStorage migration with careful
- *     credit-then-persist ordering to avoid "user paid, got nothing"
- *     in the crash-between-persist-and-credit window.
- *   - Same-session catches the actual common race; the rare cross-
- *     restart case errs in the user's favor (slight over-credit on a
- *     pathological crash window) which is acceptable.
+ * Ordering: credit FIRST, then record. If we crash between credit
+ * and `recordCreditedTransaction`, the next listener fire double-
+ * credits the user (user-favored bias). The alternative (record
+ * first, credit later) would create the worse "user paid, got
+ * nothing" failure mode.
  */
-const processedTransactionIds = new Set<string>();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let purchaseErrorSubscription: any = null;
 
@@ -111,16 +112,22 @@ export async function initializePurchases(): Promise<void> {
         const product = getProduct(purchase.productId);
         const isConsumable = product?.type === 'consumable';
 
-        // Same-session dedup. Apple may redeliver a transaction's state
-        // during the finishTransaction race — without this guard, the
-        // second fire would re-credit. CRITICAL: we still call
-        // finishTransaction on the duplicate path. Skipping it would
-        // leave the transaction in Apple's queue, which would just
-        // redeliver again on the next listener fire — making this
-        // dedup the cause of an infinite re-credit loop.
+        // Cross-session dedup. Apple may redeliver a transaction's
+        // state in two windows:
+        //   1. Same-session race during the finishTransaction ack
+        //   2. Cross-restart if we crashed before finishTransaction
+        // The persisted `creditedTransactionIds` list catches both.
+        //
+        // CRITICAL: we still call finishTransaction on the duplicate
+        // path. Skipping it would leave the transaction in Apple's
+        // queue forever, which would just redeliver again on every
+        // future listener fire — making this dedup the cause of an
+        // infinite re-credit loop. (We DO want to ack Apple even
+        // on the duplicate-detected path; that's the only way to
+        // tell Apple "we've got it" and stop the redelivery.)
         const txnId = (purchase as { transactionId?: string }).transactionId;
-        if (txnId && processedTransactionIds.has(txnId)) {
-          console.warn('[IAP] dedup: transaction already processed', txnId);
+        if (txnId && usePlayerStore.getState().creditedTransactionIds.includes(txnId)) {
+          console.warn('[IAP] dedup: transaction already credited', txnId);
           try {
             await IAP.finishTransaction({ purchase, isConsumable });
           } catch {
@@ -128,7 +135,6 @@ export async function initializePurchases(): Promise<void> {
           }
           return;
         }
-        if (txnId) processedTransactionIds.add(txnId);
 
         try {
           const result = await validateReceipt(receipt, purchase.productId);
@@ -138,6 +144,16 @@ export async function initializePurchases(): Promise<void> {
             // it does NOT decide reward amounts. See creditFromProduct
             // notes for why we deliberately ignore `result.credits`.
             creditFromProduct(purchase.productId);
+            // Persist the txnId AFTER the credit succeeds. Order
+            // matters: credit first (so a crash between credit and
+            // record is user-favored over-credit on retry rather
+            // than user-hostile under-credit). Apple's queued txn
+            // still needs finishTransaction below; until that acks,
+            // a redelivery would hit the dedup check at the top of
+            // the listener.
+            if (txnId) {
+              usePlayerStore.getState().recordCreditedTransaction(txnId);
+            }
             track('iap.purchase_credited', {
               productId: purchase.productId,
               price: product?.price,
