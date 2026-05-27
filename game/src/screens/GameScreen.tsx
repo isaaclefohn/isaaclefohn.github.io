@@ -125,11 +125,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   } = useGameEngine();
 
   const { playSound, playPlacement, playHaptic, playChromaticCascade, playColorChord } = useSound();
-  const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, dailyPuzzleBestScore, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak, chromaticClearsSincePremium, setChromaticClearsSincePremium, incrementTotalChromaticClears } = usePlayerStore(useShallow((s) => ({
+  const { powerUps, usePowerUp, coins, gems, addCoins, addGems, addPowerUp, spendGems, levelHighScores, levelStars, zenHighScore, dailyPuzzleBestScore, bestWaveReached, consecutiveFailures, lastFailedLevel, displayName, highestLevel, skillRating, claimedWorldClears, claimedWorldPerfects, claimWorldClear, claimWorldPerfect, dailyPuzzleStreak, chromaticClearsSincePremium, setChromaticClearsSincePremium, incrementTotalChromaticClears } = usePlayerStore(useShallow((s) => ({
     powerUps: s.powerUps, usePowerUp: s.usePowerUp, coins: s.coins, gems: s.gems,
     addCoins: s.addCoins, addGems: s.addGems, addPowerUp: s.addPowerUp, spendGems: s.spendGems,
     levelHighScores: s.levelHighScores, levelStars: s.levelStars, zenHighScore: s.zenHighScore,
     dailyPuzzleBestScore: s.dailyPuzzleBestScore,
+    bestWaveReached: s.bestWaveReached,
     consecutiveFailures: s.consecutiveFailures, lastFailedLevel: s.lastFailedLevel,
     displayName: s.displayName, highestLevel: s.highestLevel, skillRating: s.skillRating,
     claimedWorldClears: s.claimedWorldClears, claimedWorldPerfects: s.claimedWorldPerfects,
@@ -499,14 +500,30 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   // Non-endless modes don't have waves — this useEffect is a no-op
   // for them (didCrossWaveBoundary returns false, and even if it
   // didn't, the inner check on isEndless gates further).
+  //
+  // Reset on restart: `prevPiecesPlacedRef` would silently retain the
+  // previous run's count across `handleRetry` (which resets
+  // gameState.piecesPlaced to 0). On the next placement, the effect
+  // would compute `didCrossWaveBoundary(73, 1)` which is correctly
+  // false (backwards motion), but the ref then snaps to 1 and the
+  // first wave-2 boundary at piece 50 could be missed if the effect
+  // ran on a later piece count without seeing the intermediate steps.
+  // The simplest safe pattern: detect a backwards jump in
+  // piecesPlaced (new < prev) and reset to 0 before the usual
+  // comparison.
   const prevPiecesPlacedRef = useRef(0);
   useEffect(() => {
     if (!gameState || !isEndless) {
       prevPiecesPlacedRef.current = gameState?.piecesPlaced ?? 0;
       return;
     }
-    const prev = prevPiecesPlacedRef.current;
     const next = gameState.piecesPlaced;
+    // Restart detection: piecesPlaced went backwards. Reset to 0 so
+    // the first real wave boundary on the new run fires normally.
+    if (next < prevPiecesPlacedRef.current) {
+      prevPiecesPlacedRef.current = 0;
+    }
+    const prev = prevPiecesPlacedRef.current;
     if (didCrossWaveBoundary(prev, next)) {
       const newWave = getWaveForPieces(next).wave;
       setHypeText(`WAVE ${newWave}!`);
@@ -1314,6 +1331,28 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             <Text style={styles.endlessStatText}>Pieces placed: {gameState.piecesPlaced}</Text>
             <Text style={styles.endlessStatText}>Lines cleared: {gameState.linesCleared}</Text>
             <Text style={styles.endlessStatText}>Best combo: {gameState.combo}x</Text>
+            {/* Wave reached this run + lifetime best. The wave system
+                gives endless mode a progression dimension separate from
+                raw score — a fast / efficient player might reach a
+                higher wave than a grinder who maxes the early waves.
+                Showing both creates two distinct "personal best"
+                arcs to chase. */}
+            {(() => {
+              const finalWave = getWaveForPieces(gameState.piecesPlaced).wave;
+              const isNewWaveBest = finalWave > bestWaveReached;
+              return (
+                <Text
+                  style={[
+                    styles.endlessStatText,
+                    isNewWaveBest && { color: COLORS.accentGold, fontWeight: '800' },
+                  ]}
+                >
+                  {isNewWaveBest
+                    ? `Reached Wave ${finalWave}! 🏆 (new best)`
+                    : `Reached Wave ${finalWave}${bestWaveReached > 0 ? ` (best: ${bestWaveReached})` : ''}`}
+                </Text>
+              );
+            })()}
             {zenHighScore > 0 && (
               <Text style={[styles.endlessStatText, gameState.score >= zenHighScore && { color: COLORS.accentGold, fontWeight: '800' }]}>
                 {gameState.score >= zenHighScore ? 'New best!' : `Best: ${formatScore(zenHighScore)}`}

@@ -357,6 +357,15 @@ export function processTurn(
     lastClearedRows: result.clearedRows,
     lastClearedCols: result.clearedCols,
     lastPlacedCells: placedCellPositions,
+    // If the placed piece WAS the golden one, clear the index. The
+    // other-tray-spread `...state` carries forward the prior value
+    // by default, which would leave the index pointing at a now-null
+    // slot — and PieceTray would render the gold ring on an empty
+    // slot. The full-tray-exhausted branch above rolls a fresh
+    // index on every new set, so this only matters when 1-2 pieces
+    // remain in the tray after the golden placement.
+    goldenPieceIndex:
+      pieceIndex === state.goldenPieceIndex ? null : state.goldenPieceIndex,
   };
 }
 

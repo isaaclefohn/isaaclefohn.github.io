@@ -108,6 +108,15 @@ interface PlayerStoreState {
   zenHighScore: number;
   zenGamesPlayed: number;
   zenBestLinesCleared: number;
+  /**
+   * Highest endless wave ever reached. Each block of 50 pieces in
+   * endless mode is one wave; this is the lifetime max. Distinct
+   * from zenHighScore so players have TWO progression dimensions to
+   * chase in endless: raw score AND wave depth. A skillful player
+   * who places efficiently might reach wave 5+ on lower scores than
+   * a power-grinder who maxes wave 4 but scores higher within it.
+   */
+  bestWaveReached: number;
   // Daily Puzzle — one shared-seed run per calendar day
   dailyPuzzleLastPlayedId: string | null;
   dailyPuzzleLastPlayedScore: number;
@@ -305,6 +314,8 @@ interface PlayerStore extends PlayerStoreState {
   checkAchievements: () => Achievement[];
   recordGamePlayed: (combo: number) => void;
   recordZenGame: (score: number, linesCleared: number, combo: number) => void;
+  /** Idempotent lifetime-max bump for endless wave reached. */
+  recordBestWave: (wave: number) => void;
   recordDailyPuzzleResult: (puzzleId: string, score: number, stars: number) => { isFirstCompletion: boolean; isNewBest: boolean };
   /** Persist the new pity counter value after a celebration-tier roll. */
   setChromaticClearsSincePremium: (n: number) => void;
@@ -493,6 +504,7 @@ export const usePlayerStore = create<PlayerStore>()(
       totalPowerUpsUsed: 0,
       bestCombo: 0,
       zenHighScore: 0,
+      bestWaveReached: 0,
       zenGamesPlayed: 0,
       zenBestLinesCleared: 0,
       dailyPuzzleLastPlayedId: null,
@@ -816,6 +828,15 @@ export const usePlayerStore = create<PlayerStore>()(
           totalGamesPlayed: s.totalGamesPlayed + 1,
           bestCombo: Math.max(s.bestCombo, combo),
         }));
+      },
+
+      /**
+       * Update lifetime best wave reached. Idempotent (Math.max) so
+       * calling this on a non-improving run is a no-op. Called from
+       * the endless game-over path in useGameEngine.
+       */
+      recordBestWave: (wave: number) => {
+        set((s) => ({ bestWaveReached: Math.max(s.bestWaveReached, wave) }));
       },
 
       recordZenGame: (score: number, linesCleared: number, combo: number) => {

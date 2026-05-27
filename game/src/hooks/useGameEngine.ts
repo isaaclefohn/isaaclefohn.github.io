@@ -7,6 +7,7 @@ import { useCallback, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
 import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
+import { getWaveForPieces } from '../game/levels/EndlessWaves';
 import { calculateCoinReward } from '../game/engine/Scoring';
 import { getScoreMultiplier, getXPMultiplier, getCoinMultiplier } from '../game/events/LiveEvents';
 import {
@@ -44,7 +45,7 @@ export function useGameEngine() {
     continueGame,
   } = useGameStore();
 
-  const { completeLevel, addCoins, addGems, updateStreak, checkAchievements, recordGamePlayed, recordZenGame, recordDailyPuzzleResult, recordFailure, resetFailures, addPiggyBankCoins, addBattlePassXP, completeWeeklyChallenge, incrementGamesPlayedToday, updateQuestProgress, updateSkillRating, skillRating, levelHighScores, levelStars, addTreasureMapPiece, addSeasonalPoints, addBlockMasteryXP } = usePlayerStore();
+  const { completeLevel, addCoins, addGems, updateStreak, checkAchievements, recordGamePlayed, recordZenGame, recordBestWave, recordDailyPuzzleResult, recordFailure, resetFailures, addPiggyBankCoins, addBattlePassXP, completeWeeklyChallenge, incrementGamesPlayedToday, updateQuestProgress, updateSkillRating, skillRating, levelHighScores, levelStars, addTreasureMapPiece, addSeasonalPoints, addBlockMasteryXP } = usePlayerStore();
 
   // Start a level by number (negative = weekly challenge)
   const loadLevel = useCallback((levelNumber: number) => {
@@ -242,6 +243,11 @@ export function useGameEngine() {
       trackGameEvent({ type: 'level_fail', level: levelConfig.levelNumber, score: gameState.score });
       if (isZen) {
         recordZenGame(gameState.score, gameState.linesCleared, gameState.combo ?? 0);
+        // Record lifetime best wave reached. Computed from the final
+        // pieces-placed count using the wave system's own boundary
+        // math, so this is the only place that needs to know about
+        // wave progression — playerStore stays palette-agnostic.
+        recordBestWave(getWaveForPieces(gameState.piecesPlaced).wave);
         const zenXpMult = getXPMultiplier();
         addBattlePassXP(Math.round((20 + Math.min(gameState.linesCleared * 3, 60)) * zenXpMult), { boostable: true });
       } else if (isWeekly) {
