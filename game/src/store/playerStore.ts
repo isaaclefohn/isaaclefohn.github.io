@@ -356,6 +356,33 @@ interface PlayerStore extends PlayerStoreState {
   addBlockMasteryXP: (color: 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'pink', xp: number) => void;
   // Daily Roulette
   claimDailyRoulette: (date: string) => void;
+  /**
+   * Atomic single-action variant: stamp the date AND apply the reward
+   * payload in one `set()` call. Prevents the race where a player
+   * force-closes the app during the spin animation between the reward
+   * credit and the date stamp — that race let them re-spin on next
+   * launch (double payout). With this atomic variant, either both
+   * happen or neither.
+   *
+   * Also idempotent: re-claiming the same date is a no-op (so a stray
+   * double-fire or replay never double-credits).
+   */
+  claimDailyRouletteAtomic: (
+    date: string,
+    // Shape mirrors `RouletteReward['payload']` in DailyRoulette.ts.
+    // boostDurationMs is currently ignored by the action (parity with
+    // the previous sequential handler) — there is a separate flagged
+    // task to wire active boosts through the store.
+    payload: {
+      coins?: number;
+      gems?: number;
+      bomb?: number;
+      rowClear?: number;
+      colorClear?: number;
+      lives?: number;
+      boostDurationMs?: number;
+    },
+  ) => void;
   // Starter Pack
   unlockStarterPack: () => void;
   claimStarterPack: () => void;
@@ -868,8 +895,18 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       claimDailyQuest: (questId: string) => {
+        // Idempotency guard matches the pattern used by every other
+        // claim action in this store (claimStarChest, claimAlbumPage,
+        // claimQuestChain, claimInboxReward, etc.). Without this, a
+        // rapid double-tap or a stale-state re-render could push a
+        // duplicate entry — currently harmless because coin granting
+        // happens elsewhere, but the asymmetry is fragile and any
+        // future refactor that uses `dailyQuestsClaimed.includes()` to
+        // gate re-credits would silently break.
         set((s) => ({
-          dailyQuestsClaimed: [...s.dailyQuestsClaimed, questId],
+          dailyQuestsClaimed: s.dailyQuestsClaimed.includes(questId)
+            ? s.dailyQuestsClaimed
+            : [...s.dailyQuestsClaimed, questId],
         }));
       },
 
@@ -1105,6 +1142,33 @@ export const usePlayerStore = create<PlayerStore>()(
 
       claimDailyRoulette: (date: string) => {
         set({ rouletteLastDate: date });
+      },
+
+      /**
+       * Atomic claim — see type doc. Idempotent: if rouletteLastDate
+       * already equals `date`, the function is a no-op so a duplicate
+       * fire (animation callback racing with a re-mount, replay, etc.)
+       * never double-credits.
+       */
+      claimDailyRouletteAtomic: (date, payload) => {
+        set((s) => {
+          if (s.rouletteLastDate === date) return s;
+          const next: Partial<typeof s> = { rouletteLastDate: date };
+          if (payload.coins) next.coins = s.coins + payload.coins;
+          if (payload.gems) next.gems = s.gems + payload.gems;
+          if (payload.bomb || payload.rowClear || payload.colorClear) {
+            next.powerUps = {
+              bomb: s.powerUps.bomb + (payload.bomb ?? 0),
+              rowClear: s.powerUps.rowClear + (payload.rowClear ?? 0),
+              colorClear: s.powerUps.colorClear + (payload.colorClear ?? 0),
+            };
+          }
+          if (payload.lives) {
+            next.lives = 5;
+            next.lastLifeLostAt = null;
+          }
+          return next;
+        });
       },
 
       unlockStarterPack: () => {

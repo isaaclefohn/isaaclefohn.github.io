@@ -92,10 +92,27 @@ async function handlePostScore(req: VercelRequest, res: VercelResponse) {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   // Rate-limit writes per user.
+  //
+  // `getWriteLimit()` returns null when Upstash env vars are absent (local
+  // dev) or when getRedis() returns null (Redis outage / misconfig). The
+  // current behavior is to skip rate limiting entirely in those cases —
+  // by design for dev, but a latent risk in production: a Redis outage
+  // silently drops the rate-limit layer rather than failing closed. The
+  // score sanity bounds (MAX_PLAUSIBLE_SCORE) and ZADD `gt` semantics
+  // still apply, but an attacker scripting submits during a Redis hiccup
+  // would have one fewer line of defense.
+  //
+  // For visibility, log when the degraded state is active in production.
+  // This makes the gap show up in Vercel logs rather than being silent.
   const writeLimit = getWriteLimit();
   if (writeLimit) {
     const { success } = await writeLimit.limit(userId);
     if (!success) return res.status(429).json({ error: 'Too many requests' });
+  } else if (process.env.NODE_ENV === 'production') {
+    console.warn(
+      '[leaderboard] write rate limit unavailable in production — accepting submission without rate limit',
+      JSON.stringify({ userId, ts: new Date().toISOString() }),
+    );
   }
 
   const { type, levelId, score } = req.body ?? {};

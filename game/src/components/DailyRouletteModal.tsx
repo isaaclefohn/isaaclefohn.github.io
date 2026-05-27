@@ -30,11 +30,7 @@ export const DailyRouletteModal: React.FC<DailyRouletteModalProps> = ({
 }) => {
   const {
     rouletteLastDate,
-    claimDailyRoulette,
-    addCoins,
-    addGems,
-    addPowerUp,
-    refillLives,
+    claimDailyRouletteAtomic,
   } = usePlayerStore();
 
   const today = getToday();
@@ -62,15 +58,15 @@ export const DailyRouletteModal: React.FC<DailyRouletteModalProps> = ({
     }).start(() => {
       setSpinning(false);
       setRevealed(true);
-      // Grant reward
-      const p = todaysReward.payload;
-      if (p.coins) addCoins(p.coins);
-      if (p.gems) addGems(p.gems);
-      if (p.bomb) addPowerUp('bomb', p.bomb);
-      if (p.rowClear) addPowerUp('rowClear', p.rowClear);
-      if (p.colorClear) addPowerUp('colorClear', p.colorClear);
-      if (p.lives) refillLives();
-      claimDailyRoulette(today);
+      // Grant reward AND stamp the date atomically in one store action.
+      // Previously these were sequential calls (addCoins, addGems, ...,
+      // claimDailyRoulette) — if the app force-closed between the first
+      // credit and the final stamp, the date wouldn't be persisted and
+      // the player could re-spin on next launch (double payout). The
+      // atomic variant is idempotent: re-calling with the same date is
+      // a no-op, so a rare double-fire of this callback can't double-
+      // credit either.
+      claimDailyRouletteAtomic(today, todaysReward.payload);
     });
   };
 
