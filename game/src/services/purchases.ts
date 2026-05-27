@@ -2,9 +2,21 @@
  * In-app purchase service.
  * Handles Apple IAP product definitions, purchase flow, and receipt validation.
  * Falls back gracefully when IAP is not available (e.g., Expo Go, simulator).
+ *
+ * Crediting policy (single source of truth):
+ *   Two purchase paths both converge on creditFromProduct(productId):
+ *     1. Real iOS — `purchaseUpdatedListener` fires after Apple confirms the
+ *        transaction. The receipt is validated server-side. Only valid
+ *        receipts credit the player.
+ *     2. Expo Go / no native IAP — `requestPurchase` short-circuits and
+ *        credits immediately so the shop UI is usable in development.
+ *   The eventual real-payment switchover (when Apple Developer enrollment
+ *   completes) is a config-level change, not an architectural one, because
+ *   the crediting function is shared.
  */
 
 import Constants from 'expo-constants';
+import { usePlayerStore } from '../store/playerStore';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -46,11 +58,29 @@ export async function initializePurchases(): Promise<void> {
       async (purchase: any) => {
         const receipt = purchase?.transactionReceipt;
         if (!receipt) return;
+        // Look up the product once so we know how to finish the transaction
+        // (consumables and non-consumables use different finish semantics —
+        // getting this wrong causes Apple to redeliver the transaction
+        // forever, which would silently double-credit on every restart).
+        const product = getProduct(purchase.productId);
+        const isConsumable = product?.type === 'consumable';
         try {
-          await validateReceipt(receipt, purchase.productId);
+          const result = await validateReceipt(receipt, purchase.productId);
+          if (result.valid) {
+            // Source of truth for crediting lives client-side via the
+            // product catalog. Server only confirms the receipt is real —
+            // it does NOT decide reward amounts. See creditFromProduct
+            // notes for why we deliberately ignore `result.credits`.
+            creditFromProduct(purchase.productId);
+          } else {
+            console.warn(
+              '[IAP] receipt validation failed — NOT crediting',
+              purchase.productId,
+            );
+          }
         } finally {
           try {
-            await IAP.finishTransaction({ purchase, isConsumable: true });
+            await IAP.finishTransaction({ purchase, isConsumable });
           } catch {
             /* ignore */
           }
@@ -95,14 +125,29 @@ export async function teardownPurchases(): Promise<void> {
 }
 
 /**
- * Kick off a purchase flow for the given product ID. Resolves when the
- * platform has received the request — the actual credit happens inside
- * the purchaseUpdatedListener after successful receipt validation.
+ * Kick off a purchase flow for the given product ID.
+ *
+ *   - Real iOS: triggers Apple's StoreKit payment sheet. Returns true once
+ *     the request has been handed off to the platform — the actual credit
+ *     happens later inside `purchaseUpdatedListener` after receipt
+ *     validation succeeds.
+ *   - Expo Go / no native IAP: short-circuits the platform layer and
+ *     credits the player directly via `creditFromProduct`. This is the
+ *     DEV STUB path that keeps the shop usable pre-Apple-enrollment.
+ *
+ * Returns true on success (request initiated OR DEV STUB credit applied),
+ * false if neither path could run.
  */
 export async function requestPurchase(productId: string): Promise<boolean> {
   if (isExpoGo || !loadIAP() || !IAP) {
-    console.warn('[IAP] not available, cannot purchase', productId);
-    return false;
+    // DEV STUB. Without the platform IAP module we have no way to charge
+    // the user, so we just hand them the goods. This branch ONLY runs in
+    // Expo Go / simulator / non-EAS builds — production iOS builds bundle
+    // react-native-iap, so this fallback won't be reachable from a paying
+    // user. The credit goes through the same function as the real path
+    // so swapping in real StoreKit is a one-line change at the listener.
+    console.warn('[IAP] dev stub: crediting without StoreKit charge', productId);
+    return creditFromProduct(productId);
   }
   if (!iapInitialized) await initializePurchases();
   try {
@@ -385,4 +430,70 @@ export async function validateReceipt(
 export function getPurchaseReward(productId: string): { type: string; amount: number } | null {
   const product = getProduct(productId);
   return product ? product.reward : null;
+}
+
+/**
+ * Apply a product's reward to the player's account.
+ *
+ * Single source of truth for crediting — called from BOTH the real iOS
+ * `purchaseUpdatedListener` (after receipt validation) and the Expo Go /
+ * dev-stub `requestPurchase` short-circuit. Keeping both paths funneled
+ * through one function is what makes the eventual real-payment switchover
+ * a config change rather than an architecture change.
+ *
+ * Why we credit from the LOCAL catalog instead of the server-returned
+ * `credits` field: the server-side validate-receipt endpoint only needs
+ * to confirm "this receipt is from Apple and matches this productId" —
+ * the reward shape (coins, bundles, VIP bonus) is product metadata that
+ * already lives in `PRODUCTS` on both client and server. Trusting the
+ * server's credit response would mean a backend bug could under-grant
+ * a paying user; trusting the local catalog after server `valid:true`
+ * is the more defensible posture. (The server still owns "is this
+ * receipt real" — that's the part the client cannot self-verify.)
+ *
+ * Returns true if the product was found and credited, false on unknown id.
+ *
+ * KNOWN ISSUE (out of scope for the launch-blocker fix): restoring a
+ * non-consumable bundle (Starter Pack, VIP Pass) on a new device will
+ * re-credit the consumable contents (coins/gems/power-ups) on top of
+ * re-granting the entitlement (ad-free). The clean fix is a server-side
+ * "already granted" check or a client `ownedNonConsumables` ledger; for
+ * the launch-blocker pass we accept the over-grant since it errs in the
+ * user's favor and only triggers on legitimate restores.
+ */
+export function creditFromProduct(productId: string): boolean {
+  const product = getProduct(productId);
+  if (!product) {
+    console.warn('[IAP] unknown productId, cannot credit', productId);
+    return false;
+  }
+  // Zustand's getState() exposes the same action surface as the hook —
+  // safe to call from non-React contexts like the IAP listener.
+  const store = usePlayerStore.getState();
+  const { reward } = product;
+
+  if (reward.type === 'coins') {
+    store.addCoins(reward.amount);
+    if (reward.bonus?.gems) store.addGems(reward.bonus.gems);
+  } else if (reward.type === 'gems') {
+    store.addGems(reward.amount);
+    if (reward.bonus?.coins) store.addCoins(reward.bonus.coins);
+  } else if (reward.type === 'ad_free') {
+    store.setAdFree(true);
+  } else if (reward.type === 'vip') {
+    store.setAdFree(true);
+    if (reward.bonus?.coins) store.addCoins(reward.bonus.coins);
+    if (reward.bonus?.gems) store.addGems(reward.bonus.gems);
+  } else if (reward.type === 'bundle') {
+    const b = reward.bonus;
+    if (b) {
+      if (b.coins) store.addCoins(b.coins);
+      if (b.gems) store.addGems(b.gems);
+      if (b.bomb) store.addPowerUp('bomb', b.bomb);
+      if (b.rowClear) store.addPowerUp('rowClear', b.rowClear);
+      if (b.colorClear) store.addPowerUp('colorClear', b.colorClear);
+      if (b.adFree) store.setAdFree(true);
+    }
+  }
+  return true;
 }

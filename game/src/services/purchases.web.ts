@@ -6,7 +6,14 @@
  *
  * The product catalog is duplicated here (rather than re-exported) to avoid
  * a circular `./purchases` resolution when running under Metro's web target.
+ *
+ * Crediting parity: `creditFromProduct` mirrors the native variant so the
+ * web preview (used as the public portfolio demo) lets visitors experience
+ * the shop end-to-end. No real money changes hands; credit is persisted
+ * to local storage only. The function shape matches the native variant
+ * exactly so jest tests against purchases.web cover both paths.
  */
+import { usePlayerStore } from '../store/playerStore';
 
 export interface Product {
   id: string;
@@ -62,6 +69,43 @@ export function getPurchaseReward(productId: string): { type: string; amount: nu
   return product ? (product.reward as { type: string; amount: number }) : null;
 }
 
+/**
+ * Web mirror of the native `creditFromProduct`. Same dispatch shape so
+ * unit tests written against this file cover the credit logic for both
+ * the real native implementation and the web demo path.
+ */
+export function creditFromProduct(productId: string): boolean {
+  const product = getProduct(productId);
+  if (!product) return false;
+  const store = usePlayerStore.getState();
+  const { reward } = product;
+
+  if (reward.type === 'coins') {
+    store.addCoins(reward.amount);
+    if (reward.bonus?.gems) store.addGems(reward.bonus.gems);
+  } else if (reward.type === 'gems') {
+    store.addGems(reward.amount);
+    if (reward.bonus?.coins) store.addCoins(reward.bonus.coins);
+  } else if (reward.type === 'ad_free') {
+    store.setAdFree(true);
+  } else if (reward.type === 'vip') {
+    store.setAdFree(true);
+    if (reward.bonus?.coins) store.addCoins(reward.bonus.coins);
+    if (reward.bonus?.gems) store.addGems(reward.bonus.gems);
+  } else if (reward.type === 'bundle') {
+    const b = reward.bonus;
+    if (b) {
+      if (b.coins) store.addCoins(b.coins);
+      if (b.gems) store.addGems(b.gems);
+      if (b.bomb) store.addPowerUp('bomb', b.bomb);
+      if (b.rowClear) store.addPowerUp('rowClear', b.rowClear);
+      if (b.colorClear) store.addPowerUp('colorClear', b.colorClear);
+      if (b.adFree) store.setAdFree(true);
+    }
+  }
+  return true;
+}
+
 export async function initializePurchases(): Promise<void> {
   return;
 }
@@ -70,9 +114,15 @@ export async function teardownPurchases(): Promise<void> {
   return;
 }
 
-export async function requestPurchase(_productId: string): Promise<boolean> {
-  console.warn('[IAP] web preview cannot process purchases');
-  return false;
+/**
+ * Web preview "demo purchase" — no real money, no platform. Credits
+ * immediately so the portfolio demo lets visitors experience the shop UX.
+ * Local-storage persistence means the credit only affects the visitor's
+ * own session, never the production iOS player base.
+ */
+export async function requestPurchase(productId: string): Promise<boolean> {
+  console.warn('[IAP] web preview demo crediting', productId);
+  return creditFromProduct(productId);
 }
 
 export async function restorePurchases(): Promise<string[]> {

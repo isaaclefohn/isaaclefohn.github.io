@@ -18,7 +18,7 @@ import {
 import { usePlayerStore } from '../store/playerStore';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
 import { Button } from '../components/common/Button';
-import { PRODUCTS, getCoinProducts, getGemProducts, getBundleProducts, getPremiumProducts, restorePurchases, Product } from '../services/purchases';
+import { PRODUCTS, getCoinProducts, getGemProducts, getBundleProducts, getPremiumProducts, restorePurchases, requestPurchase, Product } from '../services/purchases';
 import { POWER_UP_CONFIGS, PowerUpType } from '../game/powerups/PowerUpManager';
 import { canShowRewarded, showRewardedAd } from '../services/ads';
 import { POWER_UP_UPGRADES, getUpgradeInfo, canAffordUpgrade } from '../game/powerups/PowerUpUpgrades';
@@ -200,6 +200,15 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
     ]).start();
   }, [headerOpacity, headerTranslateY]);
 
+  /**
+   * Route through the purchases service so the credit happens in exactly
+   * one place — either inside `purchaseUpdatedListener` after Apple
+   * confirms the transaction (real iOS), or inside the DEV STUB short-
+   * circuit (Expo Go / web preview). Previously the credit logic lived
+   * here in the UI handler, which Apple Guideline 3.1.1 would reject
+   * (digital goods must use IAP) and which also meant a reviewer or
+   * beta tester tapping "Buy" would get currency without paying.
+   */
   const handleBuyIAP = (product: Product) => {
     Alert.alert(
       'Purchase',
@@ -208,30 +217,19 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Buy',
-          onPress: () => {
-            if (product.reward.type === 'coins') {
-              player.addCoins(product.reward.amount);
-              if (product.reward.bonus?.gems) player.addGems(product.reward.bonus.gems);
-            } else if (product.reward.type === 'gems') {
-              player.addGems(product.reward.amount);
-              if (product.reward.bonus?.coins) player.addCoins(product.reward.bonus.coins);
-            } else if (product.reward.type === 'ad_free') {
-              player.setAdFree(true);
-            } else if (product.reward.type === 'vip') {
-              player.setAdFree(true);
-              if (product.reward.bonus?.coins) player.addCoins(product.reward.bonus.coins);
-              if (product.reward.bonus?.gems) player.addGems(product.reward.bonus.gems);
-            } else if (product.reward.type === 'bundle') {
-              const b = product.reward.bonus;
-              if (b) {
-                if (b.coins) player.addCoins(b.coins);
-                if (b.gems) player.addGems(b.gems);
-                if (b.bomb) player.addPowerUp('bomb', b.bomb);
-                if (b.rowClear) player.addPowerUp('rowClear', b.rowClear);
-                if (b.colorClear) player.addPowerUp('colorClear', b.colorClear);
-                if (b.adFree) player.setAdFree(true);
-              }
+          onPress: async () => {
+            const ok = await requestPurchase(product.id);
+            if (!ok) {
+              Alert.alert(
+                'Purchase Unavailable',
+                'In-app purchases are not available right now. Please try again later.',
+              );
             }
+            // On success, crediting happens inside services/purchases.ts:
+            //   - Real iOS: purchaseUpdatedListener → validateReceipt → creditFromProduct
+            //   - Dev / web: requestPurchase short-circuit → creditFromProduct
+            // Either way the player's balance updates via the store, and
+            // the UI reflects it automatically via the Zustand subscription.
           },
         },
       ]

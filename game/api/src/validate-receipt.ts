@@ -3,22 +3,43 @@
  * POST /api/validate-receipt
  * Body: { platform: "apple", receiptData: string, productId: string }
  *
- * Validates the receipt with Apple's servers,
- * records the purchase in Supabase, and credits the player.
+ * Server contract:
+ *   The server's only job is to confirm "this receipt is real and matches
+ *   this product ID." Reward amounts (coins, gems, bundle contents) are
+ *   product metadata that already lives in the client catalog — duplicating
+ *   them here invites drift (which is exactly what happened: the previous
+ *   PRODUCT_CREDITS map miscredited `starter_pack` and was missing five
+ *   SKUs entirely). The client re-derives credits via `getPurchaseReward`
+ *   after the server returns `{ valid: true }`.
+ *
+ *   This keeps the server stateless and lets the client own the
+ *   "what does this purchase give the player" decision in one place.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Product definitions for crediting
-const PRODUCT_CREDITS: Record<string, { type: string; amount: number }> = {
-  'com.isaaclefohn.chromadrop.coins500': { type: 'coins', amount: 500 },
-  'com.isaaclefohn.chromadrop.coins2500': { type: 'coins', amount: 2500 },
-  'com.isaaclefohn.chromadrop.coins10000': { type: 'coins', amount: 10000 },
-  'com.isaaclefohn.chromadrop.gems100': { type: 'gems', amount: 100 },
-  'com.isaaclefohn.chromadrop.gems500': { type: 'gems', amount: 500 },
-  'com.isaaclefohn.chromadrop.starter_pack': { type: 'coins', amount: 5000 },
-  'com.isaaclefohn.chromadrop.remove_ads': { type: 'ad_free', amount: 1 },
-};
+// SKU allow-list. This must stay in sync with `src/services/purchases.ts`
+// and `store-metadata.json` — the IapCatalog test (jest) pins the
+// client-side parity; this server file is the third corner of the
+// triangle. When you add a SKU, add it here too.
+const VALID_PRODUCT_IDS: ReadonlySet<string> = new Set([
+  // Coin packs
+  'com.isaaclefohn.chromadrop.coins500',
+  'com.isaaclefohn.chromadrop.coins2500',
+  'com.isaaclefohn.chromadrop.coins10000',
+  'com.isaaclefohn.chromadrop.coins50000',
+  // Gem packs
+  'com.isaaclefohn.chromadrop.gems100',
+  'com.isaaclefohn.chromadrop.gems500',
+  'com.isaaclefohn.chromadrop.gems1500',
+  // Bundles
+  'com.isaaclefohn.chromadrop.starter_pack',
+  'com.isaaclefohn.chromadrop.power_bundle',
+  'com.isaaclefohn.chromadrop.mega_bundle',
+  // Premium
+  'com.isaaclefohn.chromadrop.remove_ads',
+  'com.isaaclefohn.chromadrop.vip_pass',
+]);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') {
@@ -36,20 +57,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const credits = PRODUCT_CREDITS[productId];
-    if (!credits) {
+    if (!VALID_PRODUCT_IDS.has(productId)) {
       return res.status(400).json({ error: 'Unknown product ID' });
     }
 
     // TODO: Validate receipt with Apple's /verifyReceipt endpoint
     // TODO: Extract user from JWT in Authorization header
     // TODO: Record purchase in Supabase
-    // TODO: Credit player account
 
+    // Crediting deliberately omitted — see file header. The client owns
+    // the credit table via `getPurchaseReward(productId)` and dispatches
+    // through `creditFromProduct` after this returns `valid: true`.
     return res.status(200).json({
       valid: true,
       productId,
-      credits,
     });
   } catch (error) {
     console.error('Receipt validation error:', error);
