@@ -3,7 +3,7 @@
  * Manages the state machine for a single game session.
  */
 
-import { Grid, createGrid, executePlacement } from './Board';
+import { Grid, createGrid, executePlacement, canPlace, placePiece, findFullLines, getGridSize } from './Board';
 import { Piece, PieceType, createPiece, getPieceCells, PIECE_POOLS } from './Piece';
 import { ScoreEvent, scorePlacement, scoreClear, calculateStars } from './Scoring';
 import { isGameOver } from './GameOver';
@@ -110,6 +110,74 @@ export function generatePieceSet(rng: SeededRandom, pool: PieceType[], paletteSi
 }
 
 /**
+ * Does at least one of `pieces` have a placement on `grid` that creates
+ * a line clear (row or column)? Used by the smart-generation variant
+ * to decide whether to accept a random set or retry.
+ *
+ * Search complexity: O(pieces × grid² × line-check). For 3 pieces on
+ * an 8x8 board that's ~3 * 64 * O(1) line-find — a few thousand cheap
+ * operations per call. Worth it: a single avoided "dead-set" run is
+ * worth orders of magnitude more in retained engagement than the
+ * compute cost.
+ */
+export function hasClearableMove(grid: Grid, pieces: (Piece | null)[]): boolean {
+  const size = getGridSize(grid);
+  for (const piece of pieces) {
+    if (!piece) continue;
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (!canPlace(grid, piece, r, c)) continue;
+        const placed = placePiece(grid, piece, r, c);
+        const { rows, cols } = findFullLines(placed);
+        if (rows.length > 0 || cols.length > 0) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Smart-generation variant — returns a piece set that has at least
+ * one placement creating a line clear on the current board, by retrying
+ * up to `maxAttempts` times.
+ *
+ * This is the single biggest gameplay-feel upgrade from the Block Blast
+ * teardown research: players never get into a "I literally cannot
+ * clear anything" frustration spiral. Even when the board state is
+ * tight, the RNG draws are biased (via retry) toward pieces that DO
+ * fit a clear, so the experience stays consistently "I can do this."
+ *
+ * IMPORTANT: only call this for endless / non-deterministic modes.
+ * For daily-puzzle and level modes, the seed is load-bearing — the
+ * SAME seed must always produce the same piece sequence so daily
+ * leaderboards and level-replay are comparable across players. The
+ * retry loop consumes a variable number of RNG draws depending on
+ * board state, which breaks reproducibility. `processTurn` gates
+ * on `state.level === 0` (the endless-mode sentinel) before calling
+ * this variant.
+ *
+ * Falls back to a regular random set after `maxAttempts` exhausted —
+ * if no clearable set exists in 5 tries, board state probably has
+ * no clear path forward anyway and game-over detection will fire
+ * on the next turn.
+ */
+export function generatePieceSetSmart(
+  rng: SeededRandom,
+  pool: PieceType[],
+  paletteSize: number | undefined,
+  grid: Grid,
+  maxAttempts: number = 5,
+): Piece[] {
+  let lastCandidate: Piece[] = generatePieceSet(rng, pool, paletteSize);
+  if (hasClearableMove(grid, lastCandidate)) return lastCandidate;
+  for (let attempt = 1; attempt < maxAttempts; attempt++) {
+    lastCandidate = generatePieceSet(rng, pool, paletteSize);
+    if (hasClearableMove(grid, lastCandidate)) return lastCandidate;
+  }
+  return lastCandidate;
+}
+
+/**
  * Process a piece placement. Returns the new game state.
  * This is the core turn function — handles placement, clearing, scoring,
  * piece regeneration, and win/loss detection.
@@ -166,7 +234,16 @@ export function processTurn(
   // Check if all 3 pieces have been placed — generate new set
   const remainingPieces = newAvailable.filter((p): p is Piece => p !== null);
   if (remainingPieces.length === 0) {
-    const newSet = generatePieceSet(rng, piecePool, state.paletteSize);
+    // Endless mode (level === 0): use the smart generator that retries
+    // until at least one piece has a clearable placement. This is the
+    // Block Blast "always solvable" mechanic — players never end a
+    // session on a dead-set frustration spiral. Daily-puzzle and level
+    // modes stay on the deterministic path so seeds remain reproducible
+    // for shared leaderboards. See `generatePieceSetSmart` doc comment
+    // for the full rationale.
+    const newSet = state.level === 0
+      ? generatePieceSetSmart(rng, piecePool, state.paletteSize, result.grid)
+      : generatePieceSet(rng, piecePool, state.paletteSize);
     // Check for game over with the new set (plus any held piece)
     const gameOverPool = heldPiece ? [...newSet, heldPiece] : newSet;
     const gameOver = isGameOver(result.grid, gameOverPool);
