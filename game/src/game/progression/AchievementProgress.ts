@@ -162,3 +162,49 @@ export function getNearestMilestone(
 
   return best;
 }
+
+export interface RunAchievementBeat {
+  /**
+   * 'unlocked' = the run pushed a stat past an achievement threshold that
+   * is not yet in `unlockedAchievements`. `checkAchievements()` only runs
+   * on the Home screen, so a fresh cross shows here first as a "you earned
+   * it — go claim it" beat. 'nearest' = the closest still-locked goal.
+   */
+  kind: 'unlocked' | 'nearest';
+  achievementId: string;
+  progress: AchievementProgress;
+}
+
+/**
+ * The single achievement beat to surface at game-over.
+ *
+ * Priority: if the run crossed any achievement threshold that isn't yet
+ * stamped (complete but absent from `unlockedAchievements`), celebrate the
+ * most prestigious such unlock (highest target). Otherwise dangle the
+ * nearest still-locked milestone as a come-back carrot. Null when every
+ * trackable achievement is already earned.
+ *
+ * Pure + store-free; the caller resolves a display name via ACHIEVEMENTS.
+ */
+export function getRunAchievementBeat(
+  unlockedAchievementIds: string[],
+  snapshot: AchievementStatsSnapshot,
+): RunAchievementBeat | null {
+  const unlocked = new Set(unlockedAchievementIds);
+
+  let justUnlocked: RunAchievementBeat | null = null;
+  for (const achievementId of Object.keys(ACHIEVEMENT_PROGRESS)) {
+    if (unlocked.has(achievementId)) continue;
+    const progress = getAchievementProgress(achievementId, snapshot);
+    if (!progress || !progress.complete) continue;
+    if (!justUnlocked || progress.target > justUnlocked.progress.target) {
+      justUnlocked = { kind: 'unlocked', achievementId, progress };
+    }
+  }
+  if (justUnlocked) return justUnlocked;
+
+  const nearest = getNearestMilestone(unlockedAchievementIds, snapshot);
+  return nearest
+    ? { kind: 'nearest', achievementId: nearest.achievementId, progress: nearest.progress }
+    : null;
+}

@@ -28,6 +28,7 @@ import {
   ACHIEVEMENT_PROGRESS,
   getAchievementProgress,
   getNearestMilestone,
+  getRunAchievementBeat,
   formatProgress,
   AchievementStatsSnapshot,
 } from '../game/progression/AchievementProgress';
@@ -146,6 +147,35 @@ describe('getNearestMilestone', () => {
     const s = snap({ totalChromaticClears: 92 });
     const nearest = getNearestMilestone(['chromatic_100'], s);
     expect(nearest?.achievementId).not.toBe('chromatic_100');
+  });
+});
+
+describe('getRunAchievementBeat', () => {
+  it('celebrates a threshold crossed this run but not yet stamped', () => {
+    // bestWaveReached 10 makes wave_5 + wave_10 complete; wave_5 is already
+    // stamped, so the un-stamped wave_10 is the beat.
+    const beat = getRunAchievementBeat(['wave_5'], snap({ bestWaveReached: 10 }))!;
+    expect(beat.kind).toBe('unlocked');
+    expect(beat.achievementId).toBe('wave_10');
+  });
+
+  it('celebrates the most prestigious unlock when several crossed at once', () => {
+    // 100 chromatic clears crosses first_chromatic, chromatic_25, chromatic_100
+    // all at once; the highest target (chromatic_100) wins.
+    const beat = getRunAchievementBeat([], snap({ totalChromaticClears: 100 }))!;
+    expect(beat.kind).toBe('unlocked');
+    expect(beat.achievementId).toBe('chromatic_100');
+  });
+
+  it('falls back to the nearest carrot when nothing crossed this run', () => {
+    const beat = getRunAchievementBeat([], ZERO)!;
+    expect(beat.kind).toBe('nearest');
+    expect(beat.achievementId).toBe('first_clear');
+  });
+
+  it('returns null when everything is already unlocked', () => {
+    const allIds = ACHIEVEMENTS.map((a) => a.id);
+    expect(getRunAchievementBeat(allIds, snap({ totalChromaticClears: 100, bestWaveReached: 20 }))).toBeNull();
   });
 });
 

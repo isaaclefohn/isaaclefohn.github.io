@@ -31,6 +31,7 @@ import { ScoreFlyUp } from '../components/animations/ScoreFlyUp';
 import { ComboBanner } from '../components/animations/ComboBanner';
 import { NearMissCallout } from '../components/NearMissCallout';
 import { PersonalBestCelebration } from '../components/PersonalBestCelebration';
+import { RunMilestoneNudge } from '../components/RunMilestoneNudge';
 import { didCrossWaveBoundary, getWaveForPieces } from '../game/levels/EndlessWaves';
 import { Confetti } from '../components/animations/Confetti';
 import { PowerUpType, previewBomb, previewRowClear, previewColorClear } from '../game/powerups/PowerUpManager';
@@ -1285,6 +1286,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           />
         )}
 
+        {/* Achievement beat — just-earned milestone or next-up carrot */}
+        <RunMilestoneNudge />
+
         <View style={styles.modalButtons}>
           {isDaily ? (
             // Daily puzzle: sharing is the primary action. Wordle's entire
@@ -1448,6 +1452,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             <PersonalBestCelebration score={gameState.score} best={dailyPuzzleBestScore} />
           </>
         )}
+
+        {/* Achievement beat — just-earned milestone or next-up carrot */}
+        <RunMilestoneNudge />
 
         {/* Rescue offer after 2+ failures on same level */}
         {!isEndless && !isDaily && consecutiveFailures >= 2 && lastFailedLevel === level && !rescueClaimed && (
