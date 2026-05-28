@@ -184,17 +184,27 @@ export interface RunAchievementBeat {
  * nearest still-locked milestone as a come-back carrot. Null when every
  * trackable achievement is already earned.
  *
- * Pure + store-free; the caller resolves a display name via ACHIEVEMENTS.
+ * `alreadyCelebratedIds` are achievements that already had their "unlocked"
+ * beat shown this session — they're skipped from the celebrate path so the
+ * same unlock doesn't re-fire on every subsequent game-over before the
+ * player returns Home (checkAchievements only stamps on the Home screen, and
+ * Next Level / Retry don't pass through it). On a target tie the
+ * earliest-defined tier wins (deterministic: ACHIEVEMENT_PROGRESS order).
+ *
+ * Pure + store-free; the caller owns the celebrated set and resolves a
+ * display name via ACHIEVEMENTS.
  */
 export function getRunAchievementBeat(
   unlockedAchievementIds: string[],
   snapshot: AchievementStatsSnapshot,
+  alreadyCelebratedIds: string[] = [],
 ): RunAchievementBeat | null {
   const unlocked = new Set(unlockedAchievementIds);
+  const celebrated = new Set(alreadyCelebratedIds);
 
   let justUnlocked: RunAchievementBeat | null = null;
   for (const achievementId of Object.keys(ACHIEVEMENT_PROGRESS)) {
-    if (unlocked.has(achievementId)) continue;
+    if (unlocked.has(achievementId) || celebrated.has(achievementId)) continue;
     const progress = getAchievementProgress(achievementId, snapshot);
     if (!progress || !progress.complete) continue;
     if (!justUnlocked || progress.target > justUnlocked.progress.target) {

@@ -177,6 +177,23 @@ describe('getRunAchievementBeat', () => {
     const allIds = ACHIEVEMENTS.map((a) => a.id);
     expect(getRunAchievementBeat(allIds, snap({ totalChromaticClears: 100, bestWaveReached: 20 }))).toBeNull();
   });
+
+  it('does not re-celebrate an achievement already shown this session', () => {
+    // bestWaveReached 10 makes wave_10 complete-but-unstamped; if it was
+    // already celebrated, fall through to the nearest carrot instead of
+    // re-firing "unlocked" on the next game-over.
+    const s = snap({ bestWaveReached: 10 });
+    expect(getRunAchievementBeat(['wave_5'], s)!.kind).toBe('unlocked');
+    expect(getRunAchievementBeat(['wave_5'], s, ['wave_10'])!.kind).toBe('nearest');
+  });
+
+  it('breaks an equal-target tie deterministically by table order', () => {
+    // first_clear and first_powerup both have target 1; when both cross on
+    // the same run, the earlier-defined one (first_clear) is celebrated.
+    const beat = getRunAchievementBeat([], snap({ totalLinesCleared: 1, totalPowerUpsUsed: 1 }))!;
+    expect(beat.kind).toBe('unlocked');
+    expect(beat.achievementId).toBe('first_clear');
+  });
 });
 
 describe('cross-validation against store check() predicates', () => {

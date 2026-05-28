@@ -15,6 +15,17 @@ import { getRunAchievementBeat, formatProgress } from '../game/progression/Achie
 import { GameIcon } from './GameIcon';
 import { COLORS, RADII } from '../utils/constants';
 
+/**
+ * Achievements already shown as an "unlocked" beat this app session.
+ * checkAchievements() only stamps on the Home screen, and Next Level / Retry
+ * don't pass through it — so without this dedupe a crossed-but-unstamped
+ * achievement would re-fire its celebration on every subsequent game-over.
+ * Module scope survives the per-modal remount; it's irrelevant once Home
+ * stamps the achievement (it then leaves the complete-but-unstamped state)
+ * and resets on app restart (by which point unlockedAchievements persisted).
+ */
+const celebratedThisSession = new Set<string>();
+
 export const RunMilestoneNudge: React.FC = () => {
   const {
     unlockedAchievements,
@@ -30,18 +41,35 @@ export const RunMilestoneNudge: React.FC = () => {
     bestCombo,
   } = usePlayerStore();
 
-  const beat = getRunAchievementBeat(unlockedAchievements, {
-    totalLinesCleared,
-    highestLevel,
-    totalScore,
-    longestStreak,
-    levelStars,
-    coins,
-    totalPowerUpsUsed,
-    totalChromaticClears,
-    bestWaveReached,
-    bestCombo,
-  });
+  // Compute once on mount: each game-over modal mounts a fresh instance, the
+  // run is already over so the stats are stable, and freezing prevents the
+  // beat from flipping (e.g. unlocked -> nearest) mid-display if the store
+  // updates. The session-dedupe set is read as of mount.
+  const [beat] = React.useState(() =>
+    getRunAchievementBeat(
+      unlockedAchievements,
+      {
+        totalLinesCleared,
+        highestLevel,
+        totalScore,
+        longestStreak,
+        levelStars,
+        coins,
+        totalPowerUpsUsed,
+        totalChromaticClears,
+        bestWaveReached,
+        bestCombo,
+      },
+      [...celebratedThisSession],
+    ),
+  );
+
+  // Once an unlock beat has been shown, remember it so it isn't re-celebrated
+  // on later game-overs before the player returns Home (where it gets stamped).
+  React.useEffect(() => {
+    if (beat?.kind === 'unlocked') celebratedThisSession.add(beat.achievementId);
+  }, [beat]);
+
   if (!beat) return null;
 
   const name = ACHIEVEMENTS.find((a) => a.id === beat.achievementId)?.name ?? beat.achievementId;
