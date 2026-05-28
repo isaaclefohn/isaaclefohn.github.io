@@ -8,7 +8,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Modal } from './common/Modal';
 import { GameIcon } from './GameIcon';
 import { ACHIEVEMENTS, usePlayerStore } from '../store/playerStore';
-import { getAchievementProgress, formatProgress } from '../game/progression/AchievementProgress';
+import { getAchievementProgress, getNearestMilestone, formatProgress } from '../game/progression/AchievementProgress';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
 
 interface AchievementModalProps {
@@ -47,6 +47,13 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ visible, onC
     bestCombo,
   };
 
+  // The single closest locked achievement — dangled in the header as a
+  // "you're almost there" carrot (goal-gradient nudge).
+  const nearest = getNearestMilestone(unlockedAchievements, statsSnapshot);
+  const nearestName = nearest
+    ? ACHIEVEMENTS.find((a) => a.id === nearest.achievementId)?.name
+    : null;
+
   return (
     <Modal visible={visible} onClose={onClose} dismissable>
       <View style={styles.header}>
@@ -55,6 +62,11 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ visible, onC
         <Text style={styles.subtitle}>
           {unlockedCount} / {ACHIEVEMENTS.length} Unlocked
         </Text>
+        {nearest && nearestName && (
+          <Text style={styles.nextUp}>
+            Closest: {nearestName} ({formatProgress(nearest.progress)})
+          </Text>
+        )}
       </View>
 
       <ScrollView
@@ -151,6 +163,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.textSecondary,
     fontWeight: '600',
+  },
+  nextUp: {
+    fontSize: 12,
+    color: COLORS.accentGold,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   scrollArea: {
     maxHeight: 380,

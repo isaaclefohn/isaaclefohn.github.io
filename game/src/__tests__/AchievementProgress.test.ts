@@ -27,6 +27,7 @@ import { ACHIEVEMENTS } from '../store/playerStore';
 import {
   ACHIEVEMENT_PROGRESS,
   getAchievementProgress,
+  getNearestMilestone,
   formatProgress,
   AchievementStatsSnapshot,
 } from '../game/progression/AchievementProgress';
@@ -108,6 +109,43 @@ describe('table integrity', () => {
     for (const id of Object.keys(ACHIEVEMENT_PROGRESS)) {
       expect(ACHIEVEMENTS.find((a) => a.id === id)).toBeDefined();
     }
+  });
+});
+
+describe('getNearestMilestone', () => {
+  it('returns null when every trackable achievement is already unlocked', () => {
+    const allIds = ACHIEVEMENTS.map((a) => a.id);
+    expect(getNearestMilestone(allIds, ZERO)).toBeNull();
+  });
+
+  it('picks the locked achievement with the highest completion ratio', () => {
+    // 92/100 chromatic (0.92) beats 1/5 wave (0.2); the lower chromatic
+    // tiers (first_chromatic, chromatic_25) are already complete and skipped.
+    const s = snap({ totalChromaticClears: 92, bestWaveReached: 1 });
+    const nearest = getNearestMilestone([], s)!;
+    expect(nearest.achievementId).toBe('chromatic_100');
+    expect(nearest.progress.current).toBe(92);
+  });
+
+  it('skips achievements that are complete but not yet stamped as unlocked', () => {
+    // totalLinesCleared 5 → first_clear (target 1) is complete; it must NOT
+    // be offered. clear_100 (5/100) is the closest still-incomplete one.
+    const nearest = getNearestMilestone([], snap({ totalLinesCleared: 5 }))!;
+    expect(nearest.achievementId).toBe('clear_100');
+  });
+
+  it('breaks ties at 0% by smallest remaining (cheapest next goal)', () => {
+    // A brand-new player: everything at 0%. The single-step goals
+    // (target 1) win the tie; first_clear is first in table order.
+    const nearest = getNearestMilestone([], ZERO)!;
+    expect(nearest.progress.target).toBe(1);
+    expect(nearest.achievementId).toBe('first_clear');
+  });
+
+  it('excludes ids passed in the unlocked list even when in-progress', () => {
+    const s = snap({ totalChromaticClears: 92 });
+    const nearest = getNearestMilestone(['chromatic_100'], s);
+    expect(nearest?.achievementId).not.toBe('chromatic_100');
   });
 });
 

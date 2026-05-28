@@ -115,3 +115,50 @@ export function getAchievementProgress(
 export function formatProgress(p: AchievementProgress): string {
   return `${p.current.toLocaleString()} / ${p.target.toLocaleString()}`;
 }
+
+export interface NearestMilestone {
+  achievementId: string;
+  progress: AchievementProgress;
+}
+
+/**
+ * Pick the single locked achievement the player is CLOSEST to earning —
+ * the carrot to dangle on the achievements header ("Closest: ... 92/100").
+ *
+ * "Closest" = highest completion ratio, tie-broken by the smallest absolute
+ * remaining (so a brand-new player at 0% across the board is pointed at the
+ * cheapest next goal, e.g. "clear 1 line", rather than an arbitrary pick).
+ *
+ * Already-complete-but-not-yet-stamped achievements are skipped — they're
+ * about to unlock on the next `checkAchievements()` tick, so dangling them
+ * would be stale. Returns null when everything trackable is unlocked.
+ *
+ * Store-free: returns the id; the caller resolves a display name via the
+ * ACHIEVEMENTS array (keeping this module import-free, like the rest of it).
+ */
+export function getNearestMilestone(
+  unlockedAchievementIds: string[],
+  snapshot: AchievementStatsSnapshot,
+): NearestMilestone | null {
+  const unlocked = new Set(unlockedAchievementIds);
+  let best: NearestMilestone | null = null;
+
+  for (const achievementId of Object.keys(ACHIEVEMENT_PROGRESS)) {
+    if (unlocked.has(achievementId)) continue;
+    const progress = getAchievementProgress(achievementId, snapshot);
+    if (!progress || progress.complete) continue;
+
+    if (best === null) {
+      best = { achievementId, progress };
+      continue;
+    }
+    const remaining = progress.target - progress.rawCurrent;
+    const bestRemaining = best.progress.target - best.progress.rawCurrent;
+    const closer =
+      progress.pct > best.progress.pct ||
+      (progress.pct === best.progress.pct && remaining < bestRemaining);
+    if (closer) best = { achievementId, progress };
+  }
+
+  return best;
+}
