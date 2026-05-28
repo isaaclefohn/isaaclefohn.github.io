@@ -16,6 +16,14 @@ export interface GameTheme {
   accent: string;
   price: number; // In gems, 0 = free/default
   category: 'free' | 'premium' | 'seasonal' | 'exclusive';
+  /**
+   * If set, this is a PRESTIGE cosmetic earned by unlocking the named
+   * achievement — not purchasable with gems. `price` is inert (kept 0)
+   * when this is present. The shop shows it locked until the
+   * achievement is in `unlockedAchievements`, then equippable for free.
+   * Always pair with `category: 'exclusive'`.
+   */
+  unlockAchievementId?: string;
 }
 
 export interface BlockSkin {
@@ -27,6 +35,8 @@ export interface BlockSkin {
   highlightOpacity: number;
   innerGlowOpacity: number;
   price: number; // In gems
+  /** Prestige block skin earned via achievement — see GameTheme. */
+  unlockAchievementId?: string;
 }
 
 export const THEMES: Record<string, GameTheme> = {
@@ -161,6 +171,41 @@ export const THEMES: Record<string, GameTheme> = {
     price: 250,
     category: 'seasonal',
   },
+  // --- Prestige themes — earned by skill, NOT purchasable with gems ---
+  godlike: {
+    id: 'godlike',
+    name: 'Godlike',
+    // Gold-on-black "crown" aesthetic — categorically different from the
+    // premium palettes. A 7+ combo chain is the hardest single-session
+    // skill feat in the game; the reward should read as untouchable.
+    blockColors: ['#FFD700', '#FFC400', '#FFB000', '#FFE680', '#F5C518', '#FFDF6B', '#FFCB2E'],
+    blockColorsLight: ['#FFE766', '#FFD84D', '#FFCB4D', '#FFF0B3', '#FAD95E', '#FFEAA0', '#FFDD73'],
+    blockColorsDark: ['#CCAC00', '#CC9D00', '#CC8D00', '#CCB866', '#C49C13', '#CCB256', '#CCA225'],
+    background: '#000000',
+    surface: '#161208',
+    gridEmpty: '#1F1A0A',
+    accent: '#FFD700',
+    price: 0,
+    category: 'exclusive',
+    unlockAchievementId: 'combo_godlike',
+  },
+  chromatic_overflow: {
+    id: 'chromatic_overflow',
+    name: 'Chromatic Overflow',
+    // Full spectrum at max saturation on the darkest background in the
+    // game — a literal callback to the chromatic mechanic that earned
+    // it. 100 chromatic clears is a commitment milestone.
+    blockColors: ['#FF0040', '#00E5FF', '#2979FF', '#00E676', '#FFEA00', '#D500F9', '#FF6D00'],
+    blockColorsLight: ['#FF4D79', '#5CEEFF', '#6BA4FF', '#5CEFA3', '#FFF14D', '#E25CFB', '#FF9D4D'],
+    blockColorsDark: ['#CC0033', '#00B7CC', '#2061CC', '#00B85E', '#CCBB00', '#AA00C7', '#CC5700'],
+    background: '#050507',
+    surface: '#0E0E16',
+    gridEmpty: '#15151F',
+    accent: '#D500F9',
+    price: 0,
+    category: 'exclusive',
+    unlockAchievementId: 'chromatic_100',
+  },
 };
 
 export const BLOCK_SKINS: Record<string, BlockSkin> = {
@@ -233,6 +278,19 @@ export const BLOCK_SKINS: Record<string, BlockSkin> = {
     highlightOpacity: 0.15,
     innerGlowOpacity: 0.05,
     price: 100,
+  },
+  // Prestige skin — earned by reaching endless wave 20. Glass style at
+  // max highlight/glow reads as the "holo/infinite" endurance reward.
+  holo: {
+    id: 'holo',
+    name: 'Holo',
+    style: 'glass',
+    borderWidth: 1,
+    borderRadius: 10,
+    highlightOpacity: 0.7,
+    innerGlowOpacity: 0.5,
+    price: 0,
+    unlockAchievementId: 'wave_20',
   },
 };
 

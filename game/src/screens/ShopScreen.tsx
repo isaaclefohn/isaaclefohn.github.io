@@ -16,7 +16,8 @@ import {
   Animated,
   Platform,
 } from 'react-native';
-import { usePlayerStore } from '../store/playerStore';
+import { usePlayerStore, ACHIEVEMENTS } from '../store/playerStore';
+import { checkPrestigeUnlock } from '../game/progression/PrestigeGating';
 import { CurrencyDisplay } from '../components/CurrencyDisplay';
 import { Button } from '../components/common/Button';
 import { PRODUCTS, getCoinProducts, getGemProducts, getBundleProducts, getPremiumProducts, restorePurchases, requestPurchase, Product } from '../services/purchases';
@@ -323,6 +324,16 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
   }, [adPowerUpInFlight, player]);
 
   const handleBuyTheme = (theme: GameTheme) => {
+    // Prestige themes are earned, never bought. Bypass the gem path
+    // entirely and equip directly — the shop only enables this button
+    // when the gating achievement is already unlocked, so reaching
+    // here means it's earned. The guard also defends against any
+    // future caller accidentally routing a prestige theme through the
+    // gem-charge path.
+    if (theme.unlockAchievementId) {
+      player.equipTheme(theme.id);
+      return;
+    }
     // Atomic purchase-and-equip. Free OR already-owned themes equip
     // without charge; un-owned paid themes deduct gems + record
     // ownership + equip in one store action. Returns false only when
@@ -574,22 +585,39 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                 // A paid theme the player already bought re-equips for
                 // free — show "Equip", not the gem price.
                 const isOwned = theme.price === 0 || player.ownedThemes.includes(theme.id);
+                const prestige = checkPrestigeUnlock(theme.unlockAchievementId, player.unlockedAchievements);
+                const reqLabel = prestige.requirementAchievementId
+                  ? (ACHIEVEMENTS.find((a) => a.id === prestige.requirementAchievementId)?.description ?? prestige.requirementAchievementId)
+                  : null;
                 return (
                   <View key={theme.id} style={[styles.shopItem, isEquipped && styles.equippedItem]}>
                     <View style={styles.itemInfo}>
                       <View style={styles.themePreview}>
-                        {theme.blockColors.slice(0, 4).map((color, i) => (
-                          <View key={i} style={[styles.colorDot, { backgroundColor: color }]} />
-                        ))}
+                        {prestige.locked ? (
+                          <GameIcon name="lock" size={24} color={COLORS.textMuted} />
+                        ) : (
+                          theme.blockColors.slice(0, 4).map((color, i) => (
+                            <View key={i} style={[styles.colorDot, { backgroundColor: color }]} />
+                          ))
+                        )}
                       </View>
                       <View style={styles.itemTextBlock}>
                         <Text style={styles.itemName}>{theme.name}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                          {theme.price > 0 && <GameIcon name="gem" size={12} />}
-                          <Text style={styles.itemDesc}>
-                            {theme.price === 0 ? 'Free' : `${theme.price} gems`}
-                          </Text>
-                        </View>
+                        {theme.unlockAchievementId ? (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <GameIcon name="crown" size={12} color={COLORS.accentGold} />
+                            <Text style={[styles.itemDesc, { color: COLORS.accentGold }]}>
+                              {prestige.locked ? `Earn: ${reqLabel}` : 'Prestige earned'}
+                            </Text>
+                          </View>
+                        ) : (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            {theme.price > 0 && <GameIcon name="gem" size={12} />}
+                            <Text style={styles.itemDesc}>
+                              {theme.price === 0 ? 'Free' : `${theme.price} gems`}
+                            </Text>
+                          </View>
+                        )}
                         {isEquipped && (
                           <Text style={styles.equippedLabel}>Currently equipped</Text>
                         )}
@@ -599,16 +627,20 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                       title={
                         isEquipped
                           ? '\u2714 Equipped'
-                          : isOwned
-                            ? 'Equip'
-                            : `${theme.price} gems`
+                          : prestige.locked
+                            ? '\ud83d\udd12 Locked'
+                            : theme.unlockAchievementId
+                              ? 'Equip Free'
+                              : isOwned
+                                ? 'Equip'
+                                : `${theme.price} gems`
                       }
                       onPress={() => handleBuyTheme(theme)}
-                      variant={isEquipped ? 'ghost' : 'primary'}
+                      variant={isEquipped || prestige.locked ? 'ghost' : 'primary'}
                       size="small"
-                      disabled={isEquipped}
-                      style={!isEquipped ? styles.priceButton : undefined}
-                      textStyle={!isEquipped ? styles.priceButtonText : undefined}
+                      disabled={isEquipped || prestige.locked}
+                      style={!isEquipped && !prestige.locked ? styles.priceButton : undefined}
+                      textStyle={!isEquipped && !prestige.locked ? styles.priceButtonText : undefined}
                     />
                   </View>
                 );
@@ -623,18 +655,28 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
               {Object.values(BLOCK_SKINS).map((skin) => {
                 const isEquipped = player.equippedBlockSkin === skin.id;
                 const isOwned = skin.price === 0 || player.ownedBlockSkins.includes(skin.id);
+                const prestige = checkPrestigeUnlock(skin.unlockAchievementId, player.unlockedAchievements);
+                const reqLabel = prestige.requirementAchievementId
+                  ? (ACHIEVEMENTS.find((a) => a.id === prestige.requirementAchievementId)?.description ?? prestige.requirementAchievementId)
+                  : null;
                 return (
                   <View key={skin.id} style={[styles.shopItem, isEquipped && styles.equippedItem]}>
                     <View style={styles.itemInfo}>
                       <View style={styles.iconContainer}>
-                        <GameIcon name="sparkle" size={26} />
+                        <GameIcon name={prestige.locked ? 'lock' : skin.unlockAchievementId ? 'crown' : 'sparkle'} size={26} color={skin.unlockAchievementId && !prestige.locked ? COLORS.accentGold : undefined} />
                       </View>
                       <View style={styles.itemTextBlock}>
                         <Text style={styles.itemName}>{skin.name}</Text>
-                        <Text style={styles.itemDesc}>
-                          {skin.style.charAt(0).toUpperCase() + skin.style.slice(1)} style
-                          {skin.price === 0 ? ' \u2022 Free' : ` \u2022 ${skin.price} gems`}
-                        </Text>
+                        {skin.unlockAchievementId ? (
+                          <Text style={[styles.itemDesc, { color: COLORS.accentGold }]}>
+                            {prestige.locked ? `Earn: ${reqLabel}` : 'Prestige earned'}
+                          </Text>
+                        ) : (
+                          <Text style={styles.itemDesc}>
+                            {skin.style.charAt(0).toUpperCase() + skin.style.slice(1)} style
+                            {skin.price === 0 ? ' \u2022 Free' : ` \u2022 ${skin.price} gems`}
+                          </Text>
+                        )}
                         {isEquipped && (
                           <Text style={styles.equippedLabel}>Currently equipped</Text>
                         )}
@@ -644,11 +686,21 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                       title={
                         isEquipped
                           ? '\u2714 Equipped'
-                          : isOwned
-                            ? 'Equip'
-                            : `${skin.price} gems`
+                          : prestige.locked
+                            ? '\ud83d\udd12 Locked'
+                            : skin.unlockAchievementId
+                              ? 'Equip Free'
+                              : isOwned
+                                ? 'Equip'
+                                : `${skin.price} gems`
                       }
                       onPress={() => {
+                        // Prestige skins are earned, not bought \u2014 equip
+                        // directly (button only enabled when unlocked).
+                        if (skin.unlockAchievementId) {
+                          player.equipBlockSkin(skin.id);
+                          return;
+                        }
                         // Atomic purchase-and-equip; free / already-owned
                         // skins equip without charge, un-owned paid skins
                         // deduct + record ownership + equip in one action.
@@ -657,11 +709,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                           Alert.alert('Not enough gems', `You need ${skin.price} gems.`);
                         }
                       }}
-                      variant={isEquipped ? 'ghost' : 'primary'}
+                      variant={isEquipped || prestige.locked ? 'ghost' : 'primary'}
                       size="small"
-                      disabled={isEquipped}
-                      style={!isEquipped ? styles.priceButton : undefined}
-                      textStyle={!isEquipped ? styles.priceButtonText : undefined}
+                      disabled={isEquipped || prestige.locked}
+                      style={!isEquipped && !prestige.locked ? styles.priceButton : undefined}
+                      textStyle={!isEquipped && !prestige.locked ? styles.priceButtonText : undefined}
                     />
                   </View>
                 );
