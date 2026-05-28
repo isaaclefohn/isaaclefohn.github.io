@@ -9,6 +9,7 @@ import { Modal } from './common/Modal';
 import { GameIcon } from './GameIcon';
 import { ACHIEVEMENTS, usePlayerStore } from '../store/playerStore';
 import { getAchievementProgress, getNearestMilestone, formatProgress } from '../game/progression/AchievementProgress';
+import { ACHIEVEMENT_TRACKS, getTrackProgress } from '../game/progression/AchievementTracks';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
 
 interface AchievementModalProps {
@@ -74,6 +75,29 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ visible, onC
         contentContainerStyle={styles.grid}
         showsVerticalScrollIndicator={false}
       >
+        {/* Collections — themed track sets; the 3 prestige tracks carry a crown */}
+        <View style={styles.collections}>
+          <Text style={styles.collectionsTitle}>COLLECTIONS</Text>
+          <View style={styles.tracksWrap}>
+            {ACHIEVEMENT_TRACKS.map((trk) => {
+              const tp = getTrackProgress(trk, unlockedAchievements);
+              return (
+                <View key={trk.id} style={[styles.trackChip, tp.complete && styles.trackChipComplete]}>
+                  {trk.prestige && (
+                    <GameIcon name="crown" size={10} color={tp.complete ? COLORS.accentGold : COLORS.textMuted} />
+                  )}
+                  <Text style={[styles.trackLabel, tp.complete && styles.trackLabelComplete]}>{trk.label}</Text>
+                  {tp.complete ? (
+                    <GameIcon name="check" size={11} color={COLORS.success} />
+                  ) : (
+                    <Text style={styles.trackCount}>{tp.unlocked}/{tp.total}</Text>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
         {ACHIEVEMENTS.map((achievement) => {
           const unlocked = unlockedAchievements.includes(achievement.id);
           // Only locked cards show a bar; unlocked ones carry the check badge.
@@ -177,6 +201,49 @@ const styles = StyleSheet.create({
   grid: {
     gap: 8,
     paddingBottom: SPACING.sm,
+  },
+  collections: {
+    gap: 6,
+    marginBottom: 4,
+  },
+  collectionsTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 2,
+  },
+  tracksWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  trackChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    backgroundColor: COLORS.surface,
+    borderColor: COLORS.surfaceBorder,
+  },
+  trackChipComplete: {
+    backgroundColor: `${COLORS.accentGold}14`,
+    borderColor: `${COLORS.accentGold}40`,
+  },
+  trackLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+  },
+  trackLabelComplete: {
+    color: COLORS.accentGold,
+  },
+  trackCount: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.textMuted,
   },
   card: {
     flexDirection: 'row',
