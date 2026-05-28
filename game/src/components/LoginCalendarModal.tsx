@@ -19,7 +19,7 @@ interface LoginCalendarModalProps {
 }
 
 export const LoginCalendarModal: React.FC<LoginCalendarModalProps> = ({ visible, onClose }) => {
-  const { calendarLastDay, calendarMonth, addCoins, addGems, addPowerUp, claimCalendarDay } = usePlayerStore();
+  const { calendarLastDay, calendarMonth, claimCalendarDayAtomic } = usePlayerStore();
 
   const calendar = getLoginCalendar();
   const currentMonth = getCurrentMonthId();
@@ -31,12 +31,16 @@ export const LoginCalendarModal: React.FC<LoginCalendarModalProps> = ({ visible,
     const dayData = calendar[nextDay - 1];
     if (!dayData) return;
 
-    if (dayData.coins > 0) addCoins(dayData.coins, { boostable: true });
-    if (dayData.gems > 0) addGems(dayData.gems);
-    if (dayData.powerUp && dayData.powerUpCount) {
-      addPowerUp(dayData.powerUp, dayData.powerUpCount);
-    }
-    claimCalendarDay(nextDay, currentMonth);
+    // Atomic: stamp the day/month guard AND credit in one set().
+    // Previously credits ran before the stamp, leaving a crash window
+    // where the day's reward could be re-claimed.
+    claimCalendarDayAtomic(nextDay, currentMonth, {
+      coins: dayData.coins > 0 ? dayData.coins : undefined,
+      gems: dayData.gems > 0 ? dayData.gems : undefined,
+      ...(dayData.powerUp && dayData.powerUpCount
+        ? { [dayData.powerUp]: dayData.powerUpCount }
+        : {}),
+    });
   };
 
   return (

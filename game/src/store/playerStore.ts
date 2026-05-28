@@ -90,6 +90,47 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'combo_godlike', name: 'Godlike', description: 'Land a GODLIKE combo (7-chain)', icon: 'crown', reward: { coins: 500, gems: 20 }, check: (s) => s.bestCombo >= 7 },
 ];
 
+/**
+ * A normalized reward payload shared by the "atomic claim" actions
+ * (free chest, gift box, treasure, login calendar). Lets each claim
+ * stamp its guard AND credit rewards inside a single `set()` so a
+ * crash between the two can't leave a re-claimable state. coins are
+ * boost-eligible (gameplay rewards), matching the prior addCoins
+ * `{ boostable: true }` calls these atomic actions replaced.
+ */
+export interface RewardBundle {
+  coins?: number;
+  gems?: number;
+  bomb?: number;
+  rowClear?: number;
+  colorClear?: number;
+}
+
+/**
+ * Compute the coins/gems/powerUps portion of a state delta for a
+ * reward bundle. Pure — takes the current state slice + the clock so
+ * callers can fold it into one `set()`. Applies the active coin boost
+ * (Double Time) so atomic claims stay boostable just like the
+ * addCoins({ boostable: true }) path they replaced.
+ */
+function rewardBundleDelta(
+  s: { coins: number; gems: number; powerUps: { bomb: number; rowClear: number; colorClear: number }; activeBoostUntil: ActiveBoostUntil },
+  b: RewardBundle,
+  now: number,
+): { coins?: number; gems?: number; powerUps?: { bomb: number; rowClear: number; colorClear: number } } {
+  const delta: { coins?: number; gems?: number; powerUps?: { bomb: number; rowClear: number; colorClear: number } } = {};
+  if (b.coins) delta.coins = s.coins + applyBoost(b.coins, s.activeBoostUntil, 'coins', now);
+  if (b.gems) delta.gems = s.gems + b.gems;
+  if (b.bomb || b.rowClear || b.colorClear) {
+    delta.powerUps = {
+      bomb: s.powerUps.bomb + (b.bomb ?? 0),
+      rowClear: s.powerUps.rowClear + (b.rowClear ?? 0),
+      colorClear: s.powerUps.colorClear + (b.colorClear ?? 0),
+    };
+  }
+  return delta;
+}
+
 interface PlayerStoreState {
   displayName: string;
   coins: number;
@@ -185,6 +226,10 @@ interface PlayerStoreState {
   weeklyLastWeekId: string | null;
   // Gift Box
   lastGiftDate: string | null;
+  /** ISO date the comeback bonus was last claimed. Persistent
+   *  idempotency guard — the modal previously relied only on local
+   *  React state which resets on remount. */
+  lastComebackClaimedDate: string | null;
   gamesPlayedToday: number;
   gamesPlayedDate: string | null;
   // Streak Freeze
@@ -416,6 +461,11 @@ interface PlayerStore extends PlayerStoreState {
   completeWeeklyChallenge: (weekId: string, stars: number, score: number) => void;
   // Gift Box
   claimGift: () => void;
+  /** Atomic gift claim — stamps lastGiftDate AND credits the bundle
+   *  in one set(). The non-atomic claimGift was never even called by
+   *  GiftBoxModal, leaving the gift re-openable; this fixes both the
+   *  missing-stamp and the credit-before-stamp race. */
+  claimGiftAtomic: (bundle: RewardBundle) => void;
   incrementGamesPlayedToday: () => void;
   // Streak Freeze
   addStreakFreezes: (count: number) => void;
@@ -460,6 +510,9 @@ interface PlayerStore extends PlayerStoreState {
   claimWorldPerfect: (worldId: number) => void;
   // Login Calendar
   claimCalendarDay: (day: number, month: string) => void;
+  /** Atomic login-calendar claim — stamps the day/month guard AND
+   *  credits the bundle in one set(). */
+  claimCalendarDayAtomic: (day: number, month: string, bundle: RewardBundle) => void;
   // Daily Deal
   claimDailyDeal: (date: string) => void;
   // Avatars
@@ -470,6 +523,10 @@ interface PlayerStore extends PlayerStoreState {
   // Treasure Hunt
   addTreasureMapPiece: () => void;
   openTreasureChest: () => void;
+  /** Atomic treasure-chest open — deducts the 5 map pieces AND
+   *  credits the bundle in one set(), so a crash can't leave the
+   *  pieces intact at threshold (re-openable for a free re-grant). */
+  openTreasureChestAtomic: (bundle: RewardBundle) => void;
   // Tournaments
   enterTournament: (tier: 'bronze' | 'silver' | 'gold' | 'diamond', playerScore: number) => void;
   finishTournament: (finalRank: number) => void;
@@ -532,6 +589,13 @@ interface PlayerStore extends PlayerStoreState {
   recordFlashOfferPurchase: (key: string) => void;
   // Free chest
   claimFreeChest: () => void;
+  /** Atomic free-chest claim — stamps freeChestLastClaimedAt AND
+   *  credits the bundle in one set(). */
+  claimFreeChestAtomic: (bundle: RewardBundle) => void;
+  /** Atomic comeback-bonus claim — stamps lastComebackClaimedDate
+   *  (persistent guard) AND credits the bundle in one set(). Returns
+   *  false if already claimed today. */
+  claimComebackBonusAtomic: (bundle: RewardBundle) => boolean;
   loadDemoState: () => void;
 }
 
@@ -592,6 +656,7 @@ export const usePlayerStore = create<PlayerStore>()(
       weeklyBestStars: 0,
       weeklyLastWeekId: null,
       lastGiftDate: null,
+      lastComebackClaimedDate: null,
       gamesPlayedToday: 0,
       gamesPlayedDate: null,
       streakFreezes: 0,
@@ -1088,6 +1153,13 @@ export const usePlayerStore = create<PlayerStore>()(
         }));
       },
 
+      claimGiftAtomic: (bundle) => {
+        set((s) => ({
+          lastGiftDate: getToday(),
+          ...rewardBundleDelta(s, bundle, Date.now()),
+        }));
+      },
+
       claimGift: () => {
         set({ lastGiftDate: getToday() });
       },
@@ -1234,6 +1306,14 @@ export const usePlayerStore = create<PlayerStore>()(
         set({ calendarLastDay: day, calendarMonth: month });
       },
 
+      claimCalendarDayAtomic: (day, month, bundle) => {
+        set((s) => ({
+          calendarLastDay: day,
+          calendarMonth: month,
+          ...rewardBundleDelta(s, bundle, Date.now()),
+        }));
+      },
+
       claimDailyDeal: (date: string) => {
         set({ lastDealClaimed: date });
       },
@@ -1264,6 +1344,14 @@ export const usePlayerStore = create<PlayerStore>()(
         set((s) => ({
           treasureMapPieces: Math.max(0, s.treasureMapPieces - 5),
           treasureChestsOpened: s.treasureChestsOpened + 1,
+        }));
+      },
+
+      openTreasureChestAtomic: (bundle) => {
+        set((s) => ({
+          treasureMapPieces: Math.max(0, s.treasureMapPieces - 5),
+          treasureChestsOpened: s.treasureChestsOpened + 1,
+          ...rewardBundleDelta(s, bundle, Date.now()),
         }));
       },
 
@@ -1474,6 +1562,25 @@ export const usePlayerStore = create<PlayerStore>()(
             ? s.flashOfferPurchases
             : [...s.flashOfferPurchases, key],
         }));
+      },
+
+      claimFreeChestAtomic: (bundle) => {
+        set((s) => ({
+          freeChestLastClaimedAt: Date.now(),
+          ...rewardBundleDelta(s, bundle, Date.now()),
+        }));
+      },
+
+      claimComebackBonusAtomic: (bundle) => {
+        const today = getToday();
+        // Persistent idempotency guard — refuse a second claim on the
+        // same day regardless of component-local state resets.
+        if (get().lastComebackClaimedDate === today) return false;
+        set((s) => ({
+          lastComebackClaimedDate: today,
+          ...rewardBundleDelta(s, bundle, Date.now()),
+        }));
+        return true;
       },
 
       claimFreeChest: () => {

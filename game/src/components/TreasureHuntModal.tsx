@@ -26,10 +26,7 @@ interface TreasureHuntModalProps {
 export const TreasureHuntModal: React.FC<TreasureHuntModalProps> = ({ visible, onClose }) => {
   const {
     treasureMapPieces,
-    addCoins,
-    addGems,
-    addPowerUp,
-    openTreasureChest,
+    openTreasureChestAtomic,
   } = usePlayerStore();
 
   const [revealed, setRevealed] = useState<TreasureReward | null>(null);
@@ -49,13 +46,17 @@ export const TreasureHuntModal: React.FC<TreasureHuntModalProps> = ({ visible, o
     const reward = rollTreasure(Date.now());
     setRevealed(reward);
 
-    if (reward.coins > 0) addCoins(reward.coins, { boostable: true });
-    if (reward.gems > 0) addGems(reward.gems);
-    if (reward.powerUps.bomb > 0) addPowerUp('bomb', reward.powerUps.bomb);
-    if (reward.powerUps.rowClear > 0) addPowerUp('rowClear', reward.powerUps.rowClear);
-    if (reward.powerUps.colorClear > 0) addPowerUp('colorClear', reward.powerUps.colorClear);
-
-    openTreasureChest();
+    // Atomic: deduct the 5 map pieces AND credit the reward in one
+    // set(). Previously the credits ran BEFORE openTreasureChest()
+    // deducted the pieces, so a crash mid-claim left the pieces at
+    // threshold and the chest re-openable for a free re-grant.
+    openTreasureChestAtomic({
+      coins: reward.coins > 0 ? reward.coins : undefined,
+      gems: reward.gems > 0 ? reward.gems : undefined,
+      bomb: reward.powerUps.bomb > 0 ? reward.powerUps.bomb : undefined,
+      rowClear: reward.powerUps.rowClear > 0 ? reward.powerUps.rowClear : undefined,
+      colorClear: reward.powerUps.colorClear > 0 ? reward.powerUps.colorClear : undefined,
+    });
 
     Animated.spring(scaleAnim, {
       toValue: 1,

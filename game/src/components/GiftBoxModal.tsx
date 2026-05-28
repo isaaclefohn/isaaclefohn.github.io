@@ -20,7 +20,7 @@ interface GiftBoxModalProps {
 
 export const GiftBoxModal: React.FC<GiftBoxModalProps> = ({ visible, gift, onClose }) => {
   const [opened, setOpened] = useState(false);
-  const { addCoins, addGems, addPowerUp } = usePlayerStore();
+  const { claimGiftAtomic } = usePlayerStore();
 
   const boxScale = useRef(new Animated.Value(0.5)).current;
   const boxBounce = useRef(new Animated.Value(0)).current;
@@ -67,22 +67,23 @@ export const GiftBoxModal: React.FC<GiftBoxModalProps> = ({ visible, gift, onClo
   const handleOpen = () => {
     if (!gift || opened) return;
 
-    // Apply rewards
+    // Aggregate the gift's reward list into a single bundle, then
+    // stamp + credit atomically. Previously this credited in a loop
+    // and NEVER called claimGift() — so lastGiftDate never updated and
+    // the gift could be re-opened (the parent's shouldShowGift gate
+    // stayed true forever). claimGiftAtomic stamps the date AND credits
+    // in one set(), closing both the missing-stamp and crash-window
+    // re-claim paths.
+    const bundle: { coins?: number; gems?: number; bomb?: number; rowClear?: number; colorClear?: number } = {};
     for (const reward of gift.rewards) {
-      switch (reward.type) {
-        case 'coins':
-          addCoins(reward.amount, { boostable: true });
-          break;
-        case 'gems':
-          addGems(reward.amount);
-          break;
-        case 'powerup':
-          if (reward.itemId) {
-            addPowerUp(reward.itemId as 'bomb' | 'rowClear' | 'colorClear', reward.amount);
-          }
-          break;
+      if (reward.type === 'coins') bundle.coins = (bundle.coins ?? 0) + reward.amount;
+      else if (reward.type === 'gems') bundle.gems = (bundle.gems ?? 0) + reward.amount;
+      else if (reward.type === 'powerup' && reward.itemId) {
+        const k = reward.itemId as 'bomb' | 'rowClear' | 'colorClear';
+        bundle[k] = (bundle[k] ?? 0) + reward.amount;
       }
     }
+    claimGiftAtomic(bundle);
 
     setOpened(true);
 

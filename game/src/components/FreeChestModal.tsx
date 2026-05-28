@@ -26,10 +26,7 @@ export const FreeChestModal: React.FC<FreeChestModalProps> = ({ visible, onClose
   const {
     highestLevel,
     freeChestLastClaimedAt,
-    addCoins,
-    addGems,
-    addPowerUp,
-    claimFreeChest,
+    claimFreeChestAtomic,
   } = usePlayerStore();
 
   const ready = isFreeChestReady(freeChestLastClaimedAt);
@@ -50,10 +47,15 @@ export const FreeChestModal: React.FC<FreeChestModalProps> = ({ visible, onClose
 
   const handleClaim = () => {
     if (!ready || !reward) return;
-    addCoins(reward.coins, { boostable: true });
-    if (reward.gems > 0) addGems(reward.gems);
-    if (reward.powerUp) addPowerUp(reward.powerUp.type, reward.powerUp.count);
-    claimFreeChest();
+    // Atomic: stamp freeChestLastClaimedAt AND credit in one set().
+    // Previously the timestamp was stamped AFTER the credits, so a
+    // crash mid-claim left the timer un-stamped and the chest
+    // re-claimable on next launch.
+    claimFreeChestAtomic({
+      coins: reward.coins,
+      gems: reward.gems > 0 ? reward.gems : undefined,
+      ...(reward.powerUp ? { [reward.powerUp.type]: reward.powerUp.count } : {}),
+    });
     setClaimed(true);
     setTimeout(onClose, 900);
   };

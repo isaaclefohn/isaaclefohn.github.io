@@ -20,7 +20,7 @@ interface ComebackBonusModalProps {
 
 export const ComebackBonusModal: React.FC<ComebackBonusModalProps> = ({ visible, reward, onClose }) => {
   const [claimed, setClaimed] = useState(false);
-  const { addCoins, addGems, addPowerUp } = usePlayerStore();
+  const { claimComebackBonusAtomic } = usePlayerStore();
 
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   const rewardOpacity = useRef(new Animated.Value(0)).current;
@@ -43,11 +43,17 @@ export const ComebackBonusModal: React.FC<ComebackBonusModalProps> = ({ visible,
   const handleClaim = () => {
     if (!reward || claimed) return;
 
-    addCoins(reward.coins, { boostable: true });
-    if (reward.gems > 0) addGems(reward.gems);
-    if (reward.powerUp) {
-      addPowerUp(reward.powerUp.type, reward.powerUp.count);
-    }
+    // Atomic + persistent guard. The local `claimed` state above
+    // resets on remount, so it can't be the sole double-claim
+    // defense. claimComebackBonusAtomic stamps lastComebackClaimedDate
+    // (persisted) and credits in one set(), and returns false if the
+    // bonus was already claimed today — so even a remount-then-tap
+    // can't double-credit.
+    claimComebackBonusAtomic({
+      coins: reward.coins,
+      gems: reward.gems > 0 ? reward.gems : undefined,
+      ...(reward.powerUp ? { [reward.powerUp.type]: reward.powerUp.count } : {}),
+    });
 
     setClaimed(true);
 
