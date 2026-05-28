@@ -7,7 +7,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Modal } from './common/Modal';
 import { GameIcon } from './GameIcon';
-import { usePlayerStore } from '../store/playerStore';
+import { usePlayerStore, ACHIEVEMENTS } from '../store/playerStore';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
 
 interface StatsModalProps {
@@ -42,6 +42,8 @@ export const StatsModal: React.FC<StatsModalProps> = ({ visible, onClose }) => {
     coins,
     gems,
     totalPowerUpsUsed,
+    totalChromaticClears,
+    bestWaveReached,
     levelStars,
     unlockedAchievements,
     zenHighScore,
@@ -81,6 +83,8 @@ export const StatsModal: React.FC<StatsModalProps> = ({ visible, onClose }) => {
           <StatRow icon="lightning" label="Lines Cleared" value={totalLinesCleared} color={COLORS.blocks[1]} />
           <StatRow icon="fire" label="Best Combo" value={`${bestCombo}x`} color={COLORS.blocks[6]} />
           <StatRow icon="bomb" label="Power-Ups Used" value={totalPowerUpsUsed} color={COLORS.blocks[5]} />
+          <StatRow icon="palette" label="Chromatic Clears" value={totalChromaticClears} color={COLORS.accent} />
+          <StatRow icon="lightning" label="Best Wave" value={bestWaveReached} color={COLORS.blocks[3]} />
         </View>
 
         {/* Dedication section */}
@@ -89,7 +93,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ visible, onClose }) => {
           <StatRow icon="map" label="Games Played" value={totalGamesPlayed} />
           <StatRow icon="fire" label="Current Streak" value={`${currentStreak} day${currentStreak !== 1 ? 's' : ''}`} color={COLORS.blocks[6]} />
           <StatRow icon="crown" label="Longest Streak" value={`${longestStreak} day${longestStreak !== 1 ? 's' : ''}`} color={COLORS.accentGold} />
-          <StatRow icon="trophy" label="Achievements" value={`${unlockedAchievements.length} / 15`} />
+          <StatRow icon="trophy" label="Achievements" value={`${unlockedAchievements.length} / ${ACHIEVEMENTS.length}`} />
         </View>
 
         {/* Zen Mode section */}

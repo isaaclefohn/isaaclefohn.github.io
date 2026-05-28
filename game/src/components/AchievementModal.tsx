@@ -8,6 +8,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Modal } from './common/Modal';
 import { GameIcon } from './GameIcon';
 import { ACHIEVEMENTS, usePlayerStore } from '../store/playerStore';
+import { getAchievementProgress, formatProgress } from '../game/progression/AchievementProgress';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
 
 interface AchievementModalProps {
@@ -16,8 +17,35 @@ interface AchievementModalProps {
 }
 
 export const AchievementModal: React.FC<AchievementModalProps> = ({ visible, onClose }) => {
-  const { unlockedAchievements } = usePlayerStore();
+  const {
+    unlockedAchievements,
+    totalLinesCleared,
+    highestLevel,
+    totalScore,
+    longestStreak,
+    levelStars,
+    coins,
+    totalPowerUpsUsed,
+    totalChromaticClears,
+    bestWaveReached,
+    bestCombo,
+  } = usePlayerStore();
   const unlockedCount = unlockedAchievements.length;
+
+  // Snapshot of the stats that drive achievement progress, fed to the
+  // pure progress helper so each locked card can show a "X / Y" bar.
+  const statsSnapshot = {
+    totalLinesCleared,
+    highestLevel,
+    totalScore,
+    longestStreak,
+    levelStars,
+    coins,
+    totalPowerUpsUsed,
+    totalChromaticClears,
+    bestWaveReached,
+    bestCombo,
+  };
 
   return (
     <Modal visible={visible} onClose={onClose} dismissable>
@@ -36,6 +64,8 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ visible, onC
       >
         {ACHIEVEMENTS.map((achievement) => {
           const unlocked = unlockedAchievements.includes(achievement.id);
+          // Only locked cards show a bar; unlocked ones carry the check badge.
+          const progress = unlocked ? null : getAchievementProgress(achievement.id, statsSnapshot);
 
           return (
             <View
@@ -57,18 +87,28 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ visible, onC
                   </View>
                 )}
               </View>
-              <Text
-                style={[styles.cardName, !unlocked && styles.cardNameLocked]}
-                numberOfLines={1}
-              >
-                {achievement.name}
-              </Text>
-              <Text
-                style={[styles.cardDesc, !unlocked && styles.cardDescLocked]}
-                numberOfLines={2}
-              >
-                {achievement.description}
-              </Text>
+              <View style={styles.cardMiddle}>
+                <Text
+                  style={[styles.cardName, !unlocked && styles.cardNameLocked]}
+                  numberOfLines={1}
+                >
+                  {achievement.name}
+                </Text>
+                <Text
+                  style={[styles.cardDesc, !unlocked && styles.cardDescLocked]}
+                  numberOfLines={2}
+                >
+                  {achievement.description}
+                </Text>
+                {progress && (
+                  <View style={styles.progressRow}>
+                    <View style={styles.progressTrack}>
+                      <View style={[styles.progressFill, { width: `${Math.round(progress.pct * 100)}%` }]} />
+                    </View>
+                    <Text style={styles.progressLabel}>{formatProgress(progress)}</Text>
+                  </View>
+                )}
+              </View>
               <View style={styles.rewardRow}>
                 {achievement.reward.coins && (
                   <View style={styles.rewardItem}>
@@ -151,11 +191,15 @@ const styles = StyleSheet.create({
     top: -2,
     right: -2,
   },
+  cardMiddle: {
+    flex: 1,
+    gap: 2,
+    justifyContent: 'center',
+  },
   cardName: {
     fontSize: 14,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    flex: 1,
   },
   cardNameLocked: {
     color: COLORS.textMuted,
@@ -163,10 +207,34 @@ const styles = StyleSheet.create({
   cardDesc: {
     fontSize: 11,
     color: COLORS.textSecondary,
-    flex: 2,
   },
   cardDescLocked: {
     color: COLORS.textMuted,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 3,
+  },
+  progressTrack: {
+    flex: 1,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: `${COLORS.textMuted}25`,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: COLORS.accentGold,
+  },
+  progressLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    minWidth: 44,
+    textAlign: 'right',
   },
   rewardRow: {
     flexDirection: 'row',
