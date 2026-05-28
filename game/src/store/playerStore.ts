@@ -113,6 +113,16 @@ interface PlayerStoreState {
   lastPlayDate: string | null;
   equippedTheme: string;
   equippedBlockSkin: string;
+  /**
+   * Themes / block-skins the player has PURCHASED with gems. The
+   * free defaults ('classic' / 'default') are not listed — they're
+   * always available via the price===0 path. Once a paid cosmetic is
+   * in this set, re-equipping it is free. Without this ledger, the
+   * shop would re-charge gems every time a player switched away from
+   * and back to a paid theme they already bought.
+   */
+  ownedThemes: string[];
+  ownedBlockSkins: string[];
   powerUps: { bomb: number; rowClear: number; colorClear: number };
   // Daily rewards
   dailyRewardDay: number;
@@ -299,6 +309,17 @@ interface PlayerStore extends PlayerStoreState {
   usePowerUp: (type: 'bomb' | 'rowClear' | 'colorClear') => boolean;
   equipTheme: (themeId: string) => void;
   equipBlockSkin: (skinId: string) => void;
+  /**
+   * Atomic purchase-and-equip for cosmetics. If the cosmetic is free
+   * (price 0) or already owned, just equips it (no charge). Otherwise
+   * checks gem affordability against live state, then deducts gems +
+   * records ownership + equips in one `set()`. Returns false (no
+   * change) if the player can't afford an un-owned paid cosmetic.
+   * Prevents the double-charge bug where re-equipping a previously-
+   * purchased theme would call spendGems again.
+   */
+  purchaseAndEquipTheme: (themeId: string, price: number) => boolean;
+  purchaseAndEquipBlockSkin: (skinId: string, price: number) => boolean;
   /** Update the daily play streak. Returns the streak-shield result so the
    *  UI can show a "Streak Saved!" toast (shield consumed) or "Shield Earned!"
    *  toast (shield granted at a milestone). */
@@ -415,6 +436,25 @@ interface PlayerStore extends PlayerStoreState {
   updateSkillRating: (change: number) => void;
   // Power-Up Upgrades
   upgradePowerUp: (type: 'bomb' | 'rowClear' | 'colorClear') => void;
+  /**
+   * Atomically purchase a power-up upgrade: checks affordability AND
+   * not-already-maxed, then deducts BOTH currencies and bumps the
+   * level in a single `set()`. Returns false (no state change) if the
+   * player can't afford it or is already at max level.
+   *
+   * Replaces the old ShopScreen pattern of three separate calls
+   * (spendCoins / spendGems / upgradePowerUp) which could partial-fail:
+   * spendCoins ran unconditionally, spendGems's return was ignored, and
+   * upgradePowerUp ran regardless — so a stale-affordability race could
+   * deduct coins, silently skip the gem deduction, and STILL grant the
+   * upgrade. Reading and writing inside one `set()` makes that
+   * impossible.
+   */
+  purchasePowerUpUpgrade: (
+    type: 'bomb' | 'rowClear' | 'colorClear',
+    coinCost: number,
+    gemCost: number,
+  ) => boolean;
   // World Completion
   claimWorldClear: (worldId: number) => void;
   claimWorldPerfect: (worldId: number) => void;
@@ -517,6 +557,8 @@ export const usePlayerStore = create<PlayerStore>()(
       lastPlayDate: null,
       equippedTheme: 'classic',
       equippedBlockSkin: 'default',
+      ownedThemes: [],
+      ownedBlockSkins: [],
       powerUps: { bomb: 0, rowClear: 0, colorClear: 0 },
       dailyRewardDay: 0,
       dailyRewardLastClaimed: null,
@@ -669,6 +711,36 @@ export const usePlayerStore = create<PlayerStore>()(
 
       equipTheme: (themeId) => set({ equippedTheme: themeId }),
       equipBlockSkin: (skinId) => set({ equippedBlockSkin: skinId }),
+
+      purchaseAndEquipTheme: (themeId, price) => {
+        const s = get();
+        if (price === 0 || s.ownedThemes.includes(themeId)) {
+          set({ equippedTheme: themeId });
+          return true;
+        }
+        if (s.gems < price) return false;
+        set({
+          gems: s.gems - price,
+          ownedThemes: [...s.ownedThemes, themeId],
+          equippedTheme: themeId,
+        });
+        return true;
+      },
+
+      purchaseAndEquipBlockSkin: (skinId, price) => {
+        const s = get();
+        if (price === 0 || s.ownedBlockSkins.includes(skinId)) {
+          set({ equippedBlockSkin: skinId });
+          return true;
+        }
+        if (s.gems < price) return false;
+        set({
+          gems: s.gems - price,
+          ownedBlockSkins: [...s.ownedBlockSkins, skinId],
+          equippedBlockSkin: skinId,
+        });
+        return true;
+      },
 
       updateStreak: (): StreakShieldResult => {
         const today = getToday();
@@ -1122,6 +1194,24 @@ export const usePlayerStore = create<PlayerStore>()(
             [type]: Math.min(s.powerUpLevels[type] + 1, 5),
           },
         }));
+      },
+
+      purchasePowerUpUpgrade: (type, coinCost, gemCost) => {
+        const s = get();
+        // Affordability + max-level guard read from CURRENT state, not
+        // a stale render-time closure. Both checks must pass before
+        // any deduction happens.
+        if (s.coins < coinCost || s.gems < gemCost) return false;
+        if (s.powerUpLevels[type] >= 5) return false;
+        set({
+          coins: s.coins - coinCost,
+          gems: s.gems - gemCost,
+          powerUpLevels: {
+            ...s.powerUpLevels,
+            [type]: Math.min(s.powerUpLevels[type] + 1, 5),
+          },
+        });
+        return true;
       },
 
       claimWorldClear: (worldId: number) => {

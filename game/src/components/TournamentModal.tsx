@@ -60,9 +60,17 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({ visible, onClo
       activeTournament.startedAt,
     );
     const prize = getPrizeForRank(rank, config);
+    // Clear the tournament FIRST, then credit. finishTournament sets
+    // activeTournament = null, so if this effect re-runs (modal
+    // unmount/remount mid-payout, React Strict Mode double-invoke),
+    // the `!activeTournament` guard at the top short-circuits before
+    // re-crediting. The prize/rank are already captured into locals
+    // above, so clearing the source state doesn't affect the credit
+    // values. Order matters: credit-then-clear left a window where a
+    // re-entry could double-pay.
+    finishTournament(rank);
     addCoins(prize.coins, { boostable: true });
     if (prize.gems > 0) addGems(prize.gems);
-    finishTournament(rank);
   }, [visible, activeTournament, addCoins, addGems, finishTournament]);
 
   const handleEnter = (tier: TournamentTier) => {

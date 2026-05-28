@@ -323,14 +323,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
   }, [adPowerUpInFlight, player]);
 
   const handleBuyTheme = (theme: GameTheme) => {
-    if (theme.price === 0) {
-      player.equipTheme(theme.id);
-      return;
-    }
-    const success = player.spendGems(theme.price);
-    if (success) {
-      player.equipTheme(theme.id);
-    } else {
+    // Atomic purchase-and-equip. Free OR already-owned themes equip
+    // without charge; un-owned paid themes deduct gems + record
+    // ownership + equip in one store action. Returns false only when
+    // the player can't afford an un-owned paid theme.
+    const ok = player.purchaseAndEquipTheme(theme.id, theme.price);
+    if (!ok) {
       Alert.alert('Not enough gems', `You need ${theme.price} gems.`);
     }
   };
@@ -539,11 +537,15 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                       <Button
                         title={`${next.coinCost}c + ${next.gemCost}g`}
                         onPress={() => {
-                          if (affordable) {
-                            player.spendCoins(next.coinCost);
-                            player.spendGems(next.gemCost);
-                            player.upgradePowerUp(type);
-                          } else {
+                          // Atomic purchase: the store action re-checks
+                          // affordability against live state and deducts
+                          // both currencies + applies the upgrade in one
+                          // set(). The `affordable` flag here is just for
+                          // the disabled styling; the real gate is inside
+                          // purchasePowerUpUpgrade so a stale closure can't
+                          // produce a partial spend.
+                          const ok = player.purchasePowerUpUpgrade(type, next.coinCost, next.gemCost);
+                          if (!ok) {
                             Alert.alert('Not enough resources', `You need ${next.coinCost} coins and ${next.gemCost} gems.`);
                           }
                         }}
@@ -569,6 +571,9 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
               <Text style={styles.sectionSubtitle}>Personalize your board with gems</Text>
               {Object.values(THEMES).map((theme) => {
                 const isEquipped = player.equippedTheme === theme.id;
+                // A paid theme the player already bought re-equips for
+                // free — show "Equip", not the gem price.
+                const isOwned = theme.price === 0 || player.ownedThemes.includes(theme.id);
                 return (
                   <View key={theme.id} style={[styles.shopItem, isEquipped && styles.equippedItem]}>
                     <View style={styles.itemInfo}>
@@ -594,7 +599,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                       title={
                         isEquipped
                           ? '\u2714 Equipped'
-                          : theme.price === 0
+                          : isOwned
                             ? 'Equip'
                             : `${theme.price} gems`
                       }
@@ -617,6 +622,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
               <Text style={styles.sectionSubtitle}>Change how your blocks look</Text>
               {Object.values(BLOCK_SKINS).map((skin) => {
                 const isEquipped = player.equippedBlockSkin === skin.id;
+                const isOwned = skin.price === 0 || player.ownedBlockSkins.includes(skin.id);
                 return (
                   <View key={skin.id} style={[styles.shopItem, isEquipped && styles.equippedItem]}>
                     <View style={styles.itemInfo}>
@@ -638,20 +644,17 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
                       title={
                         isEquipped
                           ? '\u2714 Equipped'
-                          : skin.price === 0
+                          : isOwned
                             ? 'Equip'
                             : `${skin.price} gems`
                       }
                       onPress={() => {
-                        if (skin.price === 0 || isEquipped) {
-                          player.equipBlockSkin(skin.id);
-                        } else {
-                          const success = player.spendGems(skin.price);
-                          if (success) {
-                            player.equipBlockSkin(skin.id);
-                          } else {
-                            Alert.alert('Not enough gems', `You need ${skin.price} gems.`);
-                          }
+                        // Atomic purchase-and-equip; free / already-owned
+                        // skins equip without charge, un-owned paid skins
+                        // deduct + record ownership + equip in one action.
+                        const ok = player.purchaseAndEquipBlockSkin(skin.id, skin.price);
+                        if (!ok) {
+                          Alert.alert('Not enough gems', `You need ${skin.price} gems.`);
                         }
                       }}
                       variant={isEquipped ? 'ghost' : 'primary'}
