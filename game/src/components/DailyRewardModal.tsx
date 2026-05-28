@@ -145,7 +145,14 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
       <View style={styles.header}>
         <GameIcon name="calendar" size={32} color={COLORS.accentGold} />
         <Text style={styles.title}>Daily Rewards</Text>
-        <Text style={styles.subtitle}>Day {dailyRewardDay + 1} of 7</Text>
+        {/* `dailyRewardDay` keeps incrementing forever as the player
+            returns daily; the reward selection wraps every 7 days via
+            modulo (see DAILY_REWARDS lookup in the store action). The
+            UI text must wrap too, or it shows nonsense like "Day 8
+            of 7" after a full first cycle. `currentDayIndex` (0-6)
+            is the already-wrapped value used everywhere else in
+            this component. */}
+        <Text style={styles.subtitle}>Day {currentDayIndex + 1} of 7</Text>
       </View>
 
       <View style={styles.grid}>
