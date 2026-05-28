@@ -165,3 +165,50 @@ export function buildEndlessShareCard(input: EndlessRunShareInput): string {
   lines.push(FOOTER_URL);
   return lines.join('\n');
 }
+
+// ── Collection (achievement tracks) ────────────────────────────────
+
+export interface CollectionShareInput {
+  /** Total achievements unlocked. */
+  achievementsUnlocked: number;
+  /** Total achievements in the game. */
+  achievementsTotal: number;
+  /** One entry per collection track, in display order. */
+  tracks: Array<{ unlocked: number; total: number }>;
+  /** Names of prestige cosmetics earned (e.g. ['Godlike']). Empty if none. */
+  prestigeEarned: string[];
+}
+
+/** One square per track: green = complete, yellow = in progress, white = untouched. */
+function trackSquare(t: { unlocked: number; total: number }): string {
+  if (t.total > 0 && t.unlocked >= t.total) return '🟩';
+  if (t.unlocked > 0) return '🟨';
+  return '⬜';
+}
+
+/**
+ * Build a shareable card for the player's achievement collection — the
+ * meta-progression analogue of the run cards. The track row is a compact,
+ * spoiler-safe glyph (à la Wordle) and the prestige line is the flex.
+ *
+ * Example output:
+ *
+ *   CHROMA — Collection
+ *   🏆 14 / 24 achievements
+ *   🟩🟨⬜🟩🟨⬜🟩⬜
+ *   👑 Chromatic Overflow
+ *   chroma.game
+ */
+export function buildCollectionShareCard(input: CollectionShareInput): string {
+  const lines: string[] = [];
+  lines.push('CHROMA — Collection');
+  lines.push(`🏆 ${input.achievementsUnlocked} / ${input.achievementsTotal} achievements`);
+  if (input.tracks.length > 0) {
+    lines.push(input.tracks.map(trackSquare).join(''));
+  }
+  if (input.prestigeEarned.length > 0) {
+    lines.push(`👑 ${input.prestigeEarned.join(' · ')}`);
+  }
+  lines.push(FOOTER_URL);
+  return lines.join('\n');
+}

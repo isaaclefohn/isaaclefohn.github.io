@@ -11,6 +11,8 @@ import { getSkillTier } from '../game/systems/SkillRating';
 import { GameIcon } from './GameIcon';
 import { Button } from './common/Button';
 import { Modal } from './common/Modal';
+import { ACHIEVEMENT_TRACKS, getTrackProgress } from '../game/progression/AchievementTracks';
+import { buildCollectionShareCard } from '../game/social/shareCards';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
 
 interface AchievementShowcaseProps {
@@ -27,20 +29,21 @@ export const AchievementShowcase: React.FC<AchievementShowcaseProps> = ({ visibl
   const tier = getSkillTier(skillRating);
 
   const handleShare = async () => {
-    const achievementList = unlocked.slice(0, 5).map(a => `  ${a.name}`).join('\n');
-    const message = [
-      `CHROMA — ${displayName}'s Progress`,
-      ``,
-      `Level: ${highestLevel}`,
-      `Stars: ${totalStars}`,
-      `Score: ${totalScore.toLocaleString()}`,
-      `Rank: ${tier.name} (SR ${skillRating})`,
-      `Streak: ${longestStreak} days`,
-      `Achievements: ${unlocked.length}/${ACHIEVEMENTS.length}`,
-      unlocked.length > 0 ? `\nTop Achievements:\n${achievementList}` : '',
-      ``,
-      `Can you beat my score?`,
-    ].filter(Boolean).join('\n');
+    // Polished, fixed-width collection card — mirrors the run share cards
+    // (buildLevelRunShareCard / buildEndlessShareCard) so every shared
+    // artifact carries the same recognizable CHROMA grammar.
+    const prestigeEarned = ACHIEVEMENT_TRACKS.filter(
+      (t) => t.prestige && getTrackProgress(t, unlockedAchievements).complete,
+    ).map((t) => t.prestige!.cosmetic);
+    const message = buildCollectionShareCard({
+      achievementsUnlocked: unlocked.length,
+      achievementsTotal: ACHIEVEMENTS.length,
+      tracks: ACHIEVEMENT_TRACKS.map((t) => {
+        const tp = getTrackProgress(t, unlockedAchievements);
+        return { unlocked: tp.unlocked, total: tp.total };
+      }),
+      prestigeEarned,
+    });
 
     try {
       await Share.share({ message });

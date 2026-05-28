@@ -1,7 +1,53 @@
 import {
   buildLevelRunShareCard,
   buildEndlessShareCard,
+  buildCollectionShareCard,
 } from '../game/social/shareCards';
+
+describe('shareCards — collection', () => {
+  const base = {
+    achievementsUnlocked: 14,
+    achievementsTotal: 24,
+    tracks: [
+      { unlocked: 3, total: 3 }, // complete -> green
+      { unlocked: 2, total: 3 }, // partial  -> yellow
+      { unlocked: 0, total: 3 }, // none     -> white
+    ],
+    prestigeEarned: ['Chromatic Overflow'],
+  };
+
+  it('renders title, achievement count, track grid, prestige line, and footer', () => {
+    const card = buildCollectionShareCard(base);
+    expect(card).toContain('CHROMA — Collection');
+    expect(card).toContain('🏆 14 / 24 achievements');
+    expect(card).toContain('🟩🟨⬜');
+    expect(card).toContain('👑 Chromatic Overflow');
+    expect(card).toContain('chroma.game');
+  });
+
+  it('maps each track to the right square (complete / partial / none)', () => {
+    const card = buildCollectionShareCard({
+      ...base,
+      tracks: [
+        { unlocked: 1, total: 1 },
+        { unlocked: 0, total: 2 },
+        { unlocked: 1, total: 2 },
+      ],
+      prestigeEarned: [],
+    });
+    expect(card).toContain('🟩⬜🟨');
+  });
+
+  it('omits the prestige line when nothing is earned', () => {
+    expect(buildCollectionShareCard({ ...base, prestigeEarned: [] })).not.toContain('👑');
+  });
+
+  it('joins multiple earned prestige cosmetics', () => {
+    expect(buildCollectionShareCard({ ...base, prestigeEarned: ['Godlike', 'Holo'] })).toContain(
+      '👑 Godlike · Holo',
+    );
+  });
+});
 
 describe('shareCards — level run', () => {
   const base = {
