@@ -49,6 +49,12 @@ export const StatsModal: React.FC<StatsModalProps> = ({ visible, onClose }) => {
     zenHighScore,
     zenGamesPlayed,
     zenBestLinesCleared,
+    weeklyBestScore,
+    weeklyBestStars,
+    tournamentBestScore,
+    bossRushBestScore,
+    bossRushBestBosses,
+    bossRushRunsCompleted,
   } = usePlayerStore();
 
   const totalStars = Object.values(levelStars).reduce((a, b) => a + b, 0);
@@ -104,6 +110,36 @@ export const StatsModal: React.FC<StatsModalProps> = ({ visible, onClose }) => {
               <StatRow icon="sparkle" label="High Score" value={zenHighScore.toLocaleString()} color={COLORS.accentGold} />
               <StatRow icon="map" label="Games Played" value={zenGamesPlayed} />
               <StatRow icon="lightning" label="Best Lines" value={zenBestLinesCleared} color={COLORS.blocks[1]} />
+            </View>
+          </>
+        )}
+
+        {/* Competitive section — only once the player has a ranked result */}
+        {(weeklyBestScore > 0 || tournamentBestScore > 0) && (
+          <>
+            <Text style={styles.sectionTitle}>COMPETITIVE</Text>
+            <View style={styles.section}>
+              {tournamentBestScore > 0 && (
+                <StatRow icon="trophy" label="Best Tournament Rank" value={`#${tournamentBestScore}`} color={COLORS.accentGold} />
+              )}
+              {weeklyBestScore > 0 && (
+                <StatRow icon="target" label="Weekly Best Score" value={weeklyBestScore.toLocaleString()} color={COLORS.accent} />
+              )}
+              {weeklyBestScore > 0 && (
+                <StatRow icon="star" label="Weekly Best Stars" value={weeklyBestStars} />
+              )}
+            </View>
+          </>
+        )}
+
+        {/* Boss Rush section — only once the player has finished a run */}
+        {bossRushRunsCompleted > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>BOSS RUSH</Text>
+            <View style={styles.section}>
+              <StatRow icon="crown" label="Best Score" value={bossRushBestScore.toLocaleString()} color={COLORS.accentGold} />
+              <StatRow icon="bomb" label="Bosses Defeated" value={bossRushBestBosses} color={COLORS.blocks[5]} />
+              <StatRow icon="map" label="Runs Completed" value={bossRushRunsCompleted} />
             </View>
           </>
         )}
