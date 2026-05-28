@@ -17,6 +17,14 @@ interface ScoreDisplayProps {
   objective: LevelObjective;
   level: number;
   stars: 0 | 1 | 2 | 3;
+  /**
+   * Optional current wave number for endless mode. When passed and
+   * level is 0, the label reads "ZEN · WAVE N" instead of just
+   * "ZEN MODE". Surfaces the just-shipped wave system as ambient
+   * state so the player always knows their wave between WAVE N!
+   * boundary-crossing toasts.
+   */
+  endlessWave?: number;
 }
 
 export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
@@ -26,6 +34,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   objective,
   level,
   stars,
+  endlessWave,
 }) => {
   // Progress drives the goal-bar fill. For 'score' objectives that's
   // score-vs-target (the original); for 'chromatic' objectives it's
@@ -96,7 +105,11 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       {/* Level badge and stars row */}
       <View style={styles.levelRow}>
         <View style={styles.levelBadge}>
-          <Text style={styles.levelText}>{level === 0 ? 'ZEN MODE' : `LEVEL ${level}`}</Text>
+          <Text style={styles.levelText}>
+            {level === 0
+              ? (endlessWave ? `ZEN · WAVE ${endlessWave}` : 'ZEN MODE')
+              : `LEVEL ${level}`}
+          </Text>
         </View>
         <Animated.View style={[styles.starsContainer, { transform: [{ scale: starBounce }] }]}>
           {[1, 2, 3].map((star) => (

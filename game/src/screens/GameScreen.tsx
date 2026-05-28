@@ -1004,6 +1004,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         objective={isEndless ? { type: 'score', target: gameState.score + 1000 } : gameState.objective}
         level={isEndless ? 0 : gameState.level}
         stars={stars}
+        endlessWave={isEndless ? getWaveForPieces(gameState.piecesPlaced).wave : undefined}
       />
 
       {/* Power-up targeting hint */}
