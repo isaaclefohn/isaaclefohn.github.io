@@ -358,7 +358,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <Animated.View style={[styles.decorOrb, styles.decorOrb2, { opacity: decorPulse }]} />
       <Animated.View style={[styles.decorOrb, styles.decorOrb3, { opacity: decorPulse }]} />
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={[styles.content, highestLevel < 1 && styles.contentFirstRun]} showsVerticalScrollIndicator={false}>
         {/* Animated Title with floating blocks */}
         <View style={styles.titleContainer}>
           {/* Floating decorative blocks behind title */}
@@ -880,6 +880,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.sm,
     paddingBottom: 20,
+  },
+  // First-run home only: the stripped FTUE screen has little content, so
+  // distribute it down the full height instead of clumping at the top —
+  // wordmark up top, Play/Levels in the lower thumb-reach zone, footer at
+  // the bottom. flexGrow makes the container fill the scroll viewport;
+  // space-between spreads the children. The content-rich post-level-1 home
+  // keeps the default top-flow (it overflows and scrolls normally).
+  contentFirstRun: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    paddingTop: 44,
+    paddingBottom: 52,
   },
   // Decorative background elements
   decorOrb: {
