@@ -93,8 +93,6 @@ const POWER_UP_ICON_NAMES: Record<PowerUpType, 'bomb' | 'lightning' | 'palette'>
 /** Drag overlay tuning — the piece's visual centroid floats this many pixels
  *  above the user's finger so the thumb never occludes where the piece lands. */
 const DRAG_OVERLAY_LIFT = 64;
-const DRAG_TRAY_CELL_SIZE = 28;
-const DRAG_TRAY_GAP = 3;
 
 export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => {
   const { level, endless, daily } = route.params;
@@ -744,12 +742,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     const pieceCenterY = screenY - DRAG_OVERLAY_LIFT;
 
     // Map the centroid screen position to a cell index on the board.
-    const localX = pieceCenterX - bx - CELL_GAP;
-    const localY = pieceCenterY - by - CELL_GAP;
-
-    // localX/cellTotal gives a fractional cell coordinate where 0 = center
-    // of the first cell's left edge; the +0.5 shifts to cell-center space
-    // before subtracting the centroid offset so rounding snaps correctly.
+    // Subtract CELL_SIZE/2 so the centroid point — which the overlay anchors
+    // at the CENTER of its centroid cell (see centroidPx/centroidPy in the
+    // render below, both add CELL_SIZE/2 for that purpose) — is measured in
+    // cell-center space here too. Without this term the snapped ghost drifted
+    // ~0.46 cells from the visible piece, which tipped the Math.round() to the
+    // wrong cell for shapes whose centroid fractional part landed near the
+    // rounding boundary (L / S / Z / T, pentominoes) — the "piece doesn't
+    // match the silhouette beneath it" symptom. Earlier comment claimed a
+    // +0.5 cell-units shift; that was the right intent but the wrong sign +
+    // magnitude (cellTotal/2 ≠ CELL_SIZE/2 once CELL_GAP is non-zero).
+    const localX = pieceCenterX - bx - CELL_GAP - CELL_SIZE / 2;
+    const localY = pieceCenterY - by - CELL_GAP - CELL_SIZE / 2;
     const col = Math.round(localX / cellTotal - centroid.col);
     const row = Math.round(localY / cellTotal - centroid.row);
     return { row, col };
@@ -1599,13 +1603,20 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       {draggedPieceIndex !== null && dragPosition && gameState.availablePieces[draggedPieceIndex] && (() => {
         const dragPiece = gameState.availablePieces[draggedPieceIndex];
         const centroid = getPieceCentroid(dragPiece);
-        const cellTotal = DRAG_TRAY_CELL_SIZE + DRAG_TRAY_GAP;
+        // Render the dragged piece at BOARD cell size, not tray cell size,
+        // so it visually matches the ghost silhouette beneath it — same
+        // shape, same dimensions, only difference is DRAG_OVERLAY_LIFT. The
+        // previous overlay rendered at 28px tray cells while the board (and
+        // therefore the ghost) uses CELL_SIZE (40), so the floating piece
+        // looked noticeably smaller than the silhouette it would land in —
+        // the visible "piece doesn't match the silhouette beneath it" symptom.
+        const cellTotal = CELL_SIZE + CELL_GAP;
         // Pixel offset from the overlay's top-left to the centroid point.
-        // Each filled cell is drawn at (gap + c*cellTotal) in PieceRenderer,
-        // so the centroid's pixel position is DRAG_TRAY_GAP + centroid.col * cellTotal
-        // plus half a cell to land on the cell centre.
-        const centroidPx = DRAG_TRAY_GAP + centroid.col * cellTotal + DRAG_TRAY_CELL_SIZE / 2;
-        const centroidPy = DRAG_TRAY_GAP + centroid.row * cellTotal + DRAG_TRAY_CELL_SIZE / 2;
+        // PieceRenderer draws each filled cell at (gap + c*cellTotal); the
+        // centroid's pixel position is CELL_GAP + centroid.col * cellTotal,
+        // plus half a cell so it lands on the cell centre.
+        const centroidPx = CELL_GAP + centroid.col * cellTotal + CELL_SIZE / 2;
+        const centroidPy = CELL_GAP + centroid.row * cellTotal + CELL_SIZE / 2;
         return (
           <View style={styles.dragOverlay} pointerEvents="none">
             <View
@@ -1617,6 +1628,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             >
               <PieceRenderer
                 piece={dragPiece}
+                cellSize={CELL_SIZE}
+                gap={CELL_GAP}
                 selected
                 disabled={false}
               />
