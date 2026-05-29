@@ -91,6 +91,29 @@ export const AchievementShowcase: React.FC<AchievementShowcaseProps> = ({ visibl
         </View>
       </View>
 
+      {/* Collections — track sets; the 3 prestige tracks carry a crown */}
+      <View style={styles.collectionsSection}>
+        <Text style={styles.sectionLabel}>COLLECTIONS</Text>
+        <View style={styles.collectionsWrap}>
+          {ACHIEVEMENT_TRACKS.map((trk) => {
+            const tp = getTrackProgress(trk, unlockedAchievements);
+            return (
+              <View key={trk.id} style={[styles.collChip, tp.complete && styles.collChipDone]}>
+                {trk.prestige && (
+                  <GameIcon name="crown" size={9} color={tp.complete ? COLORS.accentGold : COLORS.textMuted} />
+                )}
+                <Text style={[styles.collLabel, tp.complete && styles.collLabelDone]}>{trk.label}</Text>
+                {tp.complete ? (
+                  <GameIcon name="check" size={10} color={COLORS.success} />
+                ) : (
+                  <Text style={styles.collCount}>{tp.unlocked}/{tp.total}</Text>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
       {/* Achievement list */}
       <View style={styles.achievementSection}>
         <Text style={styles.sectionLabel}>
@@ -139,6 +162,43 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
     letterSpacing: 0.5,
+  },
+  collectionsSection: {
+    marginBottom: 16,
+  },
+  collectionsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
+  },
+  collChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    backgroundColor: COLORS.surface,
+    borderColor: COLORS.surfaceBorder,
+  },
+  collChipDone: {
+    backgroundColor: `${COLORS.accentGold}14`,
+    borderColor: `${COLORS.accentGold}40`,
+  },
+  collLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+  },
+  collLabelDone: {
+    color: COLORS.accentGold,
+  },
+  collCount: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.textMuted,
   },
   card: {
     backgroundColor: COLORS.surfaceLight,
