@@ -40,8 +40,17 @@ interface BoardEffectsProps {
 
 // Per-cell placement squish + settle bounce animation
 const PlacementSquish: React.FC<{ cells: PlacedCell[] }> = ({ cells }) => {
-  const squishAnims = useRef(cells.map(() => new Animated.Value(0))).current;
-  const bounceAnims = useRef(cells.map(() => new Animated.Value(0))).current;
+  // One Animated.Value per placed cell. These refs must NOT be seeded from
+  // `cells.map(...)`: on mount `placedCells` is [], so that froze the pools to
+  // length 0 forever. The first real placement then indexed squishAnims[i] =>
+  // undefined, and the unguarded Animated.timing(undefined).start() below threw
+  // "Cannot read properties of undefined (reading 'stopTracking')", black-
+  // screening the whole app on web. Grow the pools each render to cover the
+  // current piece's cell count instead.
+  const squishAnims = useRef<Animated.Value[]>([]).current;
+  const bounceAnims = useRef<Animated.Value[]>([]).current;
+  while (squishAnims.length < cells.length) squishAnims.push(new Animated.Value(0));
+  while (bounceAnims.length < cells.length) bounceAnims.push(new Animated.Value(0));
 
   useEffect(() => {
     if (cells.length === 0) return;
