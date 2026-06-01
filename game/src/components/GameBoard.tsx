@@ -77,17 +77,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   // CENTROID (not the middle index of the cell list or the bbox corner) so
   // unorthodox shapes — S/Z/L/T tetrominoes, pentominoes — land centred on
   // the tapped cell the way the user expects.
+  //
+  // The math here MUST stay in lock-step with screenToBoard in GameScreen
+  // — when tap and drag disagree, the same touch position lands the piece
+  // in two different cells (visible as: "drag the piece and it goes one
+  // place, tap the same spot and it goes one column over"). Both paths
+  // measure from the cell CENTER (subtract CELL_SIZE/2) and apply the
+  // fractional centroid before rounding.
   const tapGesture = Gesture.Tap()
     .onEnd((event) => {
       if (!selectedPiece) return;
 
       const cellTotal = CELL_SIZE + CELL_GAP;
-      const col = Math.floor((event.x - CELL_GAP) / cellTotal);
-      const row = Math.floor((event.y - CELL_GAP) / cellTotal);
-
       const centroid = getPieceCentroid(selectedPiece);
-      const adjustedRow = row - Math.round(centroid.row);
-      const adjustedCol = col - Math.round(centroid.col);
+
+      const localX = event.x - CELL_GAP - CELL_SIZE / 2;
+      const localY = event.y - CELL_GAP - CELL_SIZE / 2;
+      const adjustedCol = Math.round(localX / cellTotal - centroid.col);
+      const adjustedRow = Math.round(localY / cellTotal - centroid.row);
 
       if (canPlace(grid, selectedPiece, adjustedRow, adjustedCol)) {
         onCellTap(adjustedRow, adjustedCol);

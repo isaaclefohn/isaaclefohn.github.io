@@ -699,15 +699,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         setTimeout(() => setPowerUpPreview([]), 300);
       }
 
-      const success = usePowerUp(activePowerUp);
-      if (success) {
-        const result = applyPowerUp(activePowerUp, row, col);
-        if (result) {
-          playSound('clear');
-          shakeBoard(1);
-          setActivePowerUp(null);
-          return;
-        }
+      // Apply BEFORE consuming inventory. The previous order decremented
+      // the power-up count first, then applyPowerUp returned null on a
+      // no-op (e.g. Color Clear tapped on an empty cell, Row Clear on an
+      // already-empty row) — the user lost a power-up for nothing. By
+      // checking the result first we only spend when something happened.
+      const result = applyPowerUp(activePowerUp, row, col);
+      if (result) {
+        usePowerUp(activePowerUp);
+        playSound('clear');
+        shakeBoard(1);
       }
       setActivePowerUp(null);
       return;

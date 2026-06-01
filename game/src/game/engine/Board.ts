@@ -246,6 +246,69 @@ function sweepCellsOfColors(
   return { newGrid, removed };
 }
 
+/**
+ * Run the clear + gravity + chromatic-detonation cascade loop on a grid,
+ * starting from a possibly-modified board (after a placement OR after a
+ * power-up's zero-out). Returns a PlacementResult describing what cleared.
+ *
+ * This is the SHARED engine for both `executePlacement` (which calls this
+ * after `placePiece`) and `applyPowerUp` in gameStore (which calls this
+ * after bombing / row-clearing / color-clearing cells). Centralising it
+ * ensures power-ups trigger the same line-clears and chromatic cascades
+ * that piece placements do — without it, a power-up that completes a row
+ * leaves the row full until the next manual placement.
+ */
+export function resolveBoardCascade(grid: Grid): PlacementResult {
+  let currentGrid = grid;
+  let totalLinesCleared = 0;
+  let totalCellsCleared = 0;
+  let allClearedRows: number[] = [];
+  let allClearedCols: number[] = [];
+  let cascadeCount = 0;
+  let totalChromaticColors: number[] = [];
+  let totalCascadeCells = 0;
+
+  while (true) {
+    const { rows, cols } = findFullLines(currentGrid);
+    if (rows.length === 0 && cols.length === 0) break;
+
+    const roundChromaticColors = getChromaticColors(currentGrid, rows, cols);
+    totalChromaticColors = [...totalChromaticColors, ...roundChromaticColors];
+
+    const result = clearLines(currentGrid, rows, cols);
+    totalLinesCleared += rows.length + cols.length;
+    totalCellsCleared += result.cellsCleared;
+    allClearedRows = [...allClearedRows, ...rows];
+    allClearedCols = [...allClearedCols, ...cols];
+
+    let postClearGrid = result.newGrid;
+    if (roundChromaticColors.length > 0) {
+      const cascade = sweepCellsOfColors(postClearGrid, roundChromaticColors);
+      postClearGrid = cascade.newGrid;
+      totalCascadeCells += cascade.removed;
+    }
+
+    currentGrid = applyGravity(postClearGrid);
+    cascadeCount++;
+  }
+
+  const actualCascades = Math.max(0, cascadeCount - 1);
+  const isPerfectClear = totalLinesCleared > 0 && countFilledCells(currentGrid) === 0;
+
+  return {
+    grid: currentGrid,
+    linesCleared: totalLinesCleared,
+    cellsCleared: totalCellsCleared,
+    clearedRows: allClearedRows,
+    clearedCols: allClearedCols,
+    perfectClear: isPerfectClear,
+    cascadeCount: actualCascades,
+    chromaticClears: totalChromaticColors.length,
+    chromaticColors: totalChromaticColors,
+    cascadeCellsCleared: totalCascadeCells,
+  };
+}
+
 export function executePlacement(
   grid: Grid,
   piece: Piece,

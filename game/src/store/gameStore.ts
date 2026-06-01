@@ -12,12 +12,15 @@ import {
   processTurn,
   generatePieceSet,
   getCurrentStars,
+  maybeRollGoldenPieceIndex,
 } from '../game/engine/GameLoop';
 import { Piece, rotatePiece } from '../game/engine/Piece';
 import { SeededRandom } from '../utils/seededRandom';
-import { ScoreEvent, scorePlacement } from '../game/engine/Scoring';
+import { ScoreEvent, scorePlacement, scoreClear } from '../game/engine/Scoring';
 import { PowerUpType, applyBomb, applyRowClear, applyColorClear } from '../game/powerups/PowerUpManager';
+import { resolveBoardCascade } from '../game/engine/Board';
 import { isGameOver } from '../game/engine/GameOver';
+import { usePlayerStore } from './playerStore';
 import { trackGameEvent } from '../services/analytics';
 
 interface GameStore {
@@ -139,19 +142,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!gameState || !rng || !levelConfig) return false;
     if (gameState.status !== 'playing') return false;
 
-    // First swap is free, subsequent swaps cost 25 coins
+    // First swap is free, subsequent swaps cost SWAP_COST coins. Previously
+    // both the gate and the spend were dead code — players could swap an
+    // unlimited number of times for free, which broke level pacing and
+    // turned chromatic-objective levels into "Swap until you get the right
+    // colors" trivially.
     const FREE_SWAPS = 1;
     const SWAP_COST = 25;
-    const needsCoins = gameState.swapsUsed >= FREE_SWAPS;
+    if (gameState.swapsUsed >= FREE_SWAPS) {
+      const spent = usePlayerStore.getState().spendCoins(SWAP_COST);
+      if (!spent) return false;
+    }
 
-    // Generate fresh pieces
-    const newPieces = generatePieceSet(rng, levelConfig.piecePool);
+    // Honour the CURRENT palette — `gameState.paletteSize` tracks the live
+    // palette (set by processTurn for endless waves, fixed for levels), so
+    // a Swap in Zen wave 1 (4 colors) MUST give 4-color pieces, not the
+    // default 7. Without this, Swap effectively skips past the chromatic
+    // teaching ramp the wave palette was designed around.
+    const newPieces = generatePieceSet(rng, levelConfig.piecePool, gameState.paletteSize);
 
     set({
       gameState: {
         ...gameState,
         availablePieces: newPieces,
         swapsUsed: gameState.swapsUsed + 1,
+        // The golden piece index referred to a position in the OLD tray —
+        // after a full reroll, it would point at an arbitrary unrelated
+        // piece. Re-roll it for endless (where goldens exist) and clear it
+        // everywhere else, matching processTurn's policy when a fresh set
+        // spawns naturally.
+        goldenPieceIndex: gameState.level === 0 ? maybeRollGoldenPieceIndex(rng) : null,
       },
       selectedPieceIndex: null,
     });
@@ -211,26 +231,60 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     if (result.cellsCleared === 0) return null;
 
-    const scoreEvent = scorePlacement(result.cellsCleared);
-    const newScore = gameState.score + scoreEvent.points;
+    // After the power-up zeros its cells, the resulting grid may have newly
+    // full rows/cols (e.g. a Row Clear that completed a partially-full
+    // column). Previously power-ups stopped at zero-out and left those
+    // lines full until the next manual placement — visibly broken: row 6 is
+    // full, no clear animation, no chromatic cascade, no score for it.
+    // Hand the grid to the shared resolver so the line-clear + gravity +
+    // chromatic-detonation loop runs identically to a placement turn.
+    const cascade = resolveBoardCascade(result.grid);
 
-    // Re-check game state after power-up (held piece is considered too)
+    const directScore = scorePlacement(result.cellsCleared);
+    const cascadeScore = cascade.linesCleared > 0
+      ? scoreClear(
+          cascade.linesCleared,
+          cascade.cellsCleared,
+          gameState.combo,
+          cascade.perfectClear,
+          cascade.chromaticClears,
+          cascade.chromaticColors,
+          cascade.cascadeCellsCleared,
+        )
+      : null;
+
+    const totalPoints = directScore.points + (cascadeScore?.points ?? 0);
+    const newScore = gameState.score + totalPoints;
+    // Bias the surfaced score event toward the more "interesting" one —
+    // cascade events have chromatic / multi-line info the UI wants to
+    // celebrate; direct power-up clears are flat.
+    const surfacedEvent: ScoreEvent = cascadeScore ?? directScore;
+    const finalGrid = cascade.grid;
+
     const { heldPiece } = get();
     const remainingPieces = gameState.availablePieces.filter((p): p is Piece => p !== null);
     const gameOverPool = heldPiece ? [...remainingPieces, heldPiece] : remainingPieces;
-    const gameOver = gameOverPool.length > 0 && isGameOver(result.grid, gameOverPool);
+    const gameOver = gameOverPool.length > 0 && isGameOver(finalGrid, gameOverPool);
 
     set({
       gameState: {
         ...gameState,
-        grid: result.grid,
+        grid: finalGrid,
         score: newScore,
+        combo: cascade.linesCleared > 0 ? gameState.combo + 1 : 0,
         status: gameOver ? 'lost' : gameState.status,
-        lastScoreEvent: scoreEvent,
+        lastScoreEvent: surfacedEvent,
+        // Reset turn-scoped animation fields so BoardEffects' sweep/squish
+        // play the power-up's cascade, not a stale replay from the prior
+        // placement. lastPlacedCells stays empty — the power-up didn't add
+        // a piece, so the squish is meaningless here.
+        lastPlacedCells: [],
+        lastClearedRows: cascade.clearedRows,
+        lastClearedCols: cascade.clearedCols,
       },
     });
 
-    return { cellsCleared: result.cellsCleared };
+    return { cellsCleared: result.cellsCleared + cascade.cellsCleared };
   },
 
   pauseGame: () => {
@@ -293,10 +347,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   peekNextPieces: () => {
-    const { rng, levelConfig } = get();
+    const { rng, levelConfig, gameState } = get();
     if (!rng || !levelConfig) return [];
     const peekRng = rng.clone();
-    return generatePieceSet(peekRng, levelConfig.piecePool);
+    // Match the LIVE palette so the "NEXT" preview shows colors that will
+    // actually appear. Without this, in Zen wave 1 (4 colors) the preview
+    // misleadingly displays pieces in 7 colors, then the real spawn comes
+    // out in 4 — a UX trust break and a chromatic-strategy spoiler.
+    return generatePieceSet(peekRng, levelConfig.piecePool, gameState?.paletteSize);
   },
 
   getAvailablePieces: () => get().gameState?.availablePieces ?? [],
