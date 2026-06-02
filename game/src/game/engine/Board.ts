@@ -4,7 +4,7 @@
  * Grid values: 0 = empty, 1-7 = block color index.
  */
 
-import { Piece, getPieceCells } from './Piece';
+import { Piece, getPieceCells, rotatePiece } from './Piece';
 
 export type Grid = number[][];
 
@@ -541,4 +541,63 @@ export function findBestPlacement(
   }
 
   return bestPos;
+}
+
+/**
+ * Like findBestPlacement, but considers ALL of a piece's rotations — tap-to-
+ * rotate is a free, unlimited player action, so the best move may require a
+ * turn. Returns the winning orientation (already rotated), where to place it,
+ * and how many 90° turns from the input piece, so a hint can rotate the tray
+ * piece to match before highlighting. Returns null ONLY when no rotation of the
+ * piece fits anywhere. Uses the same heuristic score as findBestPlacement.
+ */
+export function findBestPlacementWithRotation(
+  grid: Grid,
+  piece: Piece
+): { row: number; col: number; rotations: number; piece: Piece } | null {
+  const size = grid.length;
+  let best: { row: number; col: number; rotations: number; piece: Piece } | null = null;
+  let bestScore = -1;
+  let oriented = piece;
+  const seenShapes = new Set<string>();
+
+  for (let rotations = 0; rotations < 4; rotations++) {
+    // Skip orientations whose shape repeats (square/single = 1 distinct form,
+    // domino/S/Z = 2, …) — keeps `rotations` the minimal turn count and avoids
+    // redundant board scans.
+    const shapeKey = oriented.shape.map((row) => row.map((b) => (b ? '1' : '0')).join('')).join('/');
+    if (!seenShapes.has(shapeKey)) {
+      seenShapes.add(shapeKey);
+      const cells = getPieceCells(oriented);
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (!canPlace(grid, oriented, r, c)) continue;
+          const placed = placePiece(grid, oriented, r, c);
+          const { rows, cols } = findFullLines(placed);
+          const linesCleared = rows.length + cols.length;
+          let adjacency = 0;
+          for (const cell of cells) {
+            const pr = r + cell.row;
+            const pc = c + cell.col;
+            const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (const [dr, dc] of dirs) {
+              const nr = pr + dr;
+              const nc = pc + dc;
+              if (nr >= 0 && nr < size && nc >= 0 && nc < size && grid[nr][nc] !== 0) {
+                adjacency++;
+              }
+            }
+          }
+          const score = linesCleared * 10000 + adjacency * 100 + r;
+          if (score > bestScore) {
+            bestScore = score;
+            best = { row: r, col: c, rotations, piece: oriented };
+          }
+        }
+      }
+    }
+    oriented = rotatePiece(oriented);
+  }
+
+  return best;
 }

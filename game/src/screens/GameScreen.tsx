@@ -15,7 +15,7 @@ import { HoldSlot } from '../components/HoldSlot';
 import { NextPiecesPreview } from '../components/NextPiecesPreview';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { Piece, getPieceCells, getPieceCentroid } from '../game/engine/Piece';
-import { canPlace, findBestPlacement, getNearChromaticLines } from '../game/engine/Board';
+import { canPlace, findBestPlacement, findBestPlacementWithRotation, getNearChromaticLines } from '../game/engine/Board';
 import { getChapterName, getChapterProgress } from '../game/levels/Chapters';
 import { getWorldForLevel } from '../game/levels/Worlds';
 import { ScoreDisplay } from '../components/ScoreDisplay';
@@ -1206,25 +1206,32 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
                 playSound('select');
                 return;
               }
-              const best = findBestPlacement(state.grid, piece);
+              // Rotation-aware: tap-to-rotate is free/unlimited, so the best
+              // move for this piece may need a turn. Find it across all
+              // orientations, then rotate the tray piece to match before
+              // highlighting — otherwise a rotation-only hint either showed a
+              // mismatched silhouette or wrongly claimed "no moves" (now
+              // inconsistent with the rotation-aware game-over check).
+              const best = findBestPlacementWithRotation(state.grid, piece);
               if (best) {
-                const cells = getPieceCells(piece);
+                for (let t = 0; t < best.rotations; t++) rotatePiece(idx);
+                const cells = getPieceCells(best.piece);
                 setHintCells(cells.map(c => ({
                   row: best.row + c.row,
                   col: best.col + c.col,
-                  colorIndex: piece.colorIndex,
+                  colorIndex: best.piece.colorIndex,
                 })));
                 if (idx >= 0 && selectedPieceIndex === null) selectPiece(idx);
                 playSound('select');
                 setTimeout(() => setHintCells([]), 3000);
               } else {
-                // No legal placement anywhere — late-game stuck state.
-                // Surface this instead of no-op'ing; otherwise the user
-                // taps Hint and gets silence, thinking the button is
-                // broken. The toast piggy-backs on the milestone slot we
-                // already render so it shares the same styling.
+                // This piece cannot be placed in ANY rotation. Another tray
+                // piece may still fit (hence "try another"), so we don't claim
+                // the whole board is dead — that's game-over's job, and it's
+                // now rotation-aware too. Surface a sound + message so the
+                // button never feels broken.
                 playSound('select');
-                setMilestoneMsg('No moves for this piece — try Swap');
+                setMilestoneMsg('No spot for this piece — try another or Swap');
                 setShowMilestone(true);
                 setTimeout(() => setShowMilestone(false), 2200);
               }

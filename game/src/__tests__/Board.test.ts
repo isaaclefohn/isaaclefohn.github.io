@@ -8,6 +8,7 @@ import {
   cloneGrid,
   countFilledCells,
   getEmptyCells,
+  findBestPlacementWithRotation,
 } from '../game/engine/Board';
 import { createPiece } from '../game/engine/Piece';
 
@@ -209,5 +210,55 @@ describe('Board', () => {
       grid[0][0] = 1;
       expect(getEmptyCells(grid)).toHaveLength(63);
     });
+  });
+});
+
+describe('findBestPlacementWithRotation', () => {
+  const fullExcept = (empties: [number, number][]) => {
+    const grid = createGrid(8);
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) grid[r][c] = 1;
+    for (const [r, c] of empties) grid[r][c] = 0;
+    return grid;
+  };
+
+  it('returns the as-is orientation (0 rotations) when the piece already fits', () => {
+    const grid = createGrid(8); // empty
+    const res = findBestPlacementWithRotation(grid, createPiece('domino_h', 1));
+    expect(res).not.toBeNull();
+    expect(res!.rotations).toBe(0);
+    expect(canPlace(grid, res!.piece, res!.row, res!.col)).toBe(true);
+  });
+
+  it('finds a one-rotation placement over a vertical gap a horizontal domino cannot fill as-is', () => {
+    const grid = fullExcept([[4, 4], [5, 4]]); // vertical 2-cell gap
+    const res = findBestPlacementWithRotation(grid, createPiece('domino_h', 1));
+    expect(res).not.toBeNull();
+    expect(res!.rotations).toBe(1); // domino_h -> domino_v
+    // The returned (rotated) piece genuinely fits where it says.
+    expect(canPlace(grid, res!.piece, res!.row, res!.col)).toBe(true);
+    expect(res!.piece.shape).toEqual([[true], [true]]); // vertical domino
+  });
+
+  it('prefers a CLEARING rotation over a non-clearing as-is placement', () => {
+    // Column 3 filled rows 2..7 (6 cells); (0,3),(1,3) empty. A horizontal
+    // domino can only sit flat somewhere (no clear); rotated to vertical it
+    // drops into (0,3)+(1,3), completing column 3 -> a line clear (score
+    // 10000+), which must win over any flat placement.
+    const grid = createGrid(8);
+    for (let r = 2; r < 8; r++) grid[r][3] = 1;
+    const res = findBestPlacementWithRotation(grid, createPiece('domino_h', 1));
+    expect(res).not.toBeNull();
+    expect(res!.rotations).toBe(1);          // chose the vertical orientation
+    expect(res!.row).toBe(0);
+    expect(res!.col).toBe(3);
+    // Sanity: placing it really does complete the column.
+    const placed = placePiece(grid, res!.piece, res!.row, res!.col);
+    expect(findFullLines(placed).cols).toContain(3);
+  });
+
+  it('returns null when no rotation of the piece fits anywhere', () => {
+    const grid = fullExcept([[4, 4]]); // one isolated free cell
+    expect(findBestPlacementWithRotation(grid, createPiece('domino_h', 1))).toBeNull();
+    expect(findBestPlacementWithRotation(grid, createPiece('tri_l', 1))).toBeNull();
   });
 });
