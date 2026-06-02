@@ -33,8 +33,14 @@ const WORLD_REWARD_TABLE: Record<number, { clear: { coins: number; gems: number 
 
 /** Get reward config for a world by index (1-based) */
 export function getWorldReward(worldIndex: number): WorldReward {
-  const world = WORLDS[worldIndex - 1];
-  const rewards = WORLD_REWARD_TABLE[worldIndex] ?? WORLD_REWARD_TABLE[1];
+  // Clamp so the function never returns undefined fields. The rewards lookup
+  // already falls back to world 1, but the WORLDS lookup was unguarded — an
+  // out-of-range index produced WORLDS[-1] === undefined and crashed at
+  // `world.id`. No live caller passes out-of-range today, but the two lookups
+  // must agree (mirrors the getWorldForLevel clamp).
+  const safeIndex = Math.max(1, Math.min(worldIndex, WORLDS.length));
+  const world = WORLDS[safeIndex - 1];
+  const rewards = WORLD_REWARD_TABLE[safeIndex] ?? WORLD_REWARD_TABLE[1];
 
   return {
     worldId: world.id,
