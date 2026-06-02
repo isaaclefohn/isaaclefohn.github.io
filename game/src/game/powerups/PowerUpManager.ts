@@ -72,8 +72,16 @@ export function applyRowClear(
   grid: Grid,
   row: number
 ): { grid: Grid; cellsCleared: number } {
-  const newGrid = cloneGrid(grid);
   const size = getGridSize(grid);
+  // Defense-in-depth: bounds-check `row` the same way applyBomb bounds-checks
+  // its 3x3 sweep. Without this, an out-of-range row throws "Cannot read
+  // properties of undefined" on `newGrid[row][c]`. No live caller passes a bad
+  // row today (taps come from rendered cells), but keeping the engine API safe
+  // regardless of caller behavior matches applyColorClear's guard philosophy
+  // and lets a no-op return null upstream (so no power-up is consumed).
+  if (row < 0 || row >= size) return { grid, cellsCleared: 0 };
+
+  const newGrid = cloneGrid(grid);
   let cleared = 0;
 
   for (let c = 0; c < size; c++) {

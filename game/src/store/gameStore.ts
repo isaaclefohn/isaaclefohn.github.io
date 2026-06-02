@@ -232,7 +232,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         result = applyRowClear(gameState.grid, row);
         break;
       case 'colorClear':
-        result = applyColorClear(gameState.grid, colorIndex ?? gameState.grid[row][col]);
+        // Optional-chain the default color read so an out-of-range row can't
+        // throw before applyColorClear's own `<= 0` guard runs (the preview
+        // path at the GameScreen call site already reads grid[row]?.[col]).
+        result = applyColorClear(gameState.grid, colorIndex ?? (gameState.grid[row]?.[col] ?? 0));
         break;
       default:
         return null;
