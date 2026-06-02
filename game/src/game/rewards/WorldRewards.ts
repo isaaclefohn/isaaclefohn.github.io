@@ -38,7 +38,13 @@ export function getWorldReward(worldIndex: number): WorldReward {
   // out-of-range index produced WORLDS[-1] === undefined and crashed at
   // `world.id`. No live caller passes out-of-range today, but the two lookups
   // must agree (mirrors the getWorldForLevel clamp).
-  const safeIndex = Math.max(1, Math.min(worldIndex, WORLDS.length));
+  //
+  // Number.isFinite trailing guard: Math.min(NaN, n) is NaN and Math.max(1, NaN)
+  // is NaN, so a min/max-only clamp lets NaN slip straight through to
+  // WORLDS[NaN-1] === undefined. Fold non-finite input to world 1 the same way
+  // getWorldForLevel does (±Infinity still clamps correctly via min/max first).
+  const clamped = Math.max(1, Math.min(worldIndex, WORLDS.length));
+  const safeIndex = Number.isFinite(clamped) ? clamped : 1;
   const world = WORLDS[safeIndex - 1];
   const rewards = WORLD_REWARD_TABLE[safeIndex] ?? WORLD_REWARD_TABLE[1];
 

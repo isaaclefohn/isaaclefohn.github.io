@@ -35,6 +35,15 @@ describe('getWorldReward', () => {
     expect(getWorldReward(0).worldId).toBe(WORLDS[0].id);   // -> world 1
     expect(getWorldReward(99).worldId).toBe(WORLDS[9].id);  // -> world 10
   });
+
+  it('folds non-finite input to a valid world (NaN slips past a min/max-only clamp)', () => {
+    // Math.max(1, Math.min(NaN, 10)) is NaN, which without the Number.isFinite
+    // guard would index WORLDS[NaN-1] === undefined and crash at `.id`.
+    expect(getWorldReward(NaN)).toBeDefined();
+    expect(getWorldReward(NaN).worldId).toBe(WORLDS[0].id);          // -> world 1
+    expect(getWorldReward(Infinity).worldId).toBe(WORLDS[9].id);     // -> world 10
+    expect(getWorldReward(-Infinity).worldId).toBe(WORLDS[0].id);    // -> world 1
+  });
 });
 
 describe('getWorldCompletionStatus', () => {
