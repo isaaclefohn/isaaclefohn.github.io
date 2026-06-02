@@ -37,6 +37,7 @@ import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
 import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
 import { getDailyPuzzleConfig } from '../game/challenges/DailyPuzzle';
+import { getWeeklyChallengeConfig } from '../game/challenges/WeeklyChallenge';
 import { canPlace, placePiece as simulatePlace, findFullLines } from '../game/engine/Board';
 import { rotatePiece, type Piece } from '../game/engine/Piece';
 import { SeededRandom } from '../utils/seededRandom';
@@ -288,6 +289,20 @@ describe('bot playthrough — daily puzzle (palette 5, REACHABLE 8000 target -> 
   for (const [y, m, d] of [[2026, 5, 15], [2026, 8, 1], [2027, 0, 20]] as const) {
     it(`daily ${y}-${m + 1}-${d}: invariants + keystone hold to a clean win-or-stuck`, () => {
       const cfg = getDailyPuzzleConfig(new Date(y, m, d));
+      const { moveCount, finalStatus } = playToEnd(cfg, 500, 'greedy');
+      expect(moveCount).toBeGreaterThan(3);
+      expect(['won', 'lost', 'playing']).toContain(finalStatus);
+    });
+  }
+});
+
+describe('bot playthrough — weekly challenge (distinct config, levelNumber -1)', () => {
+  // The weekly challenge is its own config (levelNumber -1, week-seeded). Fuzz
+  // it for completeness across every gameplay mode the engine drives. Fixed
+  // dates make the week seed deterministic.
+  for (const [y, m, d] of [[2026, 5, 15], [2026, 10, 3], [2027, 2, 9]] as const) {
+    it(`weekly ${y}-${m + 1}-${d}: invariants + keystone hold to a clean terminal`, () => {
+      const cfg = getWeeklyChallengeConfig(new Date(y, m, d));
       const { moveCount, finalStatus } = playToEnd(cfg, 500, 'greedy');
       expect(moveCount).toBeGreaterThan(3);
       expect(['won', 'lost', 'playing']).toContain(finalStatus);
