@@ -181,6 +181,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   // (Reward-popup auto-triggers — gift box, streak milestone, comeback,
   // offline reward — were removed to reduce offer spam on home.)
   useEffect(() => {
+    let streakPromptTimer: ReturnType<typeof setTimeout> | undefined;
     checkAchievements();
     // Check for new sticker unlocks
     const newStickers = checkStickerUnlocks({
@@ -228,7 +229,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       if (currentStreak >= 7 && streakShields > 0) {
         // Small delay so the prompt doesn't collide with the daily-
         // reward auto-open or any entrance animations.
-        setTimeout(() => {
+        streakPromptTimer = setTimeout(() => {
           maybePromptForStreakDay7({
             currentStreak,
             shieldIntact: streakShields > 0,
@@ -236,6 +237,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         }, 1500);
       }
     }
+    // Clear the deferred prompt if Home unmounts within the 1.5s window, so it
+    // can't fire after navigating away (matches the daily-reward timer above).
+    return () => {
+      if (streakPromptTimer) clearTimeout(streakPromptTimer);
+    };
   }, [highestLevel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Entrance animations

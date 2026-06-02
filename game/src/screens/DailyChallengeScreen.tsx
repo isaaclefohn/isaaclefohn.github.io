@@ -13,6 +13,7 @@ import { GameIcon } from '../components/GameIcon';
 import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import { formatTime } from '../utils/formatters';
 import { getLocalToday } from '../utils/dates';
+import { getMsUntilNextPuzzle } from '../game/challenges/DailyPuzzle';
 import { useSettingsStore } from '../store/settingsStore';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -21,12 +22,14 @@ type DailyChallengeScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'DailyChallenge'>;
 };
 
-/** Get seconds until midnight UTC */
+/** Seconds until the next daily challenge unlocks. MUST use LOCAL midnight to
+ *  match the rest of the daily system: `hasPlayedToday` keys off getLocalToday()
+ *  and the puzzle/streak refresh at local midnight. The old setUTCHours version
+ *  made the countdown race to zero hours early for non-UTC players while the
+ *  Play button (gated on local hasPlayedToday) stayed disabled. Reuses the
+ *  canonical getMsUntilNextPuzzle (single source of truth, no date-formula drift). */
 function getSecondsUntilMidnight(): number {
-  const now = new Date();
-  const midnight = new Date(now);
-  midnight.setUTCHours(24, 0, 0, 0);
-  return Math.floor((midnight.getTime() - now.getTime()) / 1000);
+  return Math.floor(getMsUntilNextPuzzle() / 1000);
 }
 
 /** Get today's date string in the player's LOCAL timezone — see
