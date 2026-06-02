@@ -165,9 +165,17 @@ export async function showRewardedAd(): Promise<boolean> {
 
       let earned = false;
       let settled = false;
+      let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
       const settle = (value: boolean) => {
         if (settled) return;
         settled = true;
+        // Clear the 30s safety timeout on natural settle paths (ad
+        // closed normally, ad errored, show failed). Otherwise the
+        // timeout closure pinned `ad`, `earned`, and `settled` for the
+        // full 30s past every successful ad watch, delaying GC of the
+        // ad instance and its 4 listeners.
+        if (timeoutHandle) clearTimeout(timeoutHandle);
+        timeoutHandle = null;
         resolve(value);
       };
 
@@ -190,8 +198,9 @@ export async function showRewardedAd(): Promise<boolean> {
       });
       ad.load();
 
-      // Safety timeout: don't hang forever
-      setTimeout(() => settle(earned), 30_000);
+      // Safety timeout: don't hang forever. Captured into `timeoutHandle`
+      // so the natural settle paths above can cancel it.
+      timeoutHandle = setTimeout(() => settle(earned), 30_000);
     } catch (err) {
       console.warn('[Ads] rewarded threw', err);
       resolve(false);
