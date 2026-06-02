@@ -150,8 +150,26 @@ function assertInvariants(prevScore: number, paletteMax: number) {
   void paletteMax;
 }
 
-/** Play one full game to its terminal state (or the move cap). */
-function playToEnd(config: LevelConfig, maxMoves: number, strategy: 'random' | 'greedy' = 'random') {
+/** First filled (non-empty) cell on the board, or null. */
+function firstFilledCell(grid: number[][]): { r: number; c: number } | null {
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid[r].length; c++) {
+      if (grid[r][c] !== 0) return { r, c };
+    }
+  }
+  return null;
+}
+
+/** Play one full game to its terminal state (or the move cap). When
+ *  firePowerups is set, the bot periodically detonates a random power-up at a
+ *  live target, fuzzing the applyPowerUp -> cascade-resolve -> game-over-recheck
+ *  integration path mid-game. */
+function playToEnd(
+  config: LevelConfig,
+  maxMoves: number,
+  strategy: 'random' | 'greedy' = 'random',
+  firePowerups = false
+) {
   gs().startLevel(config);
   usePlayerStore.setState({ coins: 0 }); // no paid swaps; force honest play
   const chooser = new SeededRandom((config.seed ?? 0) ^ 0x9e3779b9);
@@ -169,6 +187,17 @@ function playToEnd(config: LevelConfig, maxMoves: number, strategy: 'random' | '
     expect(moves.length > 0).toBe(status === 'playing');
 
     if (status !== 'playing') break; // terminal (lost/won) — game correctly ended
+
+    // Periodically detonate a power-up at a live target (no inventory gate at
+    // the store layer). Exercises applyPowerUp's cascade + game-over recheck.
+    const target = firstFilledCell(state.grid);
+    if (firePowerups && moveCount % 6 === 5 && target) {
+      const kind = (['bomb', 'rowClear', 'colorClear'] as const)[Math.floor(chooser.next() * 3)];
+      gs().applyPowerUp(kind, target.r, target.c); // colorIndex defaults to grid[r][c]
+      assertInvariants(prevScore, config.paletteSize ?? 7);
+      prevScore = gs().gameState!.score;
+      continue; // power-ups don't consume a tray slot; place on the next turn
+    }
 
     // pick a legal move deterministically and play it (rotate-to-orientation
     // first, exactly as a real player would via tap-to-rotate)
@@ -238,6 +267,18 @@ describe('bot playthrough — greedy bot reaches DEEP endless waves (palette 5-7
       const { piecesPlaced } = playToEnd(endlessConfig(seed), 600, 'greedy');
       // Crossed at least the first wave boundary (piece 50 -> palette 5).
       expect(piecesPlaced).toBeGreaterThan(50);
+    });
+  }
+});
+
+describe('bot playthrough — power-ups fired mid-game (applyPowerUp integration)', () => {
+  for (const seed of [5, 271]) {
+    it(`seed ${seed}: periodic bomb/row/color detonation never corrupts state`, () => {
+      // Greedy + periodic power-up detonation: fuzzes applyPowerUp's cascade
+      // resolution and post-power-up game-over recheck against a live, evolving
+      // board, with the per-turn invariants + move ⟺ playing keystone holding.
+      const { moveCount } = playToEnd(stuckConfig(seed), 400, 'greedy', true);
+      expect(moveCount).toBeGreaterThan(3);
     });
   }
 });
