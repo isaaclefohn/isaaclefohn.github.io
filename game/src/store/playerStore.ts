@@ -1478,13 +1478,18 @@ export const usePlayerStore = create<PlayerStore>()(
       tradePowerUp: (from, fromCost, to, toAmount) => {
         const { powerUps } = get();
         if (powerUps[from] < fromCost) return false;
-        set((s) => ({
-          powerUps: {
-            ...s.powerUps,
-            [from]: s.powerUps[from] - fromCost,
-            [to]: s.powerUps[to] + toAmount,
-          },
-        }));
+        set((s) => {
+          // Apply the deduction and the grant SEQUENTIALLY on one copy. An
+          // object literal `{ [from]: x - cost, [to]: y + amt }` silently drops
+          // the first entry when from === to (duplicate key → last wins), which
+          // would hand out `toAmount` free with no cost deducted. No TRADE_RECIPE
+          // currently has from === to, but this keeps the economy action safe
+          // regardless of the recipe table / future callers.
+          const next = { ...s.powerUps };
+          next[from] = next[from] - fromCost;
+          next[to] = next[to] + toAmount;
+          return { powerUps: next };
+        });
         return true;
       },
 
