@@ -1,4 +1,4 @@
-import { getLevel, isBossLevel, getTotalLevels } from '../game/levels/LevelGenerator';
+import { getLevel, isBossLevel, getTotalLevels, getLevelRange, getEndlessConfig } from '../game/levels/LevelGenerator';
 import { getDifficultyParams, generateLevelConfig } from '../game/levels/DifficultyScaler';
 
 describe('LevelGenerator', () => {
@@ -146,6 +146,36 @@ describe('LevelGenerator', () => {
         expect(config.starThresholds[0]).toBeLessThan(config.starThresholds[1]);
         expect(config.starThresholds[1]).toBeLessThan(config.starThresholds[2]);
       }
+    });
+  });
+
+  describe('getLevelRange', () => {
+    it('returns one config per level in [start, end], in order', () => {
+      const range = getLevelRange(24, 27);
+      expect(range.map((c) => c.levelNumber)).toEqual([24, 25, 26, 27]);
+      // The range dispatches through getLevel, so the boss in it is the boss config.
+      expect(range[1].objective.target).toBe(getLevel(25).objective.target);
+    });
+
+    it('returns an empty array when start > end', () => {
+      expect(getLevelRange(10, 5)).toEqual([]);
+    });
+
+    it('returns a single config for a one-level range', () => {
+      expect(getLevelRange(7, 7).map((c) => c.levelNumber)).toEqual([7]);
+    });
+  });
+
+  describe('getEndlessConfig', () => {
+    it('is a zero-level, run-until-stuck config starting at the wave-1 palette', () => {
+      const cfg = getEndlessConfig();
+      expect(cfg.levelNumber).toBe(0);          // endless/zen sentinel
+      expect(cfg.objective.type).toBe('score');
+      expect(cfg.objective.target).toBeGreaterThan(1_000_000); // effectively unreachable
+      expect(cfg.paletteSize).toBe(4);          // STARTING_PALETTE (wave 1)
+      expect(cfg.gridSize).toBe(8);
+      expect(cfg.piecePool.length).toBeGreaterThan(0);
+      expect(cfg.starThresholds[0]).toBeLessThan(cfg.starThresholds[2]);
     });
   });
 });
