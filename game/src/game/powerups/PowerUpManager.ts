@@ -94,6 +94,17 @@ export function applyColorClear(
   grid: Grid,
   colorIndex: number
 ): { grid: Grid; cellsCleared: number } {
+  // Defensive guard: `0` is the empty-cell sentinel on the grid. If a
+  // caller ever passes 0 (the GameScreen path defaults to the tapped
+  // cell's value via `colorIndex ?? gameState.grid[row][col]`, so tapping
+  // an empty cell could reach here), we'd "clear" every empty cell —
+  // counting cellsCleared as the number of empty cells and looking like
+  // a successful power-up firing on a board that wasn't actually changed.
+  // GameScreen has its own guard at the call site (treats colorIdx > 0
+  // before showing preview) but a defense-in-depth check here makes the
+  // engine API safe regardless of caller behavior.
+  if (colorIndex <= 0) return { grid, cellsCleared: 0 };
+
   const newGrid = cloneGrid(grid);
   const size = getGridSize(grid);
   let cleared = 0;
