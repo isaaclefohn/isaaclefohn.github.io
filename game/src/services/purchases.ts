@@ -21,6 +21,18 @@ import { usePlayerStore } from '../store/playerStore';
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
 const isExpoGo = Constants.appOwnership === 'expo';
 
+/**
+ * "Lifetime" VIP duration for the non-consumable VIP Pass — 100 years
+ * past purchase. `activateVIP` adds this to either `Date.now()` or the
+ * existing `vipUntil` if it's still in the future, so the resulting
+ * timestamp is well within Number.MAX_SAFE_INTEGER and effectively
+ * "forever" for any real player. The constant lives at module scope
+ * so both creditFromProduct and applyEntitlementOnly (restore path)
+ * can grant identical durations — they must agree, otherwise restore
+ * would shorten the entitlement the original purchase granted.
+ */
+const LIFETIME_VIP_DURATION_MS = 100 * 365 * 24 * 60 * 60 * 1000;
+
 // Lazy-loaded native module. Stays null in Expo Go.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let IAP: any = null;
@@ -650,6 +662,16 @@ export function creditFromProduct(productId: string): boolean {
     store.setAdFree(true);
   } else if (reward.type === 'vip') {
     store.setAdFree(true);
+    // CRITICAL: actually activate VIP. Previously this path granted
+    // ad-free + the bonus coins/gems but never called activateVIP, so
+    // `vipUntil` stayed null and `isVIPActive()` returned false
+    // everywhere — VIP daily gift, coin/XP multipliers, exclusive
+    // theme, and the home-screen VIP badge were all silently missing
+    // for paid users. Direct false advertising on a $9.99 product.
+    // VIP Pass is a non_consumable (= lifetime VIP) so grant 100
+    // years — `activateVIP` extends from `vipUntil` if already active,
+    // so this safely handles repeated purchases / restores too.
+    store.activateVIP(LIFETIME_VIP_DURATION_MS);
     if (reward.bonus?.coins) store.addCoins(reward.bonus.coins);
     if (reward.bonus?.gems) store.addGems(reward.bonus.gems);
   } else if (reward.type === 'bundle') {
@@ -704,6 +726,13 @@ export function applyEntitlementOnly(productId: string): boolean {
   }
   if (reward.type === 'vip') {
     store.setAdFree(true);
+    // Restore the lifetime VIP entitlement too — same fix as
+    // creditFromProduct above. Without this, a player who reinstalled
+    // and tapped Restore Purchases would lose the VIP status portion
+    // of what they paid for (only ad-free would come back). The
+    // activateVIP setter is additive but capped from now, so it's
+    // safe to call on a fresh install with no prior `vipUntil`.
+    store.activateVIP(LIFETIME_VIP_DURATION_MS);
     // Bonus coins/gems were one-time at purchase. DO NOT restore them.
     return true;
   }
