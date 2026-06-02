@@ -170,7 +170,8 @@ function playToEnd(
   config: LevelConfig,
   maxMoves: number,
   strategy: 'random' | 'greedy' = 'random',
-  firePowerups = false
+  firePowerups = false,
+  useHold = false
 ) {
   gs().startLevel(config);
   usePlayerStore.setState({ coins: 0 }); // no paid swaps; force honest play
@@ -178,25 +179,45 @@ function playToEnd(
 
   let prevScore = 0;
   let moveCount = 0;
+  let heldThisRun = false; // hold once per run to occupy the hold slot
 
   for (; moveCount < maxMoves; moveCount++) {
     const state = gs().gameState!;
     const status = state.status;
-    const moves = findAllMoves(state.grid, state.availablePieces);
+    const trayMoves = findAllMoves(state.grid, state.availablePieces);
 
-    // KEYSTONE (rotation-aware game-over correctness), two one-way implications:
-    //   playing ⇒ moves > 0   — a live game must always have a legal move,
-    //                            else game-over was MISSED (engine says playing
-    //                            but the rotation-aware bot is stuck).
-    //   lost    ⇒ moves === 0 — a loss must be genuinely stuck, else it's a
-    //                            FALSE LOSS (engine ended a run a rotation could
-    //                            have continued — the bug fixed this session).
-    // A WIN is asymmetric: it can fire with the board half-empty, so it makes
-    // no claim about remaining moves.
-    if (status === 'playing') expect(moves.length).toBeGreaterThan(0);
-    if (status === 'lost') expect(moves.length).toBe(0);
+    // A held piece is a REACHABLE move only when the tray has an empty slot to
+    // retrieve it into (retrieveHeldPiece needs one) — mirrors the engine's
+    // GameOver.gameOverPieces rule exactly. This is what makes the keystone a
+    // regression guard for the unretrievable-held soft-lock: if the engine ever
+    // counts a held piece on a FULL tray again, it would say 'playing' while
+    // this (correct) check finds no move -> keystone fails.
+    const held = gs().heldPiece;
+    const trayHasEmptySlot = state.availablePieces.some((p) => p === null);
+    const heldMoves = held && trayHasEmptySlot ? findAllMoves(state.grid, [held]) : [];
+    const canMove = trayMoves.length > 0 || heldMoves.length > 0;
+
+    // KEYSTONE (rotation- AND hold-aware game-over correctness):
+    //   playing ⇒ a move exists (tray, or a retrievable held piece)
+    //   lost    ⇒ NO move exists (genuinely stuck)
+    // A WIN is asymmetric — it can fire with the board half-empty.
+    if (status === 'playing') expect(canMove).toBe(true);
+    if (status === 'lost') expect(canMove).toBe(false);
 
     if (status !== 'playing') break; // terminal (lost/won) — game correctly ended
+
+    // Occupy the hold slot once early so later refills produce the
+    // full-tray-while-holding state the soft-lock fix guards against.
+    if (useHold && !heldThisRun) {
+      const holdIdx = state.availablePieces.findIndex((p) => p !== null);
+      if (holdIdx !== -1) {
+        expect(gs().holdPiece(holdIdx)).toBe(true);
+        heldThisRun = true;
+        assertInvariants(prevScore, config.paletteSize ?? 7);
+        prevScore = gs().gameState!.score;
+        continue;
+      }
+    }
 
     // Periodically detonate a power-up at a live target (no inventory gate at
     // the store layer). Exercises applyPowerUp's cascade + game-over recheck.
@@ -209,16 +230,26 @@ function playToEnd(
       continue; // power-ups don't consume a tray slot; place on the next turn
     }
 
-    // pick a legal move deterministically and play it (rotate-to-orientation
-    // first, exactly as a real player would via tap-to-rotate)
-    const move = strategy === 'greedy'
-      ? chooseGreedy(state.grid, moves, chooser)
-      : moves[Math.floor(chooser.next() * moves.length)];
-    for (let t = 0; t < move.rotations; t++) {
-      expect(gs().rotatePiece(move.index)).toBe(true);
+    if (trayMoves.length > 0) {
+      // Place a tray move (rotate-to-orientation first, as a real player would).
+      const move = strategy === 'greedy'
+        ? chooseGreedy(state.grid, trayMoves, chooser)
+        : trayMoves[Math.floor(chooser.next() * trayMoves.length)];
+      for (let t = 0; t < move.rotations; t++) {
+        expect(gs().rotatePiece(move.index)).toBe(true);
+      }
+      expect(gs().placePiece(move.index, move.row, move.col)).toBe(true);
+    } else {
+      // No tray move, but the held piece is reachable (empty slot) and fits:
+      // retrieve it into that slot, rotate, place — exercising the hold path.
+      const emptyIdx = state.availablePieces.findIndex((p) => p === null);
+      const heldMove = heldMoves[Math.floor(chooser.next() * heldMoves.length)];
+      expect(gs().retrieveHeldPiece()).toBe(true);
+      for (let t = 0; t < heldMove.rotations; t++) {
+        expect(gs().rotatePiece(emptyIdx)).toBe(true);
+      }
+      expect(gs().placePiece(emptyIdx, heldMove.row, heldMove.col)).toBe(true);
     }
-    const placed = gs().placePiece(move.index, move.row, move.col);
-    expect(placed).toBe(true); // the bot only ever submits legal placements
 
     assertInvariants(prevScore, config.paletteSize ?? 7);
     prevScore = gs().gameState!.score;
@@ -318,6 +349,23 @@ describe('bot playthrough — power-ups fired mid-game (applyPowerUp integration
       // board, with the per-turn invariants + move ⟺ playing keystone holding.
       const { moveCount } = playToEnd(stuckConfig(seed), 400, 'greedy', true);
       expect(moveCount).toBeGreaterThan(3);
+    });
+  }
+});
+
+describe('bot playthrough — HOLD enabled (regression guard for the unretrievable-held soft-lock)', () => {
+  // The bot occupies the hold slot early, so later refills produce the
+  // full-tray-WHILE-holding state. The keystone is hold-aware (a held piece
+  // counts as a move ONLY when the tray has an empty slot to retrieve it into),
+  // mirroring GameOver.gameOverPieces — so it directly guards that fix at the
+  // integration level and exercises holdPiece/retrieveHeldPiece across a full
+  // game. Before the fix the engine counted an unretrievable held piece as a
+  // move (status 'playing') while this check found none -> the keystone fails.
+  for (const seed of [4, 17, 256, 9001]) {
+    it(`seed ${seed}: hold-aware invariants + keystone hold to a clean terminal`, () => {
+      const { moveCount, finalStatus } = playToEnd(stuckConfig(seed), 500, 'greedy', false, true);
+      expect(moveCount).toBeGreaterThan(3);
+      expect(['lost', 'playing']).toContain(finalStatus); // unreachable target -> never 'won'
     });
   }
 });
