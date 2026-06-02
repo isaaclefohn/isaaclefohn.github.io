@@ -27,8 +27,11 @@ export interface ChallengeInvite {
 }
 
 /**
- * Generate a unique friend code from player data.
- * Format: 4 alphanumeric characters (e.g., "A7K2")
+ * Generate a friend code from player data. Deterministic for a given
+ * (displayName, seed); not collision-proof — treat as a display handle,
+ * not a unique key.
+ * Format: 6 unambiguous alphanumeric characters (no 0/O or 1/I), which
+ * formatFriendCode renders as a 3-3 split, e.g. "3K2YV9" → "3K2-YV9".
  */
 export function generateFriendCode(displayName: string, seed: number): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No ambiguous chars (0/O, 1/I)

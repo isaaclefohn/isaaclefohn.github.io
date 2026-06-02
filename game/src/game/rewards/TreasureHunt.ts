@@ -62,10 +62,18 @@ export const TREASURE_REWARDS: TreasureReward[] = [
 
 export const PIECES_REQUIRED = 5;
 
-/** Roll a random treasure reward using weighted selection */
+/** Roll a random treasure reward using weighted selection.
+ *
+ * The only live caller passes `Date.now()` (always large-positive), so a
+ * negative seed isn't reachable today — but JS's `%` keeps the dividend's
+ * sign, so a negative seed would make `rand` negative, `target` negative,
+ * and the first loop iteration always return TREASURE_REWARDS[0] (common):
+ * rare/epic/legendary would be unreachable. Normalize to a non-negative
+ * modulo so the weighted roll is correct for ANY seed (defensive — the
+ * `+ 233280) % 233280` is a no-op for the positive seeds we actually pass). */
 export function rollTreasure(seed: number): TreasureReward {
   const total = TREASURE_REWARDS.reduce((sum, r) => sum + r.weight, 0);
-  const rand = ((seed * 9301 + 49297) % 233280) / 233280;
+  const rand = ((((seed * 9301 + 49297) % 233280) + 233280) % 233280) / 233280;
   let target = rand * total;
   for (const reward of TREASURE_REWARDS) {
     target -= reward.weight;
