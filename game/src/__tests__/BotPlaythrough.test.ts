@@ -35,7 +35,7 @@ jest.mock('../services/analytics', () => ({
 
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
-import { getLevel } from '../game/levels/LevelGenerator';
+import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
 import { canPlace } from '../game/engine/Board';
 import { rotatePiece, type Piece } from '../game/engine/Piece';
 import { SeededRandom } from '../utils/seededRandom';
@@ -171,6 +171,27 @@ describe('bot playthrough — engine invariants hold across full games', () => {
       // With an unreachable target it can only END by getting stuck -> 'lost'
       // (or hit the 600-move cap still 'playing'); never a corrupt state.
       expect(['lost', 'playing']).toContain(finalStatus);
+    });
+  }
+});
+
+describe('bot playthrough — endless/zen mode (always-solvable, golden, wave palette)', () => {
+  // Endless exercises a DIFFERENT pipeline than levels: generatePieceSetSmart
+  // (always-solvable, now rotation-aware), golden-piece rolls, and wave-based
+  // palette escalation (4 -> 7 every 50 pieces). The same per-turn invariants
+  // and the move ⟺ playing keystone must still hold; the cell<=7 assertion
+  // covers the palette growth. Fixed seed makes it deterministic.
+  const endlessConfig = (seed: number): LevelConfig => ({ ...getEndlessConfig(), seed });
+
+  for (const seed of [3, 99, 2024]) {
+    it(`seed ${seed}: endless invariants hold across a long always-solvable run`, () => {
+      const { moveCount } = playToEnd(endlessConfig(seed), 300);
+      // A RANDOM bot can still corner itself even in always-solvable endless
+      // (smart-gen only guarantees a clearing move EXISTS at refill, not that a
+      // careless player takes it) — so the run length varies by seed. We only
+      // require real progress; the value is the per-turn invariants + the
+      // move ⟺ playing keystone holding the whole way, including at game-over.
+      expect(moveCount).toBeGreaterThan(3);
     });
   }
 });
