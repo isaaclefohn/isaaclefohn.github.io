@@ -6,6 +6,7 @@
  */
 
 import { SeededRandom, hashSeed } from '../../utils/seededRandom';
+import { getLocalToday } from '../../utils/dates';
 
 export interface GiftReward {
   type: 'coins' | 'gems' | 'powerup';
@@ -31,7 +32,7 @@ export const GIFT_RARITIES = {
 export function shouldShowGift(highestLevel: number, gamesPlayedToday: number, lastGiftDate: string | null): boolean {
   if (highestLevel < 3) return false; // Don't overwhelm new players
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   if (lastGiftDate === today) return false; // One gift per day max
 
   // Gift appears after 2+ games played today

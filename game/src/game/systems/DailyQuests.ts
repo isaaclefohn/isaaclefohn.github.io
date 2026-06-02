@@ -6,6 +6,7 @@
  */
 
 import { SeededRandom, hashSeed } from '../../utils/seededRandom';
+import { getLocalToday } from '../../utils/dates';
 
 export interface Quest {
   id: string;
@@ -47,7 +48,7 @@ const QUEST_TEMPLATES: Omit<Quest, 'id'>[] = [
 
 /** Get today's date string */
 function getToday(): string {
-  return new Date().toISOString().split('T')[0];
+  return getLocalToday();
 }
 
 /** Get a day-based seed */

@@ -10,6 +10,7 @@ import { Modal } from './common/Modal';
 import { GameIcon } from './GameIcon';
 import { usePlayerStore } from '../store/playerStore';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
+import { getLocalToday } from '../utils/dates';
 
 /** Wheel segments with prizes */
 const SEGMENTS = [
@@ -39,7 +40,7 @@ export const LuckySpinModal: React.FC<LuckySpinModalProps> = ({ visible, onClose
   const spinAnim = useRef(new Animated.Value(0)).current;
   const spinCount = useRef(0);
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   const canSpin = lastSpinDate !== today;
 
   const handleSpin = useCallback(() => {

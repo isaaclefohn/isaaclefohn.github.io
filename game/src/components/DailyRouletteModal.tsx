@@ -16,13 +16,14 @@ import { GameIcon } from './GameIcon';
 import { Button } from './common/Button';
 import { Modal } from './common/Modal';
 import { COLORS, RADII } from '../utils/constants';
+import { getLocalToday } from '../utils/dates';
 
 interface DailyRouletteModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
-const getToday = () => new Date().toISOString().split('T')[0];
+const getToday = () => getLocalToday();
 
 export const DailyRouletteModal: React.FC<DailyRouletteModalProps> = ({
   visible,

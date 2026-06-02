@@ -592,7 +592,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   useEffect(() => {
     resetIdleTimer();
     return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current); };
-  }, [gameState?.score, gameState?.availablePieces, resetIdleTimer]);
+    // Include `gameState?.status` so a pause / win / lose transition
+    // re-runs the timer reset. The setTimeout callback below checks the
+    // captured status via its closure; without re-running the effect on
+    // status change, an idle timer scheduled during play would fire its
+    // hint after 8s into a paused board, flashing a stale placement
+    // suggestion the user can't act on.
+  }, [gameState?.score, gameState?.availablePieces, gameState?.status, resetIdleTimer]);
 
   // Check for personal best proximity
   useEffect(() => {
@@ -847,6 +853,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const handleRetry = useCallback(() => {
     setShowLoseModal(false); setShowWinModal(false); setShowPauseMenu(false);
     setShowConfetti(false); setActivePowerUp(null); setDoubleCoinsUsed(false);
+    // Also clear every celebratory modal that may have been scheduled by
+    // the win path. Without this, a player who tapped Retry on a level
+    // that triggered the lucky-level / world-complete / feature-unlock
+    // banner would start the fresh run with a stale modal overlaying the
+    // new board — confusing and demo-breaking. We also clear the inline
+    // hype / milestone toasts so the retry feels like a clean slate.
+    setShowLuckyLevel(false); setShowWorldComplete(false); setShowFeatureUnlock(false);
+    setShowMilestone(false); setShowHype(false);
     // The personal-best milestone is a once-per-run ref guard. Without
     // resetting it here, a retry that blows past the same personal best
     // again would surface no celebration toast — the user beats their
@@ -1178,7 +1192,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
               if (!state || state.status !== 'playing') return;
               const idx = selectedPieceIndex ?? state.availablePieces.findIndex(p => p !== null);
               const piece = idx >= 0 ? state.availablePieces[idx] : null;
-              if (!piece) return;
+              if (!piece) {
+                // Tray is fully empty (mid-refresh). Acknowledge the tap
+                // with a sound so the user knows the button isn't dead.
+                playSound('select');
+                return;
+              }
               const best = findBestPlacement(state.grid, piece);
               if (best) {
                 const cells = getPieceCells(piece);
@@ -1190,6 +1209,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
                 if (idx >= 0 && selectedPieceIndex === null) selectPiece(idx);
                 playSound('select');
                 setTimeout(() => setHintCells([]), 3000);
+              } else {
+                // No legal placement anywhere — late-game stuck state.
+                // Surface this instead of no-op'ing; otherwise the user
+                // taps Hint and gets silence, thinking the button is
+                // broken. The toast piggy-backs on the milestone slot we
+                // already render so it shares the same styling.
+                playSound('select');
+                setMilestoneMsg('No moves for this piece — try Swap');
+                setShowMilestone(true);
+                setTimeout(() => setShowMilestone(false), 2200);
               }
             }}
             variant="ghost"

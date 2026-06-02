@@ -17,6 +17,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { GameIcon } from './GameIcon';
 import { DAILY_REWARDS, usePlayerStore } from '../store/playerStore';
 import { COLORS, RADII, SPACING } from '../utils/constants';
+import { getLocalToday } from '../utils/dates';
 
 export const TomorrowPromise: React.FC = () => {
   const { dailyRewardDay, dailyRewardLastClaimed } = usePlayerStore();
@@ -26,7 +27,7 @@ export const TomorrowPromise: React.FC = () => {
   // If they already claimed today, the counter was incremented and now
   // points at tomorrow directly. Either way, this resolves to the
   // reward they'll see on their next return.
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   const canClaimToday = dailyRewardLastClaimed !== today;
   const tomorrowIndex =
     (dailyRewardDay + (canClaimToday ? 1 : 0)) % DAILY_REWARDS.length;

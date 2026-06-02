@@ -76,7 +76,13 @@ const COLOR_NOTE_ASSETS: Record<number, number> = {
   0: require('../../assets/sounds/color-red.wav'),    // Red    → C5
   1: require('../../assets/sounds/color-teal.wav'),   // Teal   → G5
   2: require('../../assets/sounds/color-blue.wav'),   // Blue   → E5
-  // 3 (Green) intentionally omitted — gameplay-only color
+  // Green (index 3) shares the teal note. It's a gameplay-only color
+  // and we have no dedicated sample for it, but routing it to the
+  // closest hue (cyan-green family) gives the green chromatic clear an
+  // audible voice instead of silence. Without this fallback, every other
+  // color's chromatic clear plays a note and green's just doesn't —
+  // visibly inconsistent demo polish.
+  3: require('../../assets/sounds/color-teal.wav'),   // Green  → G5 (reuse teal)
   4: require('../../assets/sounds/color-yellow.wav'), // Yellow → D5
   5: require('../../assets/sounds/color-purple.wav'), // Purple → A5
   6: require('../../assets/sounds/color-orange.wav'), // Orange → C6

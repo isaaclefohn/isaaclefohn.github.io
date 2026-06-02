@@ -12,6 +12,7 @@ import { Button } from './common/Button';
 import { GameIcon } from './GameIcon';
 import { usePlayerStore } from '../store/playerStore';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
+import { getLocalToday } from '../utils/dates';
 
 interface PiggyBankModalProps {
   visible: boolean;
@@ -31,7 +32,7 @@ export const PiggyBankModal: React.FC<PiggyBankModalProps> = ({ visible, onClose
   const bounceAnim = useRef(new Animated.Value(1)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   const canBreakFree = piggyBankLastBroken !== today && piggyBankCoins >= 100;
   const canBreakWithGems = piggyBankCoins >= 50 && gems >= 5;
   const isFull = piggyBankCoins >= 100;

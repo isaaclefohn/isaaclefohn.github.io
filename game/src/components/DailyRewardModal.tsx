@@ -15,6 +15,7 @@ import { scheduleDailyRewardReminder } from '../services/notifications';
 import { canShowRewarded, showRewardedAd } from '../services/ads';
 import { TouchableOpacity } from 'react-native';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
+import { getLocalToday } from '../utils/dates';
 
 interface DailyRewardModalProps {
   visible: boolean;
@@ -31,7 +32,7 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
   } = usePlayerStore();
   const bounceAnim = useRef(new Animated.Value(0.8)).current;
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   const canClaim = dailyRewardLastClaimed !== today;
   const currentDayIndex = dailyRewardDay % DAILY_REWARDS.length;
 

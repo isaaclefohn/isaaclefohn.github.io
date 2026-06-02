@@ -9,6 +9,7 @@ import { getDailyQuests, isQuestComplete, getQuestProgress, Quest } from '../gam
 import { usePlayerStore } from '../store/playerStore';
 import { GameIcon } from './GameIcon';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
+import { getLocalToday } from '../utils/dates';
 
 interface DailyQuestsCardProps {
   visible: boolean;
@@ -26,7 +27,7 @@ export const DailyQuestsCard: React.FC<DailyQuestsCardProps> = ({ visible }) => 
   } = usePlayerStore();
 
   const quests = useMemo(() => getDailyQuests(), []);
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   const isToday = dailyQuestsDate === today;
 
   const getProgress = useCallback((quest: Quest): number => {

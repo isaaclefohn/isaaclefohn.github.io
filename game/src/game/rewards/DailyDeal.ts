@@ -4,6 +4,8 @@
  * Deals reset at midnight local time and encourage daily shop visits.
  */
 
+import { getLocalToday } from '../../utils/dates';
+
 export type DailyDealType = 'coin_pack' | 'gem_pack' | 'power_bundle' | 'mega_bundle' | 'starter_boost';
 
 export interface DailyDeal {
@@ -130,7 +132,7 @@ const DEAL_POOL: DailyDeal[] = [
 
 /** Get today's date string as YYYY-MM-DD */
 export function getTodayDealKey(): string {
-  return new Date().toISOString().split('T')[0];
+  return getLocalToday();
 }
 
 /** Compute a simple integer hash from a date string */

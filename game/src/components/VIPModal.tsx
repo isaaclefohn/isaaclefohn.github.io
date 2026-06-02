@@ -19,6 +19,7 @@ import { GameIcon } from './GameIcon';
 import { Button } from './common/Button';
 import { Modal } from './common/Modal';
 import { COLORS, RADII } from '../utils/constants';
+import { getLocalToday } from '../utils/dates';
 
 interface VIPModalProps {
   visible: boolean;
@@ -39,7 +40,7 @@ export const VIPModal: React.FC<VIPModalProps> = ({ visible, onClose }) => {
 
   const active = isVIPActive(vipUntil);
   const remaining = getVIPTimeRemaining(vipUntil);
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   const canClaim = canClaimVIPDaily(vipUntil, vipDailyClaimedDate, today);
 
   const handlePurchase = (ms: number, cost: number) => {
