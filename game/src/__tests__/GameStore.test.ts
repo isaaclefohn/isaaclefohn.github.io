@@ -270,3 +270,46 @@ describe('gameStore endless golden piece', () => {
     }
   });
 });
+
+/** Fill the whole board so NO generated piece can be placed (in any rotation). */
+const fillBoard = (status: 'playing' | 'lost') => {
+  const s = gs().gameState!;
+  const fullGrid = s.grid.map((row) => row.map(() => 1));
+  useGameStore.setState({ gameState: { ...s, grid: fullGrid, status }, heldPiece: null });
+};
+
+describe('gameStore.swapPieces soft-lock guard', () => {
+  beforeEach(() => {
+    gs().startLevel(testConfig());
+    usePlayerStore.setState({ coins: 1000 });
+  });
+
+  it('a swap that yields an all-dead tray surfaces game-over (no soft-lock)', () => {
+    fillBoard('playing'); // every cell filled -> nothing the reroll produces can fit
+    expect(gs().swapPieces()).toBe(true);
+    expect(gs().gameState!.status).toBe('lost');
+  });
+
+  it('a swap on an open board keeps the game playing', () => {
+    expect(gs().swapPieces()).toBe(true); // empty board, any piece fits
+    expect(gs().gameState!.status).toBe('playing');
+  });
+});
+
+describe('gameStore.continueGame soft-lock guard', () => {
+  beforeEach(() => gs().startLevel(testConfig()));
+
+  it('continuing onto an open board resumes play with a fresh full tray', () => {
+    const s = gs().gameState!;
+    useGameStore.setState({ gameState: { ...s, status: 'lost' } }); // empty board, lost
+    expect(gs().continueGame()).toBe(true);
+    expect(gs().gameState!.status).toBe('playing');
+    expect(gs().gameState!.availablePieces.filter((p) => p !== null)).toHaveLength(3);
+  });
+
+  it('continuing onto a completely full board honestly stays lost (no soft-lock)', () => {
+    fillBoard('lost'); // board truly dead: even 8 retries can't find a placeable set
+    expect(gs().continueGame()).toBe(true);
+    expect(gs().gameState!.status).toBe('lost');
+  });
+});

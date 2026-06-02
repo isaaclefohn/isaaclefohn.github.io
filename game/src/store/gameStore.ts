@@ -162,10 +162,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // teaching ramp the wave palette was designed around.
     const newPieces = generatePieceSet(rng, levelConfig.piecePool, gameState.paletteSize);
 
+    // A reroll can hand back a tray that fits nowhere (even in any rotation) on
+    // a near-full board. Game-over status is otherwise only recomputed in
+    // processTurn/applyPowerUp, so without this the run would soft-lock:
+    // status stays 'playing', no game-over modal, and there's no piece to
+    // consume to ever trigger the check. Surface the honest game-over instead
+    // (the game-over modal still offers the Continue path). Held piece counts.
+    const { heldPiece } = get();
+    const swapPool = heldPiece ? [...newPieces, heldPiece] : newPieces;
+    const swapDead = isGameOver(gameState.grid, swapPool);
+
     set({
       gameState: {
         ...gameState,
         availablePieces: newPieces,
+        status: swapDead ? 'lost' : gameState.status,
         swapsUsed: gameState.swapsUsed + 1,
         // The golden piece index referred to a position in the OLD tray —
         // after a full reroll, it would point at an arbitrary unrelated
@@ -371,18 +382,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   continueGame: (): boolean => {
-    const { gameState, levelConfig, rng } = get();
+    const { gameState, levelConfig, rng, heldPiece } = get();
     if (!gameState || gameState.status !== 'lost' || !rng || !levelConfig) return false;
 
     // Generate fresh pieces respecting the active palette — same fix as
     // swapPieces / peekNextPieces. Continue is currently reachable from
     // level mode only, but wiring it to Zen later without this guard
     // would silently hand the player a 7-color tray in a 4-color wave.
-    const newPieces = generatePieceSet(rng, levelConfig.piecePool, gameState.paletteSize);
+    //
+    // Continue is a PAID second chance (10 gems) that keeps the same near-full
+    // board. A random set could fit nowhere (even rotated), which would either
+    // soft-lock or instantly re-lose — wasting the player's gems. Retry a few
+    // times to hand back a tray that's actually playable (rotation-aware); only
+    // if the board is genuinely too full for any pooled piece in any rotation
+    // do we honestly fall back to game-over.
+    const poolOf = (candidate: Piece[]) => (heldPiece ? [...candidate, heldPiece] : candidate);
+    let newPieces = generatePieceSet(rng, levelConfig.piecePool, gameState.paletteSize);
+    for (let attempt = 0; attempt < 8 && isGameOver(gameState.grid, poolOf(newPieces)); attempt++) {
+      newPieces = generatePieceSet(rng, levelConfig.piecePool, gameState.paletteSize);
+    }
+    const stillDead = isGameOver(gameState.grid, poolOf(newPieces));
     set({
       gameState: {
         ...gameState,
-        status: 'playing',
+        status: stillDead ? 'lost' : 'playing',
         availablePieces: newPieces,
       },
       selectedPieceIndex: null,
