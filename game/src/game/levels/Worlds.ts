@@ -120,10 +120,17 @@ export const WORLDS: World[] = [
   },
 ];
 
-/** Get the world a level belongs to */
+/** Get the world a level belongs to. Always returns a valid World — the
+ *  function honors its `: World` return type for EVERY input. */
 export function getWorldForLevel(level: number): World {
-  const index = Math.min(Math.floor((level - 1) / 50), WORLDS.length - 1);
-  return WORLDS[index];
+  // Clamp BOTH ends (and guard NaN) so this never returns undefined. Levels
+  // <= 0 (endless 0, weekly -1, daily -2) and non-finite levels resolve to the
+  // first world; levels past the last world resolve to the last. Previously
+  // only the UPPER bound was clamped, so level <= 0 produced WORLDS[-1] ===
+  // undefined and every caller had to remember a `level > 0` guard or hit a
+  // ".id of undefined" red-screen crash (see the GameScreen world-unlock banner).
+  const clamped = Math.max(0, Math.min(Math.floor((level - 1) / 50), WORLDS.length - 1));
+  return WORLDS[Number.isNaN(clamped) ? 0 : clamped];
 }
 
 /** Get all worlds */

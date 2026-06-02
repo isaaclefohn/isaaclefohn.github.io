@@ -201,8 +201,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
   const boardOriginRef = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 0, height: 0 });
 
-  // World theme for ambient visuals
-  const currentWorld = isEndless ? null : getWorldForLevel(level);
+  // World theme for ambient visuals. Daily (-2), weekly (-1) and endless (0)
+  // have no campaign world, so they stay theme-less. (getWorldForLevel now
+  // clamps non-positive levels to a real World instead of returning undefined,
+  // so this explicit `level <= 0` gate is what keeps those modes null.)
+  const currentWorld = isEndless || level <= 0 ? null : getWorldForLevel(level);
   const worldParticleColors = useMemo(() => currentWorld ? [
     `${currentWorld.color}18`,
     `${currentWorld.color}12`,
@@ -1282,13 +1285,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           }
           return <Text style={styles.modalTitle}>Level Complete!</Text>;
         })()}
-        {/* World unlock celebration. Gated on `level > 0` because the
-            daily puzzle and weekly challenge use negative level numbers
-            (-2 and -1) — `getWorldForLevel(-2 | -1 | 0)` returns
-            `undefined`, then `.id` throws and the win modal crashes
-            with a red screen instead of showing the success state.
-            The same gate is used by the world-complete-check effect at
-            line 302 of this file; the banner needs to match it. */}
+        {/* World unlock celebration. Gated on `level > 0` because the daily
+            puzzle (-2), weekly challenge (-1) and endless (0) have no campaign
+            world-progression — there is no "next world" to unlock for them.
+            (getWorldForLevel now clamps non-positive levels to a valid World
+            rather than returning undefined, so this gate is no longer the
+            crash-guard it once was — but it is still required so the banner
+            never shows for those modes.) The same gate guards the
+            world-complete-check effect earlier in this file; keep them in sync. */}
         {!isEndless && level > 0 && level + 1 <= 500 && getWorldForLevel(level + 1).id !== getWorldForLevel(level).id && (
           <View style={styles.worldUnlockBanner}>
             <GameIcon name={getWorldForLevel(level + 1).icon as any} size={16} color={getWorldForLevel(level + 1).color} />
