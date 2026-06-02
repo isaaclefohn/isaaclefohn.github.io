@@ -1282,8 +1282,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           }
           return <Text style={styles.modalTitle}>Level Complete!</Text>;
         })()}
-        {/* World unlock celebration */}
-        {!isEndless && level + 1 <= 500 && getWorldForLevel(level + 1).id !== getWorldForLevel(level).id && (
+        {/* World unlock celebration. Gated on `level > 0` because the
+            daily puzzle and weekly challenge use negative level numbers
+            (-2 and -1) — `getWorldForLevel(-2 | -1 | 0)` returns
+            `undefined`, then `.id` throws and the win modal crashes
+            with a red screen instead of showing the success state.
+            The same gate is used by the world-complete-check effect at
+            line 302 of this file; the banner needs to match it. */}
+        {!isEndless && level > 0 && level + 1 <= 500 && getWorldForLevel(level + 1).id !== getWorldForLevel(level).id && (
           <View style={styles.worldUnlockBanner}>
             <GameIcon name={getWorldForLevel(level + 1).icon as any} size={16} color={getWorldForLevel(level + 1).color} />
             <Text style={[styles.worldUnlockText, { color: getWorldForLevel(level + 1).color }]}>

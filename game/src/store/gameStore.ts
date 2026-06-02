@@ -19,6 +19,7 @@ import { SeededRandom } from '../utils/seededRandom';
 import { ScoreEvent, scorePlacement, scoreClear } from '../game/engine/Scoring';
 import { PowerUpType, applyBomb, applyRowClear, applyColorClear } from '../game/powerups/PowerUpManager';
 import { resolveBoardCascade } from '../game/engine/Board';
+import { checkObjective } from '../game/engine/GameLoop';
 import { isGameOver } from '../game/engine/GameOver';
 import { usePlayerStore } from './playerStore';
 import { trackGameEvent } from '../services/analytics';
@@ -274,13 +275,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const gameOverPool = heldPiece ? [...remainingPieces, heldPiece] : remainingPieces;
     const gameOver = gameOverPool.length > 0 && isGameOver(finalGrid, gameOverPool);
 
+    // Match processTurn's "what changed this turn" bookkeeping. The
+    // previous version omitted both fields, so a power-up that triggered
+    // a chromatic cascade (a) didn't credit the chromatic clear toward
+    // the run counter or chromatic-objective levels, and (b) never set
+    // status: 'won' even on score-objective levels — the player had to
+    // place a piece afterward to make the win register. Mirror what
+    // processTurn does at the end of a placement so a power-up that
+    // happens to complete the objective wins the level.
+    const newChromaticClears =
+      gameState.chromaticClears + (cascadeScore?.chromaticClears ?? 0);
+    const won = checkObjective(gameState.objective, newScore, newChromaticClears);
+    const nextStatus = won ? 'won' : gameOver ? 'lost' : gameState.status;
+
     set({
       gameState: {
         ...gameState,
         grid: finalGrid,
         score: newScore,
         combo: cascade.linesCleared > 0 ? gameState.combo + 1 : 0,
-        status: gameOver ? 'lost' : gameState.status,
+        chromaticClears: newChromaticClears,
+        status: nextStatus,
         lastScoreEvent: surfacedEvent,
         // Reset turn-scoped animation fields so BoardEffects' sweep/squish
         // play the power-up's cascade, not a stale replay from the prior

@@ -75,7 +75,18 @@ export async function scheduleStreakReminder(streakDays: number): Promise<void> 
 export async function cancelDailyRewardReminder(): Promise<void> {
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   for (const notif of scheduled) {
-    if (notif.content.title?.includes('daily reward')) {
+    // Match case-insensitively. The retention scheduler enqueues a
+    // 24h reminder titled "Daily reward waiting!" (capital D); the
+    // daily-reward scheduler enqueues "Your daily reward is ready!"
+    // (also capital D in "Daily" — wait, no, lower-d in "daily").
+    // Either way, the previous `.includes('daily reward')` only matched
+    // the lowercase-d variant, so the retention 24h reminder survived
+    // and the player got TWO near-duplicate notifications two hours
+    // apart after claiming. Normalize to lowercase + also accept the
+    // explicit data-tag if the call site set one.
+    const title = notif.content.title ?? '';
+    const dataType = (notif.content.data as { type?: string } | undefined)?.type;
+    if (title.toLowerCase().includes('daily reward') || dataType === 'daily_reward') {
       await Notifications.cancelScheduledNotificationAsync(notif.identifier);
     }
   }
