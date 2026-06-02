@@ -34,18 +34,25 @@ const PowerUpButton: React.FC<{
 
   useEffect(() => {
     if (isActive) {
-      Animated.loop(
+      // Capture the loop handle so we can stop it cleanly when the
+      // power-up is deactivated OR the component unmounts. The previous
+      // version stopped via stopAnimation() in the `else` branch but
+      // never stopped on unmount, so a power-up activated and then the
+      // GameScreen torn down left a phantom loop running on a detached
+      // pulseAnim.
+      const pulse = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, { toValue: 1.08, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
           Animated.timing(pulseAnim, { toValue: 1, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        ])
-      ).start();
+        ]),
+      );
+      pulse.start();
       Animated.timing(glowAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-    } else {
-      pulseAnim.stopAnimation();
-      pulseAnim.setValue(1);
-      Animated.timing(glowAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+      return () => pulse.stop();
     }
+    pulseAnim.stopAnimation();
+    pulseAnim.setValue(1);
+    Animated.timing(glowAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
   }, [isActive, pulseAnim, glowAnim]);
 
   const config = POWER_UP_CONFIGS[type];

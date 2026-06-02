@@ -80,12 +80,18 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
   // Progress bar glow
   useEffect(() => {
-    Animated.loop(
+    // Capture the loop handle so the unmount cleanup stops the driver.
+    // This component lives for the duration of a GameScreen run; on
+    // navigation back to Home the previous version left the glow loop
+    // ticking against a detached Animated.Value.
+    const glow = Animated.loop(
       Animated.sequence([
         Animated.timing(progressGlow, { toValue: 0.9, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         Animated.timing(progressGlow, { toValue: 0.4, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
+      ]),
+    );
+    glow.start();
+    return () => glow.stop();
   }, [progressGlow]);
 
   // Star threshold markers on progress bar

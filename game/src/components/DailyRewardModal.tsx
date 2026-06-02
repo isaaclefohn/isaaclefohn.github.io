@@ -49,12 +49,18 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({ visible, onC
 
   useEffect(() => {
     if (visible && canClaim) {
-      Animated.loop(
+      // Capture + stop on cleanup. Each open of this modal previously
+      // started a new bounce loop on the SAME bounceAnim with no stop —
+      // open-claim-close-reopen cycles would stack loops, compounding
+      // the bounce magnitude visually.
+      const bounce = Animated.loop(
         Animated.sequence([
           Animated.timing(bounceAnim, { toValue: 1.1, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
           Animated.timing(bounceAnim, { toValue: 0.95, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        ])
-      ).start();
+        ]),
+      );
+      bounce.start();
+      return () => bounce.stop();
     }
   }, [visible, canClaim]);
 

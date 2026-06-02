@@ -136,6 +136,12 @@ export async function initializePurchases(): Promise<void> {
           return;
         }
 
+        // Track whether to finalize: skip it on TRANSIENT validation
+        // failures so Apple redelivers the transaction next launch and
+        // we get another chance to credit. Without this guard, a network
+        // blip during purchase burned the receipt — user paid, no coins,
+        // no redelivery possible.
+        let shouldFinalize = true;
         try {
           const result = await validateReceipt(receipt, purchase.productId);
           if (result.valid) {
@@ -159,6 +165,20 @@ export async function initializePurchases(): Promise<void> {
               price: product?.price,
               source: 'storekit',
             });
+          } else if (result.transient) {
+            // Network / 5xx — let Apple redeliver. We INTENTIONALLY skip
+            // finishTransaction so the txn stays in Apple's queue and
+            // hits this listener again on next foreground / launch.
+            shouldFinalize = false;
+            console.warn(
+              '[IAP] receipt validation transient failure — leaving txn unfinalized for redelivery',
+              purchase.productId,
+            );
+            track('iap.purchase_failed', {
+              productId: purchase.productId,
+              source: 'storekit',
+              reason: 'validation_transient',
+            });
           } else {
             console.warn(
               '[IAP] receipt validation failed — NOT crediting',
@@ -171,10 +191,12 @@ export async function initializePurchases(): Promise<void> {
             });
           }
         } finally {
-          try {
-            await IAP.finishTransaction({ purchase, isConsumable });
-          } catch {
-            /* ignore */
+          if (shouldFinalize) {
+            try {
+              await IAP.finishTransaction({ purchase, isConsumable });
+            } catch {
+              /* ignore */
+            }
           }
         }
       }
@@ -519,15 +541,28 @@ export function getPremiumProducts(): Product[] {
 
 /**
  * Validate a purchase receipt with the server.
- * Returns true if valid, false otherwise.
+ * Returns `{ valid: true }` on success, `{ valid: false, transient: true }`
+ * on a TRANSIENT failure (network down, 5xx from the validator) where the
+ * caller should NOT finalize the transaction so Apple can redeliver, or
+ * `{ valid: false, transient: false }` on a PERMANENT failure (receipt
+ * actually invalid; finalize to clear the queue).
+ *
+ * Without this distinction, a network blip during purchase would burn
+ * the receipt: the user paid Apple, the validator throws, the listener
+ * acks the transaction in its `finally` block, and the player never sees
+ * the coins — with no redelivery on next launch because the transaction
+ * was already finished.
  */
 export async function validateReceipt(
   receiptData: string,
   productId: string
-): Promise<{ valid: boolean; credits?: { type: string; amount: number } }> {
+): Promise<{ valid: boolean; transient?: boolean; credits?: { type: string; amount: number } }> {
   if (!API_URL) {
     console.warn('API_URL not configured, skipping receipt validation');
-    return { valid: false };
+    // No validator configured is a setup error, not a runtime transient.
+    // The caller should still finalize so Apple's queue doesn't fill —
+    // there's no remediation a redelivery could give us.
+    return { valid: false, transient: false };
   }
 
   try {
@@ -541,11 +576,18 @@ export async function validateReceipt(
       }),
     });
 
-    if (!response.ok) return { valid: false };
-    return await response.json();
+    // 5xx is transient (server overloaded / down); 4xx is permanent (Apple
+    // rejected the receipt as fraudulent or malformed).
+    if (!response.ok) {
+      return { valid: false, transient: response.status >= 500 };
+    }
+    const json = await response.json();
+    return { ...json, transient: false };
   } catch (error) {
-    console.error('Receipt validation failed:', error);
-    return { valid: false };
+    // Network failure (no connectivity, DNS, timeout) — transient by
+    // definition. Don't finalize; Apple will redeliver next launch.
+    console.error('Receipt validation failed (transient):', error);
+    return { valid: false, transient: true };
   }
 }
 

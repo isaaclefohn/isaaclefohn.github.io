@@ -263,6 +263,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     // case) blocks every later step, leaving stats/buttons stuck at opacity 0.
     // Parallel + delay keeps the staggered feel while making each fade-in
     // self-contained, so content can never get stuck invisible.
+    const loopsToStop: Animated.CompositeAnimation[] = [];
     Animated.parallel([
       Animated.timing(titleOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.spring(titleTranslate, { toValue: 0, useNativeDriver: true, tension: 60, friction: 8 }),
@@ -291,40 +292,55 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         ]),
       ]).start();
 
-      // Gentle continuous rotation
-      Animated.loop(
+      // Gentle continuous rotation. Capture so unmount-cleanup stops it.
+      const rot = Animated.loop(
         Animated.timing(anim.rotate, {
           toValue: 1,
           duration: 8000 + i * 2000,
           easing: Easing.linear,
           useNativeDriver: true,
-        })
-      ).start();
+        }),
+      );
+      rot.start();
+      loopsToStop.push(rot);
     });
 
     // DROP glow pulse
-    Animated.loop(
+    const blastLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(blastGlow, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         Animated.timing(blastGlow, { toValue: 0.6, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
+      ]),
+    );
+    blastLoop.start();
+    loopsToStop.push(blastLoop);
 
     // Play button glow pulse
-    Animated.loop(
+    const playLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(playGlowPulse, { toValue: 0.7, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         Animated.timing(playGlowPulse, { toValue: 0.3, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
+      ]),
+    );
+    playLoop.start();
+    loopsToStop.push(playLoop);
 
     // Decorative background pulse
-    Animated.loop(
+    const decorLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(decorPulse, { toValue: 0.5, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         Animated.timing(decorPulse, { toValue: 0.3, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
+      ]),
+    );
+    decorLoop.start();
+    loopsToStop.push(decorLoop);
+
+    // HomeScreen rarely unmounts in real sessions (the navigator keeps
+    // it warm), but on logout / settings-reset-progress it does — and
+    // any leaked loops keep the rotate / blast / play / decor drivers
+    // ticking against detached Animated.Values for the rest of the
+    // session. Stop them all on unmount.
+    return () => { loopsToStop.forEach((l) => l.stop()); };
   }, []);
 
 

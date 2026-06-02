@@ -13,7 +13,9 @@ const EventCard: React.FC<{ event: LiveEvent }> = ({ event }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.loop(
+    // Capture so unmount stops the driver work. Same fix shape as the
+    // PieceTray / GiftBoxModal / WeeklyChallengeScreen leaks.
+    const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.05,
@@ -27,8 +29,10 @@ const EventCard: React.FC<{ event: LiveEvent }> = ({ event }) => {
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
-      ])
-    ).start();
+      ]),
+    );
+    pulse.start();
+    return () => pulse.stop();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
