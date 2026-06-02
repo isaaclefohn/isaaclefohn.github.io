@@ -108,19 +108,15 @@ export function getChromaticColors(
   rows: number[],
   cols: number[],
 ): number[] {
+  // Returns ONE color per chromatic line. A same-color row+col cross
+  // returns the color twice — that's by design: the scoring layer
+  // bills CHROMATIC_BONUS_PER_LINE, multi-line bonuses depend on the
+  // line count, and the existing Chromatic.test.ts snapshots the
+  // `[3, 3]` shape. Side effects that shouldn't fire twice for the
+  // same color (color-note audio, achievement counter) dedupe at
+  // their own callsites — see playColorChord in useSound.ts and the
+  // chromaticClearCount accumulator in playerStore.ts.
   const size = grid.length;
-  // De-dupe at the line level. When ONE placement completes a chromatic
-  // row AND a chromatic column of the SAME color (a cross — the third
-  // piece of a same-color L laid on the rim is the canonical example),
-  // the previous version returned the color twice. Downstream that
-  // doubled `chromaticClears` (so the bonus + achievement counter +
-  // haptic intensity + color-note play all fired twice for a single
-  // visual event). Track distinct (lineType, lineIndex, color) tuples
-  // and emit each color once per visually-distinct chromatic line, so
-  // a same-color row+col cross is counted as 2 lines but only generates
-  // 1 color-note play (the cascade-cells score still scales correctly
-  // because both lines feed cells into the sweep).
-  const seen = new Set<number>();
   const colors: number[] = [];
   const scanLine = (cells: number[]) => {
     let color = -1;
@@ -129,10 +125,7 @@ export function getChromaticColors(
       if (color === -1) color = v;
       else if (v !== color) return; // mixed colors — not chromatic
     }
-    if (color !== -1 && !seen.has(color)) {
-      seen.add(color);
-      colors.push(color);
-    }
+    if (color !== -1) colors.push(color);
   };
   for (const r of rows) scanLine(grid[r]);
   for (const c of cols) scanLine(grid.map((row) => row[c]));
