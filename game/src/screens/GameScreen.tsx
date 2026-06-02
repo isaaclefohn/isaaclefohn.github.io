@@ -837,6 +837,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const handleRetry = useCallback(() => {
     setShowLoseModal(false); setShowWinModal(false); setShowPauseMenu(false);
     setShowConfetti(false); setActivePowerUp(null); setDoubleCoinsUsed(false);
+    // The personal-best milestone is a once-per-run ref guard. Without
+    // resetting it here, a retry that blows past the same personal best
+    // again would surface no celebration toast — the user beats their
+    // record and gets silence. Other once-per-run refs reset implicitly
+    // via component remounts or store wipes; this one lives in a ref so
+    // we have to reset it explicitly.
+    milestoneShownRef.current = false;
     if (onLevelCompleted()) { showInterstitialAd(); }
     resetLevel();
   }, [resetLevel]);
@@ -1007,7 +1014,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         score={gameState.score}
         combo={gameState.combo}
         chromaticClears={gameState.chromaticClears}
-        objective={isEndless ? { type: 'score', target: gameState.score + 1000 } : gameState.objective}
+        objective={isEndless
+          // Endless has no fixed scoring target — show progress toward the
+          // next 1k milestone. The previous formula `score + 1000` made the
+          // target recede in lockstep with score (35 → 1,035, 100 → 1,100):
+          // a Zeno's progress bar that could never reach 100%, and a goal
+          // post that visibly moved every placement.
+          ? { type: 'score', target: Math.floor(gameState.score / 1000) * 1000 + 1000 }
+          : gameState.objective}
         level={isEndless ? 0 : gameState.level}
         stars={stars}
         endlessWave={isEndless ? getWaveForPieces(gameState.piecesPlaced).wave : undefined}
@@ -1568,12 +1582,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         onClose={() => setShowLuckyLevel(false)}
       />
 
-      {/* World completion modal */}
-      <WorldCompleteModal
-        visible={showWorldComplete}
-        reward={worldReward}
-        isPerfect={worldRewardPerfect}
-        onClaim={() => {
+      {/* World completion modal.
+          Both Claim and dismiss-by-backdrop credit the reward + stamp the
+          world as claimed. Previously, tapping the X / backdrop would
+          silently forfeit the reward AND leave the world un-stamped, so
+          the modal re-fired the next time the player re-won any level in
+          that world — visibly stuck. */}
+      {(() => {
+        const finalizeWorldReward = () => {
           if (worldReward) {
             const rewardData = worldRewardPerfect ? worldReward.perfectReward : worldReward.clearReward;
             addCoins(rewardData.coins, { boostable: true });
@@ -1588,9 +1604,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             }
           }
           setShowWorldComplete(false);
-        }}
-        onClose={() => setShowWorldComplete(false)}
-      />
+        };
+        return (
+          <WorldCompleteModal
+            visible={showWorldComplete}
+            reward={worldReward}
+            isPerfect={worldRewardPerfect}
+            onClaim={finalizeWorldReward}
+            onClose={finalizeWorldReward}
+          />
+        );
+      })()}
 
       {/* Tutorial overlay for first-time players */}
       <TutorialOverlay visible={showTutorial} onComplete={completeTutorial} />

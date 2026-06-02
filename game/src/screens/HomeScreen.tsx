@@ -53,6 +53,7 @@ import { requestNotificationPermissions, scheduleStreakReminder, scheduleRetenti
 import { maybePromptForStreakDay7 } from '../services/appRating';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatCompact } from '../utils/formatters';
+import { getLocalToday } from '../utils/dates';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -122,7 +123,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const unlockStarterPack = usePlayerStore((s) => s.unlockStarterPack);
   const rouletteAvailable = !hasSpunToday(
     rouletteLastDate,
-    new Date().toISOString().split('T')[0],
+    getLocalToday(),
   );
   const activeTournament = usePlayerStore((s) => s.activeTournament);
   const inboxMessages = usePlayerStore((s) => s.inboxMessages);
@@ -163,13 +164,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const seasonalTheme = getActiveSeasonalTheme();
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   const canSpin = lastSpinDate !== today;
 
   // Show daily reward modal on first visit each day — but not before a brand-new
   // player has finished the in-game tutorial (don't interrupt their first session).
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalToday();
     if (dailyRewardLastClaimed !== today && tutorialCompleted) {
       const timer = setTimeout(() => setShowDailyReward(true), 800);
       return () => clearTimeout(timer);

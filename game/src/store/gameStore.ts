@@ -190,6 +190,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       gameState: { ...gameState, availablePieces: newAvailable },
       heldPiece: piece,
       selectedPieceIndex: null,
+      // Invalidate the undo snapshot. The snapshot captured the PRE-HOLD
+      // heldPiece (whatever was in the slot before this hold action); if
+      // we left it intact, a subsequent Undo would silently restore the
+      // pre-hold hold-slot — which means the piece the user JUST held
+      // disappears. Block undo after hold instead of trying to merge the
+      // two state mutations; either action by itself is reversible, but
+      // the composition is not.
+      undoSnapshot: null,
     });
     return true;
   },
@@ -333,8 +341,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { gameState, levelConfig, rng } = get();
     if (!gameState || gameState.status !== 'lost' || !rng || !levelConfig) return false;
 
-    // Generate fresh pieces from the level's piece pool and resume
-    const newPieces = generatePieceSet(rng, levelConfig.piecePool);
+    // Generate fresh pieces respecting the active palette — same fix as
+    // swapPieces / peekNextPieces. Continue is currently reachable from
+    // level mode only, but wiring it to Zen later without this guard
+    // would silently hand the player a 7-color tray in a 4-color wave.
+    const newPieces = generatePieceSet(rng, levelConfig.piecePool, gameState.paletteSize);
     set({
       gameState: {
         ...gameState,

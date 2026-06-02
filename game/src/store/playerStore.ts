@@ -20,6 +20,7 @@ import {
   type ActiveBoostUntil,
   type BoostKind,
 } from '../game/rewards/ActiveBoosts';
+import { getLocalToday } from '../utils/dates';
 
 /** Daily reward amounts — day 7 is more valuable than days 1-6 combined */
 export const DAILY_REWARDS = [
@@ -599,7 +600,12 @@ interface PlayerStore extends PlayerStoreState {
   loadDemoState: () => void;
 }
 
-const getToday = () => new Date().toISOString().split('T')[0];
+// LOCAL-timezone "today" — see src/utils/dates.ts for the full rationale.
+// All daily/streak/spin systems agreed on UTC before this change, which
+// silently shifted resets to UTC midnight (5pm PDT, 7pm EST, etc.) and
+// broke daily-puzzle ID matching across the store. Now all routes through
+// this single helper.
+const getToday = () => getLocalToday();
 
 export const usePlayerStore = create<PlayerStore>()(
   persist(

@@ -12,6 +12,7 @@ import { CurrencyDisplay } from '../components/CurrencyDisplay';
 import { GameIcon } from '../components/GameIcon';
 import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import { formatTime } from '../utils/formatters';
+import { getLocalToday } from '../utils/dates';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -27,9 +28,10 @@ function getSecondsUntilMidnight(): number {
   return Math.floor((midnight.getTime() - now.getTime()) / 1000);
 }
 
-/** Get today's date string */
+/** Get today's date string in the player's LOCAL timezone — see
+ *  src/utils/dates.ts for why this matters. */
 function getToday(): string {
-  return new Date().toISOString().split('T')[0];
+  return getLocalToday();
 }
 
 /** Streak reward tiers */

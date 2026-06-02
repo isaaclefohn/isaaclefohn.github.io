@@ -264,6 +264,12 @@ export function useGameEngine() {
       } else if (isDaily) {
         // Daily puzzle "loss" = run ended (stuck). We still lock in the
         // score, award participation coins, and advance the streak.
+        // `recordDailyPuzzleResult` already increments totalGamesPlayed
+        // internally; we used to ALSO call `recordGamePlayed` here, which
+        // double-counted every daily play in the lifetime stats and
+        // inflated achievement progress (clear_500 etc.). Now we trust
+        // `recordDailyPuzzleResult` for the +1, and only update bestCombo
+        // separately so daily-only players still see combo records.
         const puzzleId = getDailyPuzzleId();
         const stars = getStars();
         const result = recordDailyPuzzleResult(puzzleId, gameState.score, stars);
@@ -275,7 +281,11 @@ export function useGameEngine() {
           const xpMult = getXPMultiplier();
           addBattlePassXP(Math.round((30 + stars * 15) * xpMult), { boostable: true });
         }
-        recordGamePlayed(gameState.maxComboThisRun ?? 0);
+        // Pick up best-combo from this run without re-incrementing games.
+        const combo = gameState.maxComboThisRun ?? 0;
+        if (combo > 0) {
+          usePlayerStore.setState((s) => ({ bestCombo: Math.max(s.bestCombo, combo) }));
+        }
       } else {
         recordGamePlayed(gameState.maxComboThisRun ?? 0);
         recordFailure(levelConfig.levelNumber);
