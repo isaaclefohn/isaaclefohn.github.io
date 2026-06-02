@@ -5,7 +5,7 @@
 
 import { Grid, createGrid, executePlacement, canPlace, placePiece, findFullLines, getGridSize } from './Board';
 import { getWaveForPieces } from '../levels/EndlessWaves';
-import { Piece, PieceType, createPiece, getPieceCells, PIECE_POOLS } from './Piece';
+import { Piece, PieceType, createPiece, getPieceCells, PIECE_POOLS, rotatePiece } from './Piece';
 import { ScoreEvent, scorePlacement, scoreClear, calculateStars } from './Scoring';
 import { isGameOver } from './GameOver';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -175,13 +175,24 @@ export function hasClearableMove(grid: Grid, pieces: (Piece | null)[]): boolean 
   const size = getGridSize(grid);
   for (const piece of pieces) {
     if (!piece) continue;
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        if (!canPlace(grid, piece, r, c)) continue;
-        const placed = placePiece(grid, piece, r, c);
-        const { rows, cols } = findFullLines(placed);
-        if (rows.length > 0 || cols.length > 0) return true;
+    // Tap-to-rotate is free and unlimited, so a piece can clear a line in any
+    // of its up-to-4 orientations. Checking only the current orientation made
+    // the "always-solvable" generator wrongly reject sets the player could
+    // clear after a rotation (e.g. a domino_h that becomes domino_v to finish
+    // a column) — the same rotation-blind assumption fixed in game-over
+    // detection. Four 90° turns return to the original; we bail on the first
+    // clearing placement found.
+    let oriented = piece;
+    for (let turn = 0; turn < 4; turn++) {
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (!canPlace(grid, oriented, r, c)) continue;
+          const placed = placePiece(grid, oriented, r, c);
+          const { rows, cols } = findFullLines(placed);
+          if (rows.length > 0 || cols.length > 0) return true;
+        }
       }
+      oriented = rotatePiece(oriented);
     }
   }
   return false;

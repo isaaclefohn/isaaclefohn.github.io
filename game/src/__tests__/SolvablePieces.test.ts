@@ -56,6 +56,16 @@ describe('hasClearableMove', () => {
     expect(hasClearableMove(grid, pieces)).toBe(false);
   });
 
+  it('considers ROTATION: a horizontal domino can complete a column when rotated vertical', () => {
+    // Column 3 filled rows 2..7 (6 cells); (0,3),(1,3) empty. A horizontal
+    // domino cannot complete the column, but rotated to vertical it drops into
+    // (0,3)+(1,3) and clears it. Tap-to-rotate is free, so this is a real
+    // clearable move — pre-fix (current-orientation only) this was false.
+    const grid = createGrid(8);
+    for (let r = 2; r < 8; r++) grid[r][3] = 1;
+    expect(hasClearableMove(grid, [createPiece('domino_h', 1)])).toBe(true);
+  });
+
   it('handles a null piece slot (already-placed pieces in the tray)', () => {
     // After a player places one of their 3 pieces, the tray has a null
     // slot. hasClearableMove should skip null cleanly, not crash.
