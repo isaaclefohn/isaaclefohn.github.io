@@ -134,7 +134,6 @@ const ClearSweep: React.FC<{ rows: number[]; cols: number[]; gridSize: number }>
   cols,
   gridSize,
 }) => {
-  const cellCount = rows.length * gridSize + cols.length * gridSize;
   const anims = useRef<Animated.Value[]>([]);
 
   // Build list of cells to animate

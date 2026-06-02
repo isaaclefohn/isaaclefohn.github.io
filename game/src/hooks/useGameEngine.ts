@@ -196,8 +196,15 @@ export function useGameEngine() {
       updateQuestProgress('lines_cleared', gameState.linesCleared);
       updateQuestProgress('pieces_placed', gameState.piecesPlaced);
       updateQuestProgress('stars_earned', stars);
-      if (gameState.combo > 1) {
-        updateQuestProgress('combos_achieved', gameState.combo - 1);
+      // Credit the run's PEAK combo, not the live `combo` counter — the live
+      // value is ~0 at the terminal placement once a no-clear move breaks the
+      // chain. `combos_achieved` has exactly one credit site (here), so
+      // reading the live counter left the "Combo King / Combo Madness" quests
+      // almost uncompletable. Same live-vs-maxComboThisRun bug already fixed
+      // for zen/daily bestCombo and recordGamePlayed.
+      const peakCombo = gameState.maxComboThisRun ?? 0;
+      if (peakCombo > 1) {
+        updateQuestProgress('combos_achieved', peakCombo - 1);
       }
       if (!isWeekly && !isDaily) {
         updateQuestProgress('levels_completed', 1);
