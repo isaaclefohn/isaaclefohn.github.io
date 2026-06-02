@@ -21,6 +21,7 @@ import {
   type BoostKind,
 } from '../game/rewards/ActiveBoosts';
 import { getLocalToday } from '../utils/dates';
+import { useToastQueueStore } from './toastQueueStore';
 
 /** Daily reward amounts — day 7 is more valuable than days 1-6 combined */
 export const DAILY_REWARDS = [
@@ -983,6 +984,15 @@ export const usePlayerStore = create<PlayerStore>()(
             coins: s.coins + applyBoost(totalCoins, s.activeBoostUntil, 'coins', Date.now()),
             gems: s.gems + totalGems,
           }));
+          // Surface each unlock as a toast so the player sees the dopamine
+          // beat. Previously the array returned here was discarded by both
+          // call sites (GameScreen, HomeScreen) — coins/gems appeared in
+          // the header counter with no visible reason. The toast component
+          // drains the queue one at a time with a slide-in/hold/slide-out,
+          // matching the "you earned a thing" feedback every other reward
+          // path already has.
+          const toastEnqueue = useToastQueueStore.getState().enqueue;
+          for (const a of newlyUnlocked) toastEnqueue(a);
         }
 
         return newlyUnlocked;

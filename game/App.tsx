@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { BrandSplash } from './src/components/BrandSplash';
+import { AchievementUnlockToast } from './src/components/AchievementUnlockToast';
 import { initializeAds } from './src/services/ads';
 import { initSentry, initAnalytics } from './src/services/analytics';
 import { initializePurchases } from './src/services/purchases';
@@ -38,6 +39,9 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="light" />
       <RootNavigator />
+      {/* Mounted once at App level so any screen's checkAchievements()
+          call can surface a toast. Component drains the queue itself. */}
+      <AchievementUnlockToast />
       {!splashDone && <BrandSplash onDone={() => setSplashDone(true)} />}
     </GestureHandlerRootView>
   );
