@@ -44,23 +44,33 @@ export const GiftBoxModal: React.FC<GiftBoxModalProps> = ({ visible, gift, onClo
         useNativeDriver: true,
       }).start();
 
-      // Gentle bounce loop
-      Animated.loop(
+      // Gentle bounce loop — capture the handle so we can stop it on
+      // modal close / re-open. Without this, every reopen started a new
+      // loop on the SAME shared Animated.Value, so opening this modal
+      // twice gave you 4 loops driving the bounce, three times = 6, and
+      // the bounce got jittery while the shimmer rate compounded.
+      const bounceLoop = Animated.loop(
         Animated.sequence([
           Animated.timing(boxBounce, { toValue: -8, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
           Animated.timing(boxBounce, { toValue: 0, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        ])
-      ).start();
+        ]),
+      );
+      bounceLoop.start();
 
-      // Shimmer effect
-      Animated.loop(
+      const shimmerLoop = Animated.loop(
         Animated.timing(shimmer, {
           toValue: 1,
           duration: 2000,
           easing: Easing.linear,
           useNativeDriver: true,
-        })
-      ).start();
+        }),
+      );
+      shimmerLoop.start();
+
+      return () => {
+        bounceLoop.stop();
+        shimmerLoop.stop();
+      };
     }
   }, [visible, gift]);
 

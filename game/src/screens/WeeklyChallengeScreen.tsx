@@ -53,12 +53,18 @@ export const WeeklyChallengeScreen: React.FC<WeeklyChallengeScreenProps> = ({ na
       Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 9, useNativeDriver: true }),
     ]).start();
 
-    Animated.loop(
+    // Capture the loop handle so we can stop it when the user navigates
+    // away. Previously this was fire-and-forget — the loop kept running
+    // on a detached pulseAnim after unmount; each session re-entry
+    // accumulated more orphaned driver work.
+    const pulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         Animated.timing(pulseAnim, { toValue: 0.8, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
+      ]),
+    );
+    pulseLoop.start();
+    return () => pulseLoop.stop();
   }, []);
 
   const handlePlay = useCallback(() => {

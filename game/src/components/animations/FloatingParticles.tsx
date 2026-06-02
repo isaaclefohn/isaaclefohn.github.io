@@ -56,11 +56,42 @@ export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
   }, [count, colors, reducedMotion]);
 
   useEffect(() => {
+    // Capture-style cancel: the recursive animate() self-schedules from
+    // a .start() callback, so without a flag the recursion keeps running
+    // on detached Animated.Values after unmount. Navigating Home → Game
+    // → Home would stack a new infinite recursion each visit. We flip
+    // `cancelled` in the cleanup; the next callback short-circuits.
+    let cancelled = false;
+    // Track every loop handle we spawn so we can stop them on unmount.
+    // The Animated.loop driving sway is the same shape as findings #3
+    // and #7 — a fire-and-forget loop with no captured handle — so we
+    // fix both the recursion and the inner loops in one pass.
+    const swayLoops: Animated.CompositeAnimation[] = [];
+
     particles.forEach((p) => {
       const animate = () => {
+        if (cancelled) return;
         p.y.setValue(SCREEN_H + 20);
         p.opacity.setValue(0);
         p.sway.setValue(0);
+
+        const swayLoop = Animated.loop(
+          Animated.sequence([
+            Animated.timing(p.sway, {
+              toValue: p.swayAmount,
+              duration: p.duration / 4,
+              easing: Easing.inOut(Easing.sin),
+              useNativeDriver: true,
+            }),
+            Animated.timing(p.sway, {
+              toValue: -p.swayAmount,
+              duration: p.duration / 4,
+              easing: Easing.inOut(Easing.sin),
+              useNativeDriver: true,
+            }),
+          ]),
+        );
+        swayLoops.push(swayLoop);
 
         Animated.parallel([
           // Float upward
@@ -71,23 +102,7 @@ export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
             easing: Easing.linear,
             useNativeDriver: true,
           }),
-          // Gentle sway
-          Animated.loop(
-            Animated.sequence([
-              Animated.timing(p.sway, {
-                toValue: p.swayAmount,
-                duration: p.duration / 4,
-                easing: Easing.inOut(Easing.sin),
-                useNativeDriver: true,
-              }),
-              Animated.timing(p.sway, {
-                toValue: -p.swayAmount,
-                duration: p.duration / 4,
-                easing: Easing.inOut(Easing.sin),
-                useNativeDriver: true,
-              }),
-            ])
-          ),
+          swayLoop,
           // Fade in then out
           Animated.sequence([
             Animated.timing(p.opacity, {
@@ -105,12 +120,18 @@ export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
           ]),
         ]).start(() => {
           // Reset delay for looping
+          if (cancelled) return;
           p.delay = 0;
           animate();
         });
       };
       animate();
     });
+
+    return () => {
+      cancelled = true;
+      swayLoops.forEach((l) => l.stop());
+    };
   }, [particles]);
 
   if (reducedMotion || particles.length === 0) return null;

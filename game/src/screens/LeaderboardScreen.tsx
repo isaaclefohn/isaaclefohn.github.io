@@ -88,17 +88,26 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation
     ]).start();
   }, [headerOpacity, headerSlide]);
 
-  const loadLeaderboard = useCallback(async () => {
+  const loadLeaderboard = useCallback(async (signal: { cancelled: boolean }) => {
     setLoading(true);
     // Daily tab reads the current daily-puzzle board (same id the submit uses).
     const id = activeTab === 'weekly' ? getWeekId() : getDailyPuzzleId();
     const data = await fetchLeaderboard(activeTab, id, 50);
+    // Discard if the user switched tabs (or unmounted) while this request
+    // was in flight. Without this, tapping Weekly (slow) → Daily fast
+    // path could resolve Daily first, then Weekly's response would
+    // overwrite the Daily entries with the wrong data — and a back-
+    // navigation during the request would setState on an unmounted
+    // component, triggering the React warning.
+    if (signal.cancelled) return;
     setEntries(data);
     setLoading(false);
   }, [activeTab]);
 
   useEffect(() => {
-    loadLeaderboard();
+    const signal = { cancelled: false };
+    loadLeaderboard(signal);
+    return () => { signal.cancelled = true; };
   }, [loadLeaderboard]);
 
   const renderEntry = ({ item, index }: { item: LeaderboardEntry; index: number }) => {

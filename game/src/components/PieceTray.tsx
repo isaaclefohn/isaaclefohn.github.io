@@ -107,18 +107,23 @@ const PieceSlot: React.FC<{
       useNativeDriver: true,
     }).start();
 
-    if (isSelected) {
-      // Shimmer sweep across the piece
-      shimmerX.setValue(-1);
-      Animated.loop(
-        Animated.timing(shimmerX, {
-          toValue: 2,
-          duration: 2000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      ).start();
-    }
+    if (!isSelected) return;
+    // Capture the loop handle so we can stop it when the piece is
+    // deselected or the slot unmounts. Without this, selecting and
+    // deselecting many pieces during a normal session stacked parallel
+    // shimmer loops on the SAME shimmerX value, producing erratic
+    // speed-up + driver work for invisible animations.
+    shimmerX.setValue(-1);
+    const shimmer = Animated.loop(
+      Animated.timing(shimmerX, {
+        toValue: 2,
+        duration: 2000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    shimmer.start();
+    return () => shimmer.stop();
   }, [isSelected, glowOpacity, shimmerX]);
 
   // Golden-piece breathing pulse. Faster and bigger than the regular
