@@ -140,13 +140,27 @@ export const SEASONAL_EVENTS: SeasonalEvent[] = [
   },
 ];
 
-/** Return the active seasonal event for the given date, or null if none active */
+/** Return the active seasonal event for the given date, or null if none active.
+ *
+ *  When two events' month ranges both cover the current month, the more
+ *  SPECIFIC one (narrowest span) wins. Without this, a broad season that
+ *  happens to appear earlier in SEASONAL_EVENTS permanently shadowed a
+ *  single-month special event sharing part of its range: Autumn Harvest
+ *  (Sep–Oct) sat in front of Spooky Nights (Oct only), so Halloween never
+ *  activated — players got Autumn all October, never saw the Halloween
+ *  theme/rates/milestones, and the StickerAlbum's "Spooky Season" prompt
+ *  pointed at the wrong live event. Preferring the narrower span makes
+ *  September → Autumn, October → Halloween, and is a general fix for the
+ *  whole broad-shadows-specific class rather than a Halloween point-patch. */
 export function getActiveEvent(now: Date = new Date()): SeasonalEvent | null {
   const month = now.getMonth();
-  for (const event of SEASONAL_EVENTS) {
-    if (event.startMonth <= month && month <= event.endMonth) return event;
-  }
-  return null;
+  const matches = SEASONAL_EVENTS.filter(
+    (event) => event.startMonth <= month && month <= event.endMonth,
+  );
+  if (matches.length === 0) return null;
+  return matches.reduce((best, event) =>
+    event.endMonth - event.startMonth < best.endMonth - best.startMonth ? event : best,
+  );
 }
 
 /** Unique identifier for the current season instance (year + id) for reset tracking */
