@@ -211,11 +211,14 @@ export const DailyChallengeScreen: React.FC<DailyChallengeScreenProps> = ({ navi
   }, []);
 
   const handlePlay = useCallback(() => {
-    const today = getToday();
-    const dayOfYear = Math.floor(
-      (new Date(today).getTime() - new Date(today.slice(0, 4) + '-01-01').getTime()) / 86400000
-    ) + 1;
-    navigation.navigate('Game', { level: 10000 + dayOfYear });
+    // Route through the same `daily: true` path HomeScreen uses. The old
+    // code shipped `level: 10000 + dayOfYear` (e.g. 10153) which has no
+    // matching LevelConfig — `getLevelConfig(10153)` returns undefined,
+    // `isBossLevel(10153)`, `getWorldForLevel(10153)`, the worldIndex
+    // math (`Math.ceil(level/50)`), and the SR-change calculation all
+    // produce garbage or crash. `level: 0, daily: true` is the contract
+    // the GameScreen / useGameEngine actually understand.
+    navigation.navigate('Game', { level: 0, daily: true });
   }, [navigation]);
 
   const hours = Math.floor(countdown / 3600);

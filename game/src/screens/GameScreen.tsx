@@ -294,16 +294,26 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
           setLuckyReward(lucky);
           setTimeout(() => setShowLuckyLevel(true), 1800);
         }
-        // Check for world completion (with updated stars including this win)
+        // Check for world completion (with updated stars including this win).
+        // Read the latest store values via `getState()` rather than the
+        // closure — adding `levelStars` / `claimedWorld*` to the effect dep
+        // array would cause it to re-fire on every claim and double-play the
+        // win sound + re-show the confetti + re-schedule modals; reading
+        // fresh values here avoids both the stale-closure bug and the
+        // duplicate-fire footgun. (Stale closure scenario: player 3-stars
+        // the last level of a world, claims, then 3-stars an earlier level
+        // in the same session — the closure-captured `levelStars` /
+        // `claimedWorldPerfects` lagged the store, so the modal re-fired.)
+        const ps = usePlayerStore.getState();
         const worldIndex = Math.ceil(level / 50);
         const world = getWorldForLevel(level);
-        const updatedStars = { ...levelStars, [level]: Math.max(levelStars[level] ?? 0, stars) };
+        const updatedStars = { ...ps.levelStars, [level]: Math.max(ps.levelStars[level] ?? 0, stars) };
         const worldStatus = getWorldCompletionStatus(worldIndex, updatedStars);
-        if (worldStatus.perfected && !claimedWorldPerfects.includes(world.id)) {
+        if (worldStatus.perfected && !ps.claimedWorldPerfects.includes(world.id)) {
           setWorldReward(getWorldReward(worldIndex));
           setWorldRewardPerfect(true);
           setTimeout(() => setShowWorldComplete(true), 2400);
-        } else if (worldStatus.cleared && !claimedWorldClears.includes(world.id)) {
+        } else if (worldStatus.cleared && !ps.claimedWorldClears.includes(world.id)) {
           setWorldReward(getWorldReward(worldIndex));
           setWorldRewardPerfect(false);
           setTimeout(() => setShowWorldComplete(true), 2400);
