@@ -36,7 +36,7 @@ jest.mock('../services/analytics', () => ({
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
 import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
-import { canPlace } from '../game/engine/Board';
+import { canPlace, placePiece as simulatePlace, findFullLines } from '../game/engine/Board';
 import { rotatePiece, type Piece } from '../game/engine/Piece';
 import { SeededRandom } from '../utils/seededRandom';
 import type { LevelConfig } from '../game/engine/GameLoop';
@@ -58,6 +58,7 @@ interface Move {
   rotations: number;
   row: number;
   col: number;
+  piece: Piece; // the oriented piece, for clear-simulation
 }
 
 /** Find EVERY legal move across all tray pieces and all <=4 rotations
@@ -76,7 +77,7 @@ function findAllMoves(grid: number[][], pieces: (Piece | null)[]): Move[] {
         seenShapes.add(key);
         for (let row = 0; row < size; row++) {
           for (let col = 0; col < size; col++) {
-            if (canPlace(grid, oriented, row, col)) moves.push({ index, rotations, row, col });
+            if (canPlace(grid, oriented, row, col)) moves.push({ index, rotations, row, col, piece: oriented });
           }
         }
       }
@@ -84,6 +85,32 @@ function findAllMoves(grid: number[][], pieces: (Piece | null)[]): Move[] {
     }
   }
   return moves;
+}
+
+/** How many lines a move would clear (for the greedy survival strategy). */
+function linesClearedBy(grid: number[][], move: Move): number {
+  const placed = simulatePlace(grid, move.piece, move.row, move.col);
+  const { rows, cols } = findFullLines(placed);
+  return rows.length + cols.length;
+}
+
+/** Greedy chooser: take the move clearing the most lines; among non-clearing
+ *  moves, keep the board low (prefer the highest row index). This survives FAR
+ *  longer than random play, pushing endless into deep waves (palette 5-7) the
+ *  random bot never reaches. Ties broken by the seeded RNG for variety. */
+function chooseGreedy(grid: number[][], moves: Move[], rng: SeededRandom): Move {
+  let best = moves[0];
+  let bestKey = -Infinity;
+  for (const m of moves) {
+    const cleared = linesClearedBy(grid, m);
+    // weight clears heavily, then prefer lower placements, then jitter
+    const key = cleared * 1000 + m.row + rng.next();
+    if (key > bestKey) {
+      bestKey = key;
+      best = m;
+    }
+  }
+  return best;
 }
 
 /** Assert the per-turn engine invariants on the current gameState. */
@@ -124,10 +151,10 @@ function assertInvariants(prevScore: number, paletteMax: number) {
 }
 
 /** Play one full game to its terminal state (or the move cap). */
-function playToEnd(config: LevelConfig, maxMoves: number) {
+function playToEnd(config: LevelConfig, maxMoves: number, strategy: 'random' | 'greedy' = 'random') {
   gs().startLevel(config);
   usePlayerStore.setState({ coins: 0 }); // no paid swaps; force honest play
-  const chooser = new SeededRandom(config.seed ^ 0x9e3779b9);
+  const chooser = new SeededRandom((config.seed ?? 0) ^ 0x9e3779b9);
 
   let prevScore = 0;
   let moveCount = 0;
@@ -145,7 +172,9 @@ function playToEnd(config: LevelConfig, maxMoves: number) {
 
     // pick a legal move deterministically and play it (rotate-to-orientation
     // first, exactly as a real player would via tap-to-rotate)
-    const move = moves[Math.floor(chooser.next() * moves.length)];
+    const move = strategy === 'greedy'
+      ? chooseGreedy(state.grid, moves, chooser)
+      : moves[Math.floor(chooser.next() * moves.length)];
     for (let t = 0; t < move.rotations; t++) {
       expect(gs().rotatePiece(move.index)).toBe(true);
     }
@@ -156,7 +185,7 @@ function playToEnd(config: LevelConfig, maxMoves: number) {
     prevScore = gs().gameState!.score;
   }
 
-  return { moveCount, finalStatus: gs().gameState!.status };
+  return { moveCount, finalStatus: gs().gameState!.status, piecesPlaced: gs().gameState!.piecesPlaced };
 }
 
 describe('bot playthrough — engine invariants hold across full games', () => {
@@ -192,6 +221,23 @@ describe('bot playthrough — endless/zen mode (always-solvable, golden, wave pa
       // require real progress; the value is the per-turn invariants + the
       // move ⟺ playing keystone holding the whole way, including at game-over.
       expect(moveCount).toBeGreaterThan(3);
+    });
+  }
+});
+
+describe('bot playthrough — greedy bot reaches DEEP endless waves (palette 5-7)', () => {
+  const endlessConfig = (seed: number): LevelConfig => ({ ...getEndlessConfig(), seed });
+
+  // A line-clearing greedy bot survives far longer than random play, pushing
+  // past the piece-50/100/150 wave boundaries into palette 5-7 territory — the
+  // late-game integration (wave escalation + high-palette chromatic + golden at
+  // depth) the random bot never reaches. Invariants are asserted at every turn
+  // at those depths.
+  for (const seed of [11, 808]) {
+    it(`seed ${seed}: greedy survives deep, invariants intact through wave escalation`, () => {
+      const { piecesPlaced } = playToEnd(endlessConfig(seed), 600, 'greedy');
+      // Crossed at least the first wave boundary (piece 50 -> palette 5).
+      expect(piecesPlaced).toBeGreaterThan(50);
     });
   }
 });
