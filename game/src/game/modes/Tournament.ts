@@ -145,19 +145,43 @@ export function getPrizeForRank(
   return config.prizes.participation;
 }
 
-/** Simulate a simple final rank based on player score and tier */
-export function simulateFinalRank(playerScore: number, tier: TournamentTier, seed: number): number {
-  // Tougher tiers = more competitive bots, higher average score
-  const tierStrength: Record<TournamentTier, number> = {
-    bronze: 1.0,
-    silver: 1.4,
-    gold: 1.8,
-    diamond: 2.5,
-  };
+/**
+ * Per-tier "typical competitor" benchmark score. The player's final rank
+ * is decided by how their score compares to this FIXED benchmark — NOT to
+ * a multiple of their own score. Tougher tiers demand higher scores for
+ * the same placement. Values are approximate (calibrated to weekly-best
+ * score ranges); the property that matters is monotonicity — a higher
+ * score must never produce a worse rank for the same seed/tier.
+ */
+const TIER_BENCHMARK: Record<TournamentTier, number> = {
+  bronze: 1500,
+  silver: 3000,
+  gold: 5000,
+  diamond: 8000,
+};
 
-  const strength = tierStrength[tier];
+/** Simulate a final rank from the player's score, tier, and a seed.
+ *
+ * History: the original derived `competitorAvg = playerScore * strength *
+ * (...)`, so `playerScore` algebraically cancelled out of every rank
+ * comparison — the final rank depended ONLY on the seed and tier, never on
+ * how well the player actually played (a score of 100 and 1,000,000 tied
+ * for the same seed). Worse, a score of 0 collapsed competitorAvg to 0 and
+ * satisfied the `>= 0` rank-1 test, awarding FIRST PLACE for scoring
+ * nothing. Both produced wrong prize payouts (rank drives getPrizeForRank).
+ * Now benchmarked against a fixed per-tier value so rank is monotonic in
+ * score and a non-positive score lands at the bottom of the bracket. */
+export function simulateFinalRank(playerScore: number, tier: TournamentTier, seed: number): number {
   const rng = ((seed * 9301 + 49297) % 233280) / 233280;
-  const competitorAvg = playerScore * strength * (0.7 + rng * 0.6);
+
+  // A non-positive score can't place — bottom of the bracket. Guard FIRST,
+  // before any ratio math, so it can't fall through to the rank-1 band.
+  if (playerScore <= 0) return Math.max(50, Math.floor(rng * 50) + 50);
+
+  // ±15% per-seed variance around the tier benchmark preserves the
+  // original's "same score places a little differently each tournament"
+  // feel without making the benchmark depend on the player's own score.
+  const competitorAvg = TIER_BENCHMARK[tier] * (0.85 + rng * 0.3);
 
   if (playerScore >= competitorAvg * 2) return 1;
   if (playerScore >= competitorAvg * 1.6) return Math.max(1, Math.floor(rng * 3) + 1);
