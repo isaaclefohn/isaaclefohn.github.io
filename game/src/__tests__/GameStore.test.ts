@@ -313,3 +313,45 @@ describe('gameStore.continueGame soft-lock guard', () => {
     expect(gs().gameState!.status).toBe('lost');
   });
 });
+
+describe('gameStore selectors + previews', () => {
+  beforeEach(() => gs().startLevel(testConfig()));
+
+  it('getStars is 0 at score 0 and saturates at 3 for a dominating score', () => {
+    expect(gs().getStars()).toBe(0);
+    const s = gs().gameState!;
+    useGameStore.setState({ gameState: { ...s, score: 10_000_000 } });
+    expect(gs().getStars()).toBe(3);
+  });
+
+  it('peekNextPieces previews a full set WITHOUT consuming the real RNG (idempotent)', () => {
+    const a = gs().peekNextPieces();
+    const b = gs().peekNextPieces();
+    expect(a).toHaveLength(3);
+    // It clones the RNG, so repeated peeks are identical AND the live spawn is
+    // unaffected — the "NEXT" preview can never desync from what actually
+    // spawns. A non-cloning impl would advance the RNG and return a different
+    // set on the second call.
+    expect(b.map((p) => p.id)).toEqual(a.map((p) => p.id));
+    // Colors honor the active palette (testConfig paletteSize 4).
+    expect(a.every((p) => p.colorIndex >= 1 && p.colorIndex <= 4)).toBe(true);
+  });
+
+  it('resetLevel re-initializes board, score, and tray from the stored config', () => {
+    gs().placePiece(0, 0, 0); // mutate: board now non-empty, piecesPlaced 1
+    expect(gs().gameState!.piecesPlaced).toBe(1);
+    gs().resetLevel();
+    const s = gs().gameState!;
+    expect(s.piecesPlaced).toBe(0);
+    expect(s.score).toBe(0);
+    expect(s.grid.flat().every((c) => c === 0)).toBe(true);
+    expect(s.availablePieces).toHaveLength(3);
+  });
+
+  it('selectPiece sets and clears the selected index', () => {
+    gs().selectPiece(2);
+    expect(gs().selectedPieceIndex).toBe(2);
+    gs().selectPiece(null);
+    expect(gs().selectedPieceIndex).toBeNull();
+  });
+});
