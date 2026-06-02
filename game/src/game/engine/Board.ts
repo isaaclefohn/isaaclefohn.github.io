@@ -112,10 +112,17 @@ export function getChromaticColors(
   // returns the color twice — that's by design: the scoring layer
   // bills CHROMATIC_BONUS_PER_LINE, multi-line bonuses depend on the
   // line count, and the existing Chromatic.test.ts snapshots the
-  // `[3, 3]` shape. Side effects that shouldn't fire twice for the
-  // same color (color-note audio, achievement counter) dedupe at
-  // their own callsites — see playColorChord in useSound.ts and the
-  // chromaticClearCount accumulator in playerStore.ts.
+  // `[3, 3]` shape. The lifetime achievement counter
+  // (incrementTotalChromaticClears, fed from GameScreen) intentionally
+  // consumes this RAW per-line count as well, so progress stays
+  // consistent with chromatic-objective levels — both count LINES, not
+  // distinct colors (a cross legitimately clears two chromatic lines).
+  // The ONLY consumer that dedupes is the color-note audio: a cross
+  // should sound a single chord, not the same hue twice, so it folds the
+  // colors through a distinctColors Set at the GameScreen callsite before
+  // calling playColorChord (useSound.ts). Earlier this comment claimed
+  // playerStore dedupes the counter; it does not, and that would actually
+  // be wrong (it would desync the counter from the objective).
   const size = grid.length;
   const colors: number[] = [];
   const scanLine = (cells: number[]) => {
