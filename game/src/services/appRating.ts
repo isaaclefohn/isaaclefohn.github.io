@@ -26,6 +26,7 @@
 
 import * as StoreReview from 'expo-store-review';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getLocalToday } from '../utils/dates';
 import {
   canFireSlot,
   DEFAULT_RATING_STATE as DEFAULT_STATE,
@@ -66,23 +67,41 @@ export async function recordSessionStart(): Promise<void> {
   await setState({ ...s, sessionCount: s.sessionCount + 1 });
 }
 
+// Module-scoped in-flight guard. Two concurrent calls to firePrompt
+// (e.g. a chromatic-clear-into-level-completion both queueing a slot)
+// could each pass `canFireSlot` against the same pre-write state and
+// both fire the system prompt. Apple visually dedups but the slot
+// would still be silently consumed. Locking around the whole
+// check-then-set window is the easy fix.
+let firing = false;
+
 /** Internal: actually call the system prompt, with all gates. */
 async function firePrompt(slot: RatingSlot): Promise<boolean> {
-  const available = await StoreReview.isAvailableAsync();
-  if (!available) return false;
-  const today = new Date().toISOString().split('T')[0];
-  const state = await getState();
-  if (!canFireSlot(slot, state, today)) return false;
+  if (firing) return false;
+  firing = true;
   try {
-    await StoreReview.requestReview();
-    await setState({
-      ...state,
-      slotsFired: [...state.slotsFired, slot],
-      lastPromptDate: today,
-    });
-    return true;
-  } catch {
-    return false;
+    const available = await StoreReview.isAvailableAsync();
+    if (!available) return false;
+    // Match the rest of the daily/streak machinery on LOCAL today —
+    // see src/utils/dates.ts for why mixing UTC and local breaks
+    // last-prompt-date math (this file slipped through the earlier
+    // sweep).
+    const today = getLocalToday();
+    const state = await getState();
+    if (!canFireSlot(slot, state, today)) return false;
+    try {
+      await StoreReview.requestReview();
+      await setState({
+        ...state,
+        slotsFired: [...state.slotsFired, slot],
+        lastPromptDate: today,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  } finally {
+    firing = false;
   }
 }
 
