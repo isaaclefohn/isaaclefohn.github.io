@@ -10,6 +10,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'reac
 import { Piece } from '../game/engine/Piece';
 import { PieceRenderer } from '../game/rendering/PieceRenderer';
 import { COLORS, RADII } from '../utils/constants';
+import { useSettingsStore } from '../store/settingsStore';
 
 interface HoldSlotProps {
   heldPiece: Piece | null;
@@ -27,11 +28,13 @@ export const HoldSlot: React.FC<HoldSlotProps> = ({
   onPress,
 }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const disabled = !canHold && !canRetrieve;
 
-  // Gentle pulse when an action is available
+  // Gentle pulse when an action is available. Suppressed under reduced
+  // motion — the slot renders at rest scale with no breathing loop.
   useEffect(() => {
-    if (disabled) {
+    if (disabled || reducedMotion) {
       pulseAnim.setValue(1);
       return;
     }

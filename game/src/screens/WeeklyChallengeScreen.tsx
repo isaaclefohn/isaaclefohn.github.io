@@ -26,6 +26,7 @@ import { Button } from '../components/common/Button';
 import { GameIcon } from '../components/GameIcon';
 import { COLORS, SHADOWS, RADII, SPACING } from '../utils/constants';
 import { formatScore } from '../utils/formatters';
+import { useSettingsStore } from '../store/settingsStore';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -46,6 +47,7 @@ export const WeeklyChallengeScreen: React.FC<WeeklyChallengeScreenProps> = ({ na
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const pulseAnim = useRef(new Animated.Value(0.8)).current;
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   useEffect(() => {
     Animated.parallel([
@@ -56,7 +58,9 @@ export const WeeklyChallengeScreen: React.FC<WeeklyChallengeScreenProps> = ({ na
     // Capture the loop handle so we can stop it when the user navigates
     // away. Previously this was fire-and-forget — the loop kept running
     // on a detached pulseAnim after unmount; each session re-entry
-    // accumulated more orphaned driver work.
+    // accumulated more orphaned driver work. Also suppressed under
+    // reduced motion (the entrance fade/slide above still plays).
+    if (reducedMotion) return;
     const pulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
@@ -65,7 +69,7 @@ export const WeeklyChallengeScreen: React.FC<WeeklyChallengeScreenProps> = ({ na
     );
     pulseLoop.start();
     return () => pulseLoop.stop();
-  }, []);
+  }, [reducedMotion]);
 
   const handlePlay = useCallback(() => {
     navigation.navigate('Game', { level: -1 });

@@ -23,6 +23,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { COLORS, RADII, SPACING } from '../utils/constants';
 import { isNewPersonalBest, personalBestDelta } from '../utils/personalBest';
+import { useSettingsStore } from '../store/settingsStore';
 
 interface PersonalBestCelebrationProps {
   score: number;
@@ -39,6 +40,7 @@ export const PersonalBestCelebration: React.FC<PersonalBestCelebrationProps> = (
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const sparklePulse = useRef(new Animated.Value(1)).current;
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   const showCelebration = isNewPersonalBest(score, best);
   const delta = personalBestDelta(score, best);
@@ -93,7 +95,9 @@ export const PersonalBestCelebration: React.FC<PersonalBestCelebrationProps> = (
     ]).start();
 
     // Sparkle pulse — small steady oscillation in the sparkle emoji
-    // so the "✨" actually twinkles instead of sitting still.
+    // so the "✨" actually twinkles instead of sitting still. Suppressed
+    // under reduced motion (the one-shot entrance is fine to keep).
+    if (reducedMotion) return;
     const sparkleLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(sparklePulse, {

@@ -25,6 +25,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { COLORS, RADII, SPACING } from '../utils/constants';
 import { isNearMiss } from '../utils/nearMiss';
+import { useSettingsStore } from '../store/settingsStore';
 
 interface NearMissCalloutProps {
   /** Current run's final score */
@@ -41,6 +42,7 @@ export const NearMissCallout: React.FC<NearMissCalloutProps> = ({ score, best })
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   // Gate computation BEFORE deciding to mount the animation so
   // we don't waste cycles when the callout won't render. The early
@@ -68,7 +70,9 @@ export const NearMissCallout: React.FC<NearMissCalloutProps> = ({ score, best })
 
     // Subtle breathing pulse so the eye keeps coming back to it.
     // Loop is intentionally slow (1.4s round-trip) — anything faster
-    // reads as anxious; this reads as "alive."
+    // reads as anxious; this reads as "alive." Suppressed under reduced
+    // motion (the one-shot entrance fade above is fine to keep).
+    if (reducedMotion) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {

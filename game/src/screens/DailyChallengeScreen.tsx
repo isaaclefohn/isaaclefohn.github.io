@@ -13,6 +13,7 @@ import { GameIcon } from '../components/GameIcon';
 import { COLORS, SHADOWS, SPACING, RADII } from '../utils/constants';
 import { formatTime } from '../utils/formatters';
 import { getLocalToday } from '../utils/dates';
+import { useSettingsStore } from '../store/settingsStore';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -90,6 +91,7 @@ export const DailyChallengeScreen: React.FC<DailyChallengeScreenProps> = ({ navi
   ).current;
   const readyGlowOpacity = useRef(new Animated.Value(0.4)).current;
   const currentDayBorderOpacity = useRef(new Animated.Value(0.5)).current;
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   // Countdown timer
   useEffect(() => {
@@ -169,9 +171,9 @@ export const DailyChallengeScreen: React.FC<DailyChallengeScreenProps> = ({ navi
     ]).start();
   }, []);
 
-  // Pulsing glow on "Ready to play!" text
+  // Pulsing glow on "Ready to play!" text. Suppressed under reduced motion.
   useEffect(() => {
-    if (hasPlayedToday) return;
+    if (hasPlayedToday || reducedMotion) return;
     const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(readyGlowOpacity, {
@@ -188,10 +190,11 @@ export const DailyChallengeScreen: React.FC<DailyChallengeScreenProps> = ({ navi
     );
     pulse.start();
     return () => pulse.stop();
-  }, [hasPlayedToday]);
+  }, [hasPlayedToday, reducedMotion]);
 
-  // Pulsing border on current day reward
+  // Pulsing border on current day reward. Suppressed under reduced motion.
   useEffect(() => {
+    if (reducedMotion) return;
     const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(currentDayBorderOpacity, {
@@ -208,7 +211,7 @@ export const DailyChallengeScreen: React.FC<DailyChallengeScreenProps> = ({ navi
     );
     pulse.start();
     return () => pulse.stop();
-  }, []);
+  }, [reducedMotion]);
 
   const handlePlay = useCallback(() => {
     // Route through the same `daily: true` path HomeScreen uses. The old

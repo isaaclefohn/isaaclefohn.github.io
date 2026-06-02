@@ -7,6 +7,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
+import { useSettingsStore } from '../store/settingsStore';
 
 interface TutorialStep {
   title: string;
@@ -46,6 +47,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ visible, onCom
   const [step, setStep] = useState(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   useEffect(() => {
     if (visible) {
@@ -55,7 +57,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ visible, onCom
         useNativeDriver: true,
       }).start();
 
-      // Pulsing dot animation
+      // Pulsing dot animation — suppressed under reduced motion (the
+      // one-shot fade-in above still runs).
+      if (reducedMotion) return;
       const pulse = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, { toValue: 1.3, duration: 800, useNativeDriver: true }),
@@ -65,7 +69,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ visible, onCom
       pulse.start();
       return () => pulse.stop();
     }
-  }, [visible, fadeAnim, pulseAnim]);
+  }, [visible, fadeAnim, pulseAnim, reducedMotion]);
 
   const handleNext = useCallback(() => {
     if (step >= TUTORIAL_STEPS.length - 1) {

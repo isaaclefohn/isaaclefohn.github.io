@@ -15,6 +15,7 @@ import { GameIcon } from './GameIcon';
 import { Button } from './common/Button';
 import { Modal } from './common/Modal';
 import { COLORS, RADII } from '../utils/constants';
+import { useSettingsStore } from '../store/settingsStore';
 
 interface StarterPackModalProps {
   visible: boolean;
@@ -43,6 +44,7 @@ export const StarterPackModal: React.FC<StarterPackModalProps> = ({
 
   const [countdown, setCountdown] = useState(getStarterPackTimeRemaining(starterPackUnlockedAt));
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   useEffect(() => {
     if (!visible) return;
@@ -53,7 +55,7 @@ export const StarterPackModal: React.FC<StarterPackModalProps> = ({
   }, [visible, starterPackUnlockedAt]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || reducedMotion) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1.06, duration: 800, useNativeDriver: true }),
@@ -62,7 +64,7 @@ export const StarterPackModal: React.FC<StarterPackModalProps> = ({
     );
     loop.start();
     return () => loop.stop();
-  }, [visible, pulseAnim]);
+  }, [visible, pulseAnim, reducedMotion]);
 
   const canAfford = gems >= STARTER_PACK.actualPrice;
 
