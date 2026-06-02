@@ -6,6 +6,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Animated, View, StyleSheet } from 'react-native';
+import { useSettingsStore } from '../../store/settingsStore';
 
 const PARTICLE_COUNT = 12;
 
@@ -23,6 +24,14 @@ export const RadialBurst: React.FC<RadialBurstProps> = ({
   radius = 90,
   onComplete,
 }) => {
+  // Honor the reduced-motion accessibility setting. The burst is pure
+  // decoration — 12 outward-flying particles — so we skip it entirely
+  // rather than try to render a static still frame, matching the
+  // ConfettiBurst / FloatingParticles pattern already in this folder.
+  // Hooks must run in the same order on every render, so we always
+  // declare them and gate behavior INSIDE the effect / at the JSX
+  // boundary rather than short-circuiting before the hook calls.
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const particles = useRef(
     Array.from({ length: PARTICLE_COUNT }, () => ({
       progress: new Animated.Value(0),
@@ -30,7 +39,12 @@ export const RadialBurst: React.FC<RadialBurstProps> = ({
   ).current;
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || reducedMotion) {
+      // Acknowledge the trigger so the parent's onComplete-driven
+      // cleanup still runs even though we never animated.
+      if (visible) onComplete?.();
+      return;
+    }
     particles.forEach((p) => p.progress.setValue(0));
     Animated.parallel(
       particles.map((p) =>
@@ -43,9 +57,9 @@ export const RadialBurst: React.FC<RadialBurstProps> = ({
     ).start(() => {
       onComplete?.();
     });
-  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [visible, reducedMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!visible) return null;
+  if (!visible || reducedMotion) return null;
 
   return (
     <View pointerEvents="none" style={styles.container}>

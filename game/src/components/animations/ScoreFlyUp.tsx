@@ -6,6 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Text, StyleSheet, Animated, Easing } from 'react-native';
 import { COLORS, CELL_SIZE, CELL_GAP } from '../../utils/constants';
+import { useSettingsStore } from '../../store/settingsStore';
 
 interface ScoreFlyUpProps {
   points: number;
@@ -25,11 +26,25 @@ export const ScoreFlyUp: React.FC<ScoreFlyUpProps> = ({
   isCombo,
   onComplete,
 }) => {
+  // Skip the float-and-fade animation under reduced motion. The score
+  // is already visible in the header so suppressing this doesn't hide
+  // anything material — it just removes the per-placement floater.
+  // Hooks must run in the same order on every render (rules-of-hooks),
+  // so we always declare the animated values + run the effect, and use
+  // `reducedMotion` only to choose whether to ANIMATE or fire onComplete
+  // immediately. The conditional render lives at the bottom.
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
   const scale = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
+    if (reducedMotion) {
+      // No animation — just acknowledge the placement and let the parent
+      // remove this entry from its mounted-flyups list.
+      onComplete();
+      return;
+    }
     Animated.parallel([
       Animated.timing(translateY, {
         toValue: -50,
@@ -53,6 +68,8 @@ export const ScoreFlyUp: React.FC<ScoreFlyUpProps> = ({
       ]),
     ]).start(() => onComplete());
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (reducedMotion) return null;
 
   const cellTotal = CELL_SIZE + CELL_GAP;
   const x = CELL_GAP + col * cellTotal + CELL_SIZE / 2;

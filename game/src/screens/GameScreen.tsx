@@ -139,7 +139,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     setChromaticClearsSincePremium: s.setChromaticClearsSincePremium,
     incrementTotalChromaticClears: s.incrementTotalChromaticClears,
   })));
-  const { tutorialCompleted, completeTutorial, shownTips, markTipShown } = useSettingsStore();
+  const { tutorialCompleted, completeTutorial, shownTips, markTipShown, reducedMotion } = useSettingsStore();
 
   const showTutorial = !isEndless && level === 1 && !tutorialCompleted;
 
@@ -228,8 +228,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     }
   }, [level, isEndless, isDaily, loadLevel, loadEndless, loadDailyPuzzle]);
 
-  // Board shake helper
+  // Board shake helper. Bails immediately when reducedMotion is on so
+  // every caller (placement, clear, game-over, power-up apply) honors the
+  // accessibility setting automatically — centralising the check here
+  // means we don't have to chase the toggle through every call site.
   const shakeBoard = useCallback((intensity: number = 1) => {
+    if (reducedMotion) return;
     const magnitude = 4 * intensity;
     Animated.sequence([
       Animated.timing(boardShakeX, { toValue: magnitude, duration: 40, useNativeDriver: true }),
@@ -238,15 +242,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       Animated.timing(boardShakeX, { toValue: -magnitude * 0.6, duration: 40, useNativeDriver: true }),
       Animated.timing(boardShakeX, { toValue: 0, duration: 40, useNativeDriver: true }),
     ]).start();
-  }, [boardShakeX]);
+  }, [boardShakeX, reducedMotion]);
 
   // Board pulse on placement
   const pulseBoard = useCallback(() => {
+    if (reducedMotion) return;
     Animated.sequence([
       Animated.timing(boardScale, { toValue: 1.01, duration: 80, useNativeDriver: true }),
       Animated.spring(boardScale, { toValue: 1, useNativeDriver: true, tension: 120, friction: 6 }),
     ]).start();
-  }, [boardScale]);
+  }, [boardScale, reducedMotion]);
 
   // Handle win/loss
   useEffect(() => {

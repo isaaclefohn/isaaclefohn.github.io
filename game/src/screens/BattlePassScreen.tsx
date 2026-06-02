@@ -125,6 +125,16 @@ export const BattlePassScreen: React.FC<BattlePassScreenProps> = ({ navigation }
   }, []);
 
   const handleClaim = useCallback((tier: BattlePassReward) => {
+    // Read the LIVE claimed-tiers ledger before crediting anything. A
+    // rapid double-tap on Claim can fire this handler twice before React
+    // re-renders with `canClaim=false`, so the prop-driven gate alone
+    // can't prevent it. claimBattlePassTier itself is idempotent at the
+    // ledger level (rejects the duplicate tier write), but the reward
+    // functions above it had already run twice without this guard —
+    // double coins/gems/power-ups for one tier. Bail before the credits.
+    const live = usePlayerStore.getState();
+    if (live.battlePassClaimedTiers.includes(tier.tier)) return;
+
     // Award free reward
     if (tier.freeReward) {
       if (tier.freeReward.type === 'coins') addCoins(tier.freeReward.amount, { boostable: true });

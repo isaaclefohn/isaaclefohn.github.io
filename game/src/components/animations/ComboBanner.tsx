@@ -25,6 +25,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Animated, Text, StyleSheet, Dimensions } from 'react-native';
 import { COLORS, ANIM, RADII, SHADOWS } from '../../utils/constants';
 import { getComboChainState } from '../../game/systems/ComboChain';
+import { useSettingsStore } from '../../store/settingsStore';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -34,6 +35,12 @@ interface ComboBannerProps {
 }
 
 export const ComboBanner: React.FC<ComboBannerProps> = ({ combo, visible }) => {
+  // The slide-in + shockwave + fever-pulse stack is exactly the kind of
+  // big-motion feedback the reduced-motion setting exists to suppress.
+  // The label-ladder verbal reinforcement happens in the win modal too,
+  // so removing the banner doesn't lose the player critical context.
+  // Hooks always run, conditional render lives at the JSX boundary.
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const translateX = useRef(new Animated.Value(-SCREEN_W)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.6)).current;
@@ -140,7 +147,7 @@ export const ComboBanner: React.FC<ComboBannerProps> = ({ combo, visible }) => {
     };
   }, [visible, combo, chainState.isFever]);
 
-  if (!visible || combo <= 1 || !chainState.label) return null;
+  if (!visible || combo <= 1 || !chainState.label || reducedMotion) return null;
 
   const tierColor = chainState.color;
   // Compose the multiplier label as a short string so the player can

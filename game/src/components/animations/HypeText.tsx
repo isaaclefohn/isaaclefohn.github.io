@@ -7,6 +7,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Text, StyleSheet, View } from 'react-native';
 import { COLORS } from '../../utils/constants';
+import { useSettingsStore } from '../../store/settingsStore';
 
 interface HypeTextProps {
   text: string;
@@ -22,6 +23,10 @@ export const HypeText: React.FC<HypeTextProps> = ({
   visible,
   onComplete,
 }) => {
+  // Screen-dominating zoom-and-fade is exactly the kind of motion the
+  // reduced-motion setting exists to suppress. We always declare the
+  // hooks (rules-of-hooks) and skip the render at the JSX boundary.
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const scale = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
@@ -80,7 +85,7 @@ export const HypeText: React.FC<HypeTextProps> = ({
     });
   }, [visible, text]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!visible) return null;
+  if (!visible || reducedMotion) return null;
 
   return (
     <View pointerEvents="none" style={styles.container}>

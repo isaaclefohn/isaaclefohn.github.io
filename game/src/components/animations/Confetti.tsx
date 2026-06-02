@@ -40,8 +40,13 @@ interface Particle {
 const SHAPES: ParticleShape[] = ['square', 'rect', 'circle', 'diamond'];
 
 export const Confetti: React.FC<ConfettiProps> = ({ visible, count = 50 }) => {
+  // Always call hooks before any conditional return — early-returning
+  // BEFORE useMemo/useEffect violates the rules-of-hooks. Confetti lives
+  // mounted on GameScreen for the whole run, so a mid-run reduced-motion
+  // toggle would change the hook count between renders and crash with
+  // "Rendered more hooks than during the previous render". The actual
+  // render-time gate moves to the JSX boundary below.
   const { reducedMotion } = useSettingsStore();
-  if (reducedMotion) return null;
   const particles = useMemo<Particle[]>(() => {
     return Array.from({ length: count }, () => {
       const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
@@ -62,7 +67,8 @@ export const Confetti: React.FC<ConfettiProps> = ({ visible, count = 50 }) => {
   }, [count]);
 
   useEffect(() => {
-    if (!visible) return;
+    // Don't waste cycles animating when we won't render the result.
+    if (!visible || reducedMotion) return;
 
     const animations = particles.map((p) => {
       const duration = 1800 + Math.random() * 1200;
@@ -139,9 +145,9 @@ export const Confetti: React.FC<ConfettiProps> = ({ visible, count = 50 }) => {
     });
 
     Animated.parallel(animations).start();
-  }, [visible, particles]);
+  }, [visible, particles, reducedMotion]);
 
-  if (!visible) return null;
+  if (!visible || reducedMotion) return null;
 
   return (
     <View style={styles.container} pointerEvents="none">

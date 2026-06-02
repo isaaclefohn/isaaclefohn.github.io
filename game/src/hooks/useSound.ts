@@ -277,16 +277,24 @@ export function useSound() {
         // Last pulse is the heaviest (the "BUZZ" at the end of the cascade —
         // a signature of polished mobile-game haptics).
         const tier: 'light' | 'medium' = i === stutters - 1 ? 'medium' : 'light';
-        const style = scaleImpact(tier, hapticIntensity);
-        if (style) {
-          setTimeout(() => {
-            Haptics.impactAsync(style).catch(() => {});
-          }, i * 90);
-        }
+        setTimeout(() => {
+          // Re-check LIVE settings inside the timeout. The user may have
+          // toggled haptics off (or dropped intensity) between the cascade
+          // starting and this stutter firing — the previous version
+          // captured the hook closure's value and kept buzzing the user
+          // who'd just turned it off mid-cascade.
+          const live = useSettingsStore.getState();
+          if (!live.hapticsEnabled || live.hapticIntensity === 'off') return;
+          const style = scaleImpact(tier, live.hapticIntensity);
+          if (style) Haptics.impactAsync(style).catch(() => {});
+        }, i * 90);
       }
-      // Tail: Success notification ~110ms after the last impact.
+      // Tail: Success notification ~110ms after the last impact. Same
+      // live-recheck so a mid-cascade haptics-off toggle silences the tail.
       setTimeout(() => {
-        if (hapticIntensity === 'soft') {
+        const live = useSettingsStore.getState();
+        if (!live.hapticsEnabled || live.hapticIntensity === 'off') return;
+        if (live.hapticIntensity === 'soft') {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
         } else {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});

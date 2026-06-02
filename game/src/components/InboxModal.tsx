@@ -36,7 +36,14 @@ export const InboxModal: React.FC<InboxModalProps> = ({ visible, onClose }) => {
 
   const handleClaim = (msg: InboxMessage) => {
     if (!msg.reward) return;
-    if (state.claimedIds.includes(msg.id)) return;
+    // Read the LIVE claimedIds ledger, not the closure-captured one.
+    // A double-tap fires this handler twice before React re-renders, so
+    // the closure's `state.claimedIds` still says "unclaimed" on the
+    // second invocation — fired the rewards twice. The store getter
+    // returns whatever the most recent claim wrote, so this guard wins
+    // the race.
+    const live = usePlayerStore.getState();
+    if (live.inboxClaimed.includes(msg.id)) return;
 
     if (msg.reward.coins) addCoins(msg.reward.coins, { boostable: true });
     if (msg.reward.gems) addGems(msg.reward.gems);
