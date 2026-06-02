@@ -36,6 +36,7 @@ jest.mock('../services/analytics', () => ({
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
 import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
+import { getDailyPuzzleConfig } from '../game/challenges/DailyPuzzle';
 import { canPlace, placePiece as simulatePlace, findFullLines } from '../game/engine/Board';
 import { rotatePiece, type Piece } from '../game/engine/Piece';
 import { SeededRandom } from '../utils/seededRandom';
@@ -182,9 +183,17 @@ function playToEnd(
     const status = state.status;
     const moves = findAllMoves(state.grid, state.availablePieces);
 
-    // KEYSTONE: the bot can still move IFF the engine considers the run live.
-    // (true xor — a missed game-over OR a false loss both fail here.)
-    expect(moves.length > 0).toBe(status === 'playing');
+    // KEYSTONE (rotation-aware game-over correctness), two one-way implications:
+    //   playing ⇒ moves > 0   — a live game must always have a legal move,
+    //                            else game-over was MISSED (engine says playing
+    //                            but the rotation-aware bot is stuck).
+    //   lost    ⇒ moves === 0 — a loss must be genuinely stuck, else it's a
+    //                            FALSE LOSS (engine ended a run a rotation could
+    //                            have continued — the bug fixed this session).
+    // A WIN is asymmetric: it can fire with the board half-empty, so it makes
+    // no claim about remaining moves.
+    if (status === 'playing') expect(moves.length).toBeGreaterThan(0);
+    if (status === 'lost') expect(moves.length).toBe(0);
 
     if (status !== 'playing') break; // terminal (lost/won) — game correctly ended
 
@@ -267,6 +276,21 @@ describe('bot playthrough — greedy bot reaches DEEP endless waves (palette 5-7
       const { piecesPlaced } = playToEnd(endlessConfig(seed), 600, 'greedy');
       // Crossed at least the first wave boundary (piece 50 -> palette 5).
       expect(piecesPlaced).toBeGreaterThan(50);
+    });
+  }
+});
+
+describe('bot playthrough — daily puzzle (palette 5, REACHABLE 8000 target -> can WIN)', () => {
+  // The daily is a distinct config (paletteSize 5, medium+hard pool) AND its
+  // 8000 target is reachable, so a greedy bot can actually WIN — exercising the
+  // status->'won' terminal transition the unreachable-target level/endless runs
+  // never hit. Fixed calendar dates make the shared daily seed deterministic.
+  for (const [y, m, d] of [[2026, 5, 15], [2026, 8, 1], [2027, 0, 20]] as const) {
+    it(`daily ${y}-${m + 1}-${d}: invariants + keystone hold to a clean win-or-stuck`, () => {
+      const cfg = getDailyPuzzleConfig(new Date(y, m, d));
+      const { moveCount, finalStatus } = playToEnd(cfg, 500, 'greedy');
+      expect(moveCount).toBeGreaterThan(3);
+      expect(['won', 'lost', 'playing']).toContain(finalStatus);
     });
   }
 });
