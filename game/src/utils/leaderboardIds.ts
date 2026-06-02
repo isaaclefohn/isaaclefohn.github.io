@@ -6,8 +6,16 @@
  * the read side and write side ever compute `id` differently, submitted scores
  * land in a key nobody queries. Keep all id formulas here.
  *
- * Ids are derived from the UTC date so every client agrees on "today"/"this
- * week" regardless of local timezone — the board is a shared global resource.
+ * The WEEKLY id (getWeekId, below) is derived from the UTC date so every client
+ * agrees on "this week" regardless of local timezone — the weekly board is a
+ * shared global resource.
+ *
+ * The DAILY board id is intentionally NOT here and NOT UTC: it comes from
+ * getDailyPuzzleId (game/challenges/DailyPuzzle.ts), which is LOCAL-timezone by
+ * design so the daily puzzle refreshes at each player's local midnight. The
+ * daily board key and the daily puzzle seed both derive from that same local
+ * id, so read, write, and seed stay mutually consistent. Do not "fix" the daily
+ * id to UTC — it would desync the board from the puzzle players are solving.
  */
 
 /** ISO-ish year+week identifier, e.g. "2026-W21". */

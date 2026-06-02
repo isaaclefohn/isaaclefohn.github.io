@@ -10,6 +10,28 @@ import { getDailyPuzzleId } from '../game/challenges/DailyPuzzle';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
 
+/** Default network timeout. Without it, fetch uses the platform default
+ *  (~60s+), so on a captive-portal / dead network the Leaderboard screen's
+ *  spinner can hang for a minute before the socket fails. */
+const LEADERBOARD_FETCH_TIMEOUT_MS = 5000;
+
+/** fetch wrapped in an AbortController timeout. On timeout the request aborts
+ *  and the promise rejects with an AbortError, which every caller below already
+ *  turns into its graceful fallback ([] / false). */
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs: number = LEADERBOARD_FETCH_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export type LeaderboardType = 'level' | 'weekly' | 'daily';
 
 export interface LeaderboardEntry {
@@ -28,7 +50,7 @@ export async function fetchLeaderboard(
   if (!API_URL) return [];
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${API_URL}/api/leaderboard?type=${type}&id=${id}&limit=${limit}`
     );
     if (!response.ok) return [];
@@ -58,7 +80,7 @@ export async function submitScore(
       headers['Authorization'] = `Bearer ${authToken}`;
     }
 
-    const response = await fetch(`${API_URL}/api/leaderboard`, {
+    const response = await fetchWithTimeout(`${API_URL}/api/leaderboard`, {
       method: 'POST',
       headers,
       // The API reads the board id under `levelId` for all board types.
