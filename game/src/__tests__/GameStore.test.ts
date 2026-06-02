@@ -355,3 +355,60 @@ describe('gameStore selectors + previews', () => {
     expect(gs().selectedPieceIndex).toBeNull();
   });
 });
+
+/**
+ * runId is the once-per-run accounting key. The contract the lose-accounting
+ * fix depends on: a fresh id per run (new level / retry / restart), but the
+ * SAME id preserved across every in-run transition — most importantly a paid
+ * Continue, which takes status lost -> playing -> lost on the SAME run and
+ * must therefore count the run only once.
+ */
+describe('gameStore runId + lastAccountedRunId (once-per-run gate)', () => {
+  beforeEach(() => gs().startLevel(testConfig()));
+
+  it('mints a distinct runId on each startLevel, and resets lastAccountedRunId', () => {
+    const r1 = gs().gameState!.runId;
+    expect(typeof r1).toBe('number');
+    useGameStore.setState({ lastAccountedRunId: r1 }); // pretend this run was accounted
+    gs().startLevel(testConfig());
+    expect(gs().gameState!.runId).not.toBe(r1);        // fresh run
+    expect(gs().lastAccountedRunId).toBeNull();        // gate cleared for the new run
+  });
+
+  it('resetLevel mints a fresh runId — a retry is a new run', () => {
+    const r1 = gs().gameState!.runId;
+    gs().resetLevel();
+    expect(gs().gameState!.runId).not.toBe(r1);
+  });
+
+  it('preserves runId across a paid Continue (lost -> playing is the SAME run)', () => {
+    const r = gs().gameState!.runId;
+    useGameStore.setState({ gameState: { ...gs().gameState!, status: 'lost' } });
+    expect(gs().continueGame()).toBe(true);
+    expect(gs().gameState!.status).toBe('playing');
+    expect(gs().gameState!.runId).toBe(r); // unchanged — still the same run
+  });
+
+  it('preserves runId across swap, place/undo, hold, and pause/resume', () => {
+    usePlayerStore.setState({ coins: 1000 });
+    const r = gs().gameState!.runId;
+    gs().swapPieces();
+    expect(gs().gameState!.runId).toBe(r);
+    gs().placePiece(0, 0, 0);
+    expect(gs().gameState!.runId).toBe(r);
+    gs().undoLastMove();
+    expect(gs().gameState!.runId).toBe(r);
+    gs().holdPiece(0);
+    expect(gs().gameState!.runId).toBe(r);
+    gs().pauseGame();
+    gs().resumeGame();
+    expect(gs().gameState!.runId).toBe(r);
+  });
+
+  it('markRunAccounted stamps the run as finalized', () => {
+    const r = gs().gameState!.runId;
+    expect(gs().lastAccountedRunId).toBeNull();
+    gs().markRunAccounted(r);
+    expect(gs().lastAccountedRunId).toBe(r);
+  });
+});

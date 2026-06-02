@@ -72,6 +72,22 @@ export interface GameState {
    * the Block Blast research wave.
    */
   goldenPieceIndex: number | null;
+  /**
+   * Monotonic id identifying THIS run (one attempt at a level / one zen
+   * session). Minted fresh by `initGame` and preserved across every
+   * in-run transition (placement, swap, hold, undo, pause, and crucially
+   * `continueGame`) because those all rebuild state via `{ ...gameState }`.
+   *
+   * It exists so end-of-run accounting can fire exactly ONCE per run. A
+   * paid Continue takes status `lost -> playing -> lost` on the SAME runId,
+   * which re-enters the game-over handler; gating the non-idempotent
+   * accounting (games played, skill-rating penalty, failure count, XP) on
+   * "have I already finalized this runId?" prevents the second game-over
+   * from double-counting the run. Idempotent run-bests (Math.max stats)
+   * are intentionally NOT gated — they re-run so the post-continue peak is
+   * the value that lands.
+   */
+  runId: number;
 }
 
 export interface LevelConfig {
@@ -84,6 +100,16 @@ export interface LevelConfig {
   /** Distinct block colors this level (<= 7). Fewer = chromatic clears achievable. */
   paletteSize?: number;
 }
+
+/**
+ * Process-monotonic run counter. Bumped once per `initGame` so every fresh
+ * run (new level, retry, or restart) gets a distinct `runId`. Module-scoped
+ * rather than persisted: it only needs to be unique within a session, and it
+ * pairs with the equally-ephemeral `gameStore.lastAccountedRunId` gate. Tests
+ * assert relative behavior (changes on start, preserved across continue), not
+ * absolute values, so the running count is fine.
+ */
+let runIdCounter = 0;
 
 /** Initialize a new game state for a given level configuration */
 export function initGame(config: LevelConfig): GameState {
@@ -118,6 +144,7 @@ export function initGame(config: LevelConfig): GameState {
     chromaticClears: 0,
     maxComboThisRun: 0,
     goldenPieceIndex,
+    runId: ++runIdCounter,
   };
 }
 

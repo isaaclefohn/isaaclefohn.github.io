@@ -404,6 +404,15 @@ interface PlayerStore extends PlayerStoreState {
   checkAchievements: () => Achievement[];
   recordGamePlayed: (combo: number) => void;
   recordZenGame: (score: number, linesCleared: number, combo: number) => void;
+  /**
+   * Idempotent run-bests bump (Math.max only — no counters). Captures the
+   * peak combo and, for zen, the peak score / lines of a run. Safe to call
+   * on EVERY game-over, including a post-continue re-loss: because every
+   * field is a max, re-firing with the higher final values is how the true
+   * peak lands, while the non-idempotent `+1`/penalty accounting stays gated
+   * to once per run elsewhere. See `applyLoseAccounting`.
+   */
+  recordRunBests: (bests: { combo?: number; zenScore?: number; zenLines?: number }) => void;
   /** Idempotent lifetime-max bump for endless wave reached. */
   recordBestWave: (wave: number) => void;
   recordDailyPuzzleResult: (puzzleId: string, score: number, stars: number) => { isFirstCompletion: boolean; isNewBest: boolean };
@@ -1009,6 +1018,18 @@ export const usePlayerStore = create<PlayerStore>()(
         set((s) => ({
           totalGamesPlayed: s.totalGamesPlayed + 1,
           bestCombo: Math.max(s.bestCombo, combo),
+        }));
+      },
+
+      recordRunBests: (bests) => {
+        // Pure Math.max — every field is monotonic, so calling this twice for
+        // the same run (first loss, then post-continue re-loss) is harmless
+        // and correctly keeps the larger value. Only updates fields that were
+        // passed, leaving the rest untouched.
+        set((s) => ({
+          bestCombo: bests.combo !== undefined ? Math.max(s.bestCombo, bests.combo) : s.bestCombo,
+          zenHighScore: bests.zenScore !== undefined ? Math.max(s.zenHighScore, bests.zenScore) : s.zenHighScore,
+          zenBestLinesCleared: bests.zenLines !== undefined ? Math.max(s.zenBestLinesCleared, bests.zenLines) : s.zenBestLinesCleared,
         }));
       },
 

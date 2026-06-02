@@ -36,6 +36,14 @@ interface GameStore {
   undoUsed: boolean;
   /** Piece stashed in the hold slot for later use */
   heldPiece: Piece | null;
+  /**
+   * runId of the run whose end-of-run accounting has already been applied,
+   * or null if the current run hasn't been finalized yet. This is the gate
+   * that makes once-per-run accounting idempotent across a paid Continue
+   * (which re-enters game-over on the same runId). Reset to null by
+   * startLevel so each fresh run accounts exactly once.
+   */
+  lastAccountedRunId: number | null;
 
   // Actions
   startLevel: (config: LevelConfig) => void;
@@ -56,6 +64,12 @@ interface GameStore {
   canUndo: () => boolean;
   /** Continue from game over — gives fresh pieces and resumes play */
   continueGame: () => boolean;
+  /**
+   * Mark the given runId as having had its end-of-run accounting applied,
+   * so a subsequent game-over on the same run (after a Continue/Undo) is a
+   * no-op for the non-idempotent stats.
+   */
+  markRunAccounted: (runId: number) => void;
 
   /** Peek at what pieces come next (without advancing the RNG) */
   peekNextPieces: () => Piece[];
@@ -77,11 +91,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   undoSnapshot: null,
   undoUsed: false,
   heldPiece: null,
+  lastAccountedRunId: null,
 
   startLevel: (config: LevelConfig) => {
     const rng = new SeededRandom(config.seed);
     const gameState = initGame(config);
-    set({ gameState, levelConfig: config, rng, selectedPieceIndex: null, undoSnapshot: null, undoUsed: false, heldPiece: null });
+    // lastAccountedRunId resets to null: the fresh run (new runId from
+    // initGame) has not been accounted yet, so its eventual game-over will
+    // finalize exactly once.
+    set({ gameState, levelConfig: config, rng, selectedPieceIndex: null, undoSnapshot: null, undoUsed: false, heldPiece: null, lastAccountedRunId: null });
     trackGameEvent({ type: 'level_start', level: config.levelNumber });
   },
 
@@ -410,7 +428,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       },
       selectedPieceIndex: null,
     });
+    // Note: lastAccountedRunId is intentionally NOT touched here. The spread
+    // above preserves the run's runId, so the gate set when this run's FIRST
+    // loss was accounted stays closed — when the player loses again, the
+    // game-over handler re-runs but the non-idempotent accounting (games
+    // played, SR penalty, failure count, XP) is skipped. Only the idempotent
+    // run-bests re-fire, capturing the higher post-continue peak.
     return true;
+  },
+
+  markRunAccounted: (runId: number) => {
+    set({ lastAccountedRunId: runId });
   },
 
   peekNextPieces: () => {

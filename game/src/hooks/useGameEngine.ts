@@ -7,7 +7,6 @@ import { useCallback, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
 import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
-import { getWaveForPieces } from '../game/levels/EndlessWaves';
 import { calculateCoinReward } from '../game/engine/Scoring';
 import { getScoreMultiplier, getXPMultiplier, getCoinMultiplier } from '../game/events/LiveEvents';
 import {
@@ -20,6 +19,7 @@ import { calculateSRChange } from '../game/systems/SkillRating';
 import { calculateReplayReward } from '../game/rewards/ReplayRewards';
 import { getActiveEvent, getEventInstanceId } from '../game/events/SeasonalEvent';
 import { trackGameEvent } from '../services/analytics';
+import { applyLoseAccounting } from '../game/systems/RunAccounting';
 
 export function useGameEngine() {
   const {
@@ -45,7 +45,10 @@ export function useGameEngine() {
     continueGame,
   } = useGameStore();
 
-  const { completeLevel, addCoins, addGems, updateStreak, checkAchievements, recordGamePlayed, recordZenGame, recordBestWave, recordDailyPuzzleResult, recordFailure, resetFailures, addPiggyBankCoins, addBattlePassXP, completeWeeklyChallenge, incrementGamesPlayedToday, updateQuestProgress, updateSkillRating, skillRating, levelHighScores, levelStars, addTreasureMapPiece, addSeasonalPoints, addBlockMasteryXP } = usePlayerStore();
+  // recordZenGame / recordBestWave / recordFailure moved to applyLoseAccounting
+  // (RunAccounting.ts) — the lose path no longer touches the player store
+  // directly. The win path below still uses the rest.
+  const { completeLevel, addCoins, addGems, updateStreak, checkAchievements, recordGamePlayed, recordDailyPuzzleResult, resetFailures, addPiggyBankCoins, addBattlePassXP, completeWeeklyChallenge, incrementGamesPlayedToday, updateQuestProgress, updateSkillRating, skillRating, levelHighScores, levelStars, addTreasureMapPiece, addSeasonalPoints, addBlockMasteryXP } = usePlayerStore();
 
   // Start a level by number (negative = weekly challenge)
   const loadLevel = useCallback((levelNumber: number) => {
@@ -260,69 +263,17 @@ export function useGameEngine() {
         }
       }
     } else if (gameState.status === 'lost') {
+      // Analytics fire per game-over event: a Continue that ends in a second
+      // loss is genuinely two game-over events, so this is intentionally NOT
+      // gated (it's not part of the stats/economy that must net to once).
       trackGameEvent({ type: 'level_fail', level: levelConfig.levelNumber, score: gameState.score });
-      if (isZen) {
-        // Use maxComboThisRun (per-run peak) not the live combo —
-        // the live counter is almost always 0 at game-over because
-        // game-over fires on a no-clear placement that reset the
-        // chain. Pre-this-fix, lifetime bestCombo almost never
-        // updated even when the player landed FEVER or GODLIKE
-        // chains mid-run.
-        recordZenGame(gameState.score, gameState.linesCleared, gameState.maxComboThisRun ?? 0);
-        // Record lifetime best wave reached. Computed from the final
-        // pieces-placed count using the wave system's own boundary
-        // math, so this is the only place that needs to know about
-        // wave progression — playerStore stays palette-agnostic.
-        recordBestWave(getWaveForPieces(gameState.piecesPlaced).wave);
-        const zenXpMult = getXPMultiplier();
-        addBattlePassXP(Math.round((20 + Math.min(gameState.linesCleared * 3, 60)) * zenXpMult), { boostable: true });
-      } else if (isWeekly) {
-        // Weekly challenge loss still records score
-        const weekId = getCurrentWeekId();
-        completeWeeklyChallenge(weekId, 0, gameState.score);
-        recordGamePlayed(gameState.maxComboThisRun ?? 0);
-      } else if (isDaily) {
-        // Daily puzzle "loss" = run ended (stuck). We still lock in the
-        // score, award participation coins, and advance the streak.
-        // `recordDailyPuzzleResult` already increments totalGamesPlayed
-        // internally; we used to ALSO call `recordGamePlayed` here, which
-        // double-counted every daily play in the lifetime stats and
-        // inflated achievement progress (clear_500 etc.). Now we trust
-        // `recordDailyPuzzleResult` for the +1, and only update bestCombo
-        // separately so daily-only players still see combo records.
-        const puzzleId = getDailyPuzzleId();
-        const stars = getStars();
-        const result = recordDailyPuzzleResult(puzzleId, gameState.score, stars);
-        if (result.isFirstCompletion) {
-          const coinMult = getCoinMultiplier();
-          const reward = DAILY_COIN_REWARDS[stars as 0 | 1 | 2 | 3] ?? 0;
-          if (reward > 0) addCoins(Math.round(reward * coinMult), { boostable: true });
-          if (stars === 3) addGems(DAILY_GEM_REWARD_3_STAR);
-          const xpMult = getXPMultiplier();
-          addBattlePassXP(Math.round((30 + stars * 15) * xpMult), { boostable: true });
-        }
-        // Pick up best-combo from this run without re-incrementing games.
-        const combo = gameState.maxComboThisRun ?? 0;
-        if (combo > 0) {
-          usePlayerStore.setState((s) => ({ bestCombo: Math.max(s.bestCombo, combo) }));
-        }
-      } else {
-        recordGamePlayed(gameState.maxComboThisRun ?? 0);
-        recordFailure(levelConfig.levelNumber);
-        // Update Skill Rating on loss
-        const srChange = calculateSRChange({
-          won: false,
-          level: levelConfig.levelNumber,
-          stars: 0,
-          scorePercent: levelConfig.objective.target > 0
-            ? (gameState.score / levelConfig.objective.target) * 100
-            : 0,
-          currentSR: skillRating,
-        });
-        updateSkillRating(srChange);
-      }
-      incrementGamesPlayedToday();
-      checkAchievements();
+      // All stats/economy effects of the loss live in applyLoseAccounting:
+      // idempotent run-bests (Math.max) re-run on every loss so the higher
+      // post-continue peak lands, while the non-idempotent counters / SR
+      // penalty / failure count / XP are gated to once per runId. This is
+      // what makes a paid Continue (lost -> playing -> lost on the same run)
+      // count the run exactly once. See RunAccounting.ts.
+      applyLoseAccounting(gameState, levelConfig);
     }
   }, [gameState?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
