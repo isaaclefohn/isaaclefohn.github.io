@@ -101,6 +101,12 @@ export function useGameEngine() {
         addBattlePassXP(Math.round(75 * xpMult), { boostable: true }); // Weekly challenge XP bonus
       } else if (isDaily) {
         // Daily puzzle completion — 3-star target reached (rare).
+        // `recordDailyPuzzleResult` already does +1 totalGamesPlayed, so the
+        // shared `recordGamePlayed` below is gated to !isDaily — otherwise a
+        // daily WIN double-counted lifetime games (the daily LOSS branch was
+        // fixed for the same reason; the win branch was missed). We still
+        // fold the run's best combo in manually so daily-only players see
+        // combo records.
         const puzzleId = getDailyPuzzleId();
         const result = recordDailyPuzzleResult(puzzleId, gameState.score, stars);
         if (result.isFirstCompletion) {
@@ -108,6 +114,10 @@ export function useGameEngine() {
           if (reward > 0) addCoins(Math.round(reward * coinMult), { boostable: true });
           if (stars === 3) addGems(DAILY_GEM_REWARD_3_STAR);
           addBattlePassXP(Math.round((40 + stars * 20) * xpMult), { boostable: true });
+        }
+        const combo = gameState.maxComboThisRun ?? 0;
+        if (combo > 0) {
+          usePlayerStore.setState((s) => ({ bestCombo: Math.max(s.bestCombo, combo) }));
         }
       } else {
         // Normal level completion
@@ -147,7 +157,10 @@ export function useGameEngine() {
         }
       }
 
-      recordGamePlayed(gameState.maxComboThisRun ?? 0);
+      // Skip for daily — recordDailyPuzzleResult already counted this play
+      // (and the daily branch folded in bestCombo). Calling recordGamePlayed
+      // too would double-count the daily win in lifetime games.
+      if (!isDaily) recordGamePlayed(gameState.maxComboThisRun ?? 0);
       incrementGamesPlayedToday();
       resetFailures();
       checkAchievements();

@@ -67,9 +67,19 @@ export function getWorldCompletionStatus(
   let levelsPerfected = 0;
 
   for (let lvl = startLevel; lvl <= endLevel; lvl++) {
-    const stars = levelStars[lvl] ?? 0;
-    if (stars > 0) levelsCleared++;
-    if (stars >= 3) levelsPerfected++;
+    // A level counts as CLEARED if it has been won at least once —
+    // i.e. it has an entry in levelStars (completeLevel, the only writer,
+    // runs solely on a win). The previous gate of `stars > 0` silently
+    // excluded legitimate 0-star WINS of chromatic-objective levels
+    // (Level 30/60/90/…), whose win condition is "N chromatic clears",
+    // NOT a score threshold — so a player can satisfy the objective while
+    // scoring below the 1-star cutoff. That player advanced past the
+    // level (highestLevel moved) but the world-clear reward never fired
+    // because levelStars[L] stayed 0. Counting by entry-presence fixes
+    // the inconsistency; perfected still requires a true 3-star.
+    const stars = levelStars[lvl];
+    if (stars !== undefined) levelsCleared++;
+    if ((stars ?? 0) >= 3) levelsPerfected++;
   }
 
   return {

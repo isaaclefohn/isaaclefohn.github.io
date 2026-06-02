@@ -772,12 +772,19 @@ export const usePlayerStore = create<PlayerStore>()(
       usePowerUp: (type) => {
         const { powerUps } = get();
         if (powerUps[type] <= 0) return false;
-        set({
+        set((s) => ({
           powerUps: {
-            ...powerUps,
-            [type]: powerUps[type] - 1,
+            ...s.powerUps,
+            [type]: s.powerUps[type] - 1,
           },
-        });
+          // Bump the lifetime counter. Without this it stayed at 0 forever:
+          // the "Power User" achievement (first_powerup, >= 1) was
+          // unobtainable, the Stats / Profile "Power-Ups Used" row always
+          // read 0, and any QuestChain step keyed on totalPowerUpsUsed was
+          // permanently stuck. usePowerUp is the single consume site, so
+          // this is the correct place to count.
+          totalPowerUpsUsed: s.totalPowerUpsUsed + 1,
+        }));
         return true;
       },
 

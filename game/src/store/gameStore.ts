@@ -288,12 +288,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const won = checkObjective(gameState.objective, newScore, newChromaticClears);
     const nextStatus = won ? 'won' : gameOver ? 'lost' : gameState.status;
 
+    // Mirror the rest of processTurn's per-turn accumulators. `applyPowerUp`
+    // historically copied SOME of processTurn's final write (score, combo,
+    // chromaticClears, status) but silently dropped `linesCleared` and
+    // `maxComboThisRun`. That under-credited every downstream consumer of
+    // those two run totals when a clear came from a power-up cascade
+    // instead of a placement: Battle Pass XP / Seasonal points / block-
+    // mastery XP / lines_cleared quest progress / persisted totalLinesCleared
+    // (all keyed on gameState.linesCleared at win/lose), and the combo-tier
+    // achievements + "Peak combo" lose-modal stat (keyed on maxComboThisRun).
+    const newCombo = cascade.linesCleared > 0 ? gameState.combo + 1 : 0;
+    const newLinesCleared = gameState.linesCleared + cascade.linesCleared;
+    const newMaxCombo = Math.max(gameState.maxComboThisRun, newCombo);
+
     set({
       gameState: {
         ...gameState,
         grid: finalGrid,
         score: newScore,
-        combo: cascade.linesCleared > 0 ? gameState.combo + 1 : 0,
+        combo: newCombo,
+        maxComboThisRun: newMaxCombo,
+        linesCleared: newLinesCleared,
         chromaticClears: newChromaticClears,
         status: nextStatus,
         lastScoreEvent: surfacedEvent,

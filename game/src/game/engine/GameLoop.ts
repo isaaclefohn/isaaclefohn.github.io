@@ -275,6 +275,15 @@ export function processTurn(
     // bonus is the *extra* portion (post-multiplied - base) so the UI
     // can surface "+N GOLDEN" as a distinct callout. Golden state
     // never persists across piece sets — bonus fires once or is lost.
+    //
+    // NOTE: `breakdown` is component DETAIL for display (the clearBonus
+    // / chromaticBonus / etc. lines), NOT a partition that sums to
+    // `points`. It intentionally keeps the PRE-golden component values —
+    // `points` is the headline total and already includes goldenBonus,
+    // and `goldenBonus` is surfaced as its own field for the "+N GOLDEN"
+    // callout. Do not assume `sum(breakdown) === points`; the only live
+    // consumers read individual breakdown fields (e.g. clearBonus > 0),
+    // never the sum.
     if (pieceIndex === state.goldenPieceIndex) {
       const basePoints = scoreEvent.points;
       const goldenBonus = basePoints * (GOLDEN_PIECE_MULTIPLIER - 1);
