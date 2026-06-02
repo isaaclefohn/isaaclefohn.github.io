@@ -150,11 +150,23 @@ const PieceSlot: React.FC<{
     return () => loop.stop();
   }, [isGolden, piece, goldenPulse]);
 
+  // PanResponder can only be ALLOCATED once (RN won't pick up a new instance
+  // mid-gesture without losing the active drag), so the callbacks below close
+  // over whatever values existed on first render. That used to mean a stale
+  // `piece`, stale `onDragStart/Move/End` handlers (GameScreen recreates them
+  // whenever gameState changes), and stale `index`/`onPress` — drags after the
+  // first turn ran against the FIRST turn's grid / handler closures, which
+  // surfaced as inconsistent ghost previews and "the drag knows about a piece
+  // I already placed" bugs. The canonical RN workaround: route all reads
+  // through a latestRef updated on every render.
+  const latestRef = useRef({ piece, onDragStart, onDragMove, onDragEnd, onPress, index });
+  latestRef.current = { piece, onDragStart, onDragMove, onDragEnd, onPress, index };
+
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => !!piece,
+      onStartShouldSetPanResponder: () => !!latestRef.current.piece,
       onMoveShouldSetPanResponder: (_evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
-        if (!piece) return false;
+        if (!latestRef.current.piece) return false;
         return (
           Math.abs(gestureState.dx) > DRAG_THRESHOLD ||
           Math.abs(gestureState.dy) > DRAG_THRESHOLD
@@ -168,46 +180,49 @@ const PieceSlot: React.FC<{
         };
       },
       onPanResponderMove: (evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
-        if (!piece) return;
+        const cur = latestRef.current;
+        if (!cur.piece) return;
         const movedEnough =
           Math.abs(gestureState.dx) > DRAG_THRESHOLD ||
           Math.abs(gestureState.dy) > DRAG_THRESHOLD;
 
         if (!isDraggingRef.current && movedEnough) {
           isDraggingRef.current = true;
-          onDragStart?.({
-            pieceIndex: index,
+          cur.onDragStart?.({
+            pieceIndex: cur.index,
             x: evt.nativeEvent.pageX,
             y: evt.nativeEvent.pageY,
           });
         }
 
         if (isDraggingRef.current) {
-          onDragMove?.({
-            pieceIndex: index,
+          cur.onDragMove?.({
+            pieceIndex: cur.index,
             x: evt.nativeEvent.pageX,
             y: evt.nativeEvent.pageY,
           });
         }
       },
       onPanResponderRelease: (evt: GestureResponderEvent) => {
+        const cur = latestRef.current;
         if (isDraggingRef.current) {
-          onDragEnd?.({
-            pieceIndex: index,
+          cur.onDragEnd?.({
+            pieceIndex: cur.index,
             x: evt.nativeEvent.pageX,
             y: evt.nativeEvent.pageY,
           });
           isDraggingRef.current = false;
         } else {
-          if (piece) {
-            onPress();
+          if (cur.piece) {
+            cur.onPress();
           }
         }
       },
       onPanResponderTerminate: (evt: GestureResponderEvent) => {
+        const cur = latestRef.current;
         if (isDraggingRef.current) {
-          onDragEnd?.({
-            pieceIndex: index,
+          cur.onDragEnd?.({
+            pieceIndex: cur.index,
             x: evt.nativeEvent.pageX,
             y: evt.nativeEvent.pageY,
           });
