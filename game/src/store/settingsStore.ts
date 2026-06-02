@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cancelAllNotifications } from '../services/notifications';
 
 /**
  * Graphics quality presets. 'low' disables the per-cell highlight/innerGlow
@@ -61,7 +62,7 @@ interface SettingsStore {
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       soundEnabled: true,
       musicEnabled: true,
       hapticsEnabled: true,
@@ -108,7 +109,18 @@ export const useSettingsStore = create<SettingsStore>()(
       completeTutorial: () => set({ tutorialCompleted: true }),
       toggleColorblindMode: () => set((s) => ({ colorblindMode: !s.colorblindMode })),
       toggleReducedMotion: () => set((s) => ({ reducedMotion: !s.reducedMotion })),
-      toggleNotifications: () => set((s) => ({ notificationsEnabled: !s.notificationsEnabled })),
+      toggleNotifications: () => {
+        const next = !get().notificationsEnabled;
+        set({ notificationsEnabled: next });
+        if (!next) {
+          // When the player turns notifications OFF, actually cancel any
+          // already-scheduled daily-reward / streak / retention reminders
+          // — the previous version just flipped the boolean and let the
+          // queued notifications keep firing. Fire-and-forget; the helper
+          // silently no-ops if the platform doesn't support notifications.
+          void cancelAllNotifications();
+        }
+      },
       markTipShown: (tipId: string) => set((s) => ({
         shownTips: s.shownTips.includes(tipId) ? s.shownTips : [...s.shownTips, tipId],
       })),

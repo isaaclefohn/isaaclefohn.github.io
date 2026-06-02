@@ -159,3 +159,19 @@ export async function clearBadge(): Promise<void> {
     await Notifications.setBadgeCountAsync(0);
   }
 }
+
+/**
+ * Cancel every scheduled notification — used when the player turns off
+ * the Push Notifications toggle in Settings. Previously the toggle only
+ * flipped a boolean, and any daily-reward / streak / retention reminders
+ * already queued continued firing on schedule. Calling this in the setter
+ * forces the player's intent to actually take effect.
+ */
+export async function cancelAllNotifications(): Promise<void> {
+  try {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+  } catch (e) {
+    // Notifications not available on this platform / not granted —
+    // silently fail; nothing scheduled means nothing to cancel.
+  }
+}

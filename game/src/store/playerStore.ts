@@ -1376,10 +1376,21 @@ export const usePlayerStore = create<PlayerStore>()(
       finishTournament: (finalRank: number) => {
         set((s) => ({
           activeTournament: null,
+          // Previously `=== 0` was the "never finished a tournament"
+          // sentinel — which collides with rank 0 (the top of the
+          // leaderboard, if the ranks are 0-indexed) AND silently drops
+          // an actual top finish if the value ever stays at 0 forever.
+          // A genuine first-ever record passes the !== 0 check on the
+          // SECOND run too, so the old code already had the right
+          // intent — preserve a real best. The fix: keep the lowest
+          // non-zero rank seen so far, but treat rank 0 as a valid
+          // top-tier finish rather than the absence-of-record sentinel.
           tournamentBestScore:
-            s.tournamentBestScore === 0
+            s.tournamentBestScore <= 0
               ? finalRank
-              : Math.min(s.tournamentBestScore, finalRank),
+              : finalRank <= 0
+                ? s.tournamentBestScore
+                : Math.min(s.tournamentBestScore, finalRank),
         }));
       },
 
@@ -1619,10 +1630,29 @@ export const usePlayerStore = create<PlayerStore>()(
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
       // Existing installs saved state with no version (treated as v0). Return it
-      // as-is so the player's economy/progress survives the upgrade; the default
-      // merge backfills any newly added fields. Without a migrate, Zustand
-      // discards the old save on a version bump.
+      // as-is so the player's economy/progress survives the upgrade; the merge
+      // function below back-fills any newly added fields. Without a migrate,
+      // Zustand discards the old save on a version bump.
       migrate: (persisted) => persisted as PlayerStore,
+      // Zustand's default merge is SHALLOW — it overrides top-level keys with
+      // persisted values, but anything nested (`powerUpLevels.colorClear`,
+      // `blockMastery.pink`, …) comes through wholesale from the old save and
+      // newly-added subkeys are missing. The Power-Up Upgrades screen would
+      // then read `undefined`, compute `Math.min(undefined + 1, 5) === NaN`,
+      // persist NaN, and corrupt every future upgrade. Deep-merge each known
+      // nested object against the current defaults so legacy saves pick up
+      // every newly-added field on rehydrate.
+      merge: (persisted, current) => {
+        if (!persisted || typeof persisted !== 'object') return current;
+        const p = persisted as Partial<PlayerStore>;
+        const merged: PlayerStore = { ...current, ...p };
+        if (current.powerUps) merged.powerUps = { ...current.powerUps, ...(p.powerUps ?? {}) };
+        if (current.powerUpLevels) merged.powerUpLevels = { ...current.powerUpLevels, ...(p.powerUpLevels ?? {}) };
+        if (current.megaPowerUps) merged.megaPowerUps = { ...current.megaPowerUps, ...(p.megaPowerUps ?? {}) };
+        if (current.blockMastery) merged.blockMastery = { ...current.blockMastery, ...(p.blockMastery ?? {}) };
+        if (current.activeBoostUntil) merged.activeBoostUntil = { ...current.activeBoostUntil, ...(p.activeBoostUntil ?? {}) };
+        return merged;
+      },
       onRehydrateStorage: () => (_state, error) => {
         if (error) console.warn('[playerStore] rehydrate failed', error);
       },
