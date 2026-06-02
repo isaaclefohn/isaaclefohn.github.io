@@ -20,7 +20,7 @@ import { ScoreEvent, scorePlacement, scoreClear } from '../game/engine/Scoring';
 import { PowerUpType, applyBomb, applyRowClear, applyColorClear } from '../game/powerups/PowerUpManager';
 import { resolveBoardCascade } from '../game/engine/Board';
 import { checkObjective } from '../game/engine/GameLoop';
-import { isGameOver } from '../game/engine/GameOver';
+import { isGameOver, gameOverPieces } from '../game/engine/GameOver';
 import { usePlayerStore } from './playerStore';
 import { trackGameEvent } from '../services/analytics';
 
@@ -187,7 +187,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // consume to ever trigger the check. Surface the honest game-over instead
     // (the game-over modal still offers the Continue path). Held piece counts.
     const { heldPiece } = get();
-    const swapPool = heldPiece ? [...newPieces, heldPiece] : newPieces;
+    // newPieces is a FULL fresh tray, so a held piece can't be retrieved into
+    // it — gameOverPieces drops it (a swap into an all-unplaceable full tray is
+    // an honest game over even if the held piece would fit somewhere).
+    const swapPool = gameOverPieces(newPieces, heldPiece);
     const swapDead = isGameOver(gameState.grid, swapPool);
 
     set({
@@ -303,8 +306,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const finalGrid = cascade.grid;
 
     const { heldPiece } = get();
-    const remainingPieces = gameState.availablePieces.filter((p): p is Piece => p !== null);
-    const gameOverPool = heldPiece ? [...remainingPieces, heldPiece] : remainingPieces;
+    // Power-ups don't consume a tray slot, so the tray may be full; gameOverPieces
+    // counts the held piece only when an empty slot makes it retrievable.
+    const gameOverPool = gameOverPieces(gameState.availablePieces, heldPiece);
     const gameOver = gameOverPool.length > 0 && isGameOver(finalGrid, gameOverPool);
 
     // Match processTurn's "what changed this turn" bookkeeping. The
@@ -414,7 +418,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // times to hand back a tray that's actually playable (rotation-aware); only
     // if the board is genuinely too full for any pooled piece in any rotation
     // do we honestly fall back to game-over.
-    const poolOf = (candidate: Piece[]) => (heldPiece ? [...candidate, heldPiece] : candidate);
+    // candidate is a FULL fresh tray, so a held piece isn't retrievable into it
+    // — gameOverPieces drops it (a continue onto an all-unplaceable full tray is
+    // an honest game over even if the held piece would fit).
+    const poolOf = (candidate: Piece[]) => gameOverPieces(candidate, heldPiece);
     let newPieces = generatePieceSet(rng, levelConfig.piecePool, gameState.paletteSize);
     for (let attempt = 0; attempt < 8 && isGameOver(gameState.grid, poolOf(newPieces)); attempt++) {
       newPieces = generatePieceSet(rng, levelConfig.piecePool, gameState.paletteSize);

@@ -5,6 +5,7 @@ import {
   canPlaceAnywhere,
   canPlaceAnywhereWithRotation,
   hasValidMove,
+  gameOverPieces,
 } from '../game/engine/GameOver';
 
 describe('GameOver', () => {
@@ -154,6 +155,36 @@ describe('GameOver', () => {
       expect(canPlaceAnywhereWithRotation(grid, pieces[0])).toBe(false);
       expect(canPlaceAnywhereWithRotation(grid, pieces[1])).toBe(false);
       expect(isGameOver(grid, pieces)).toBe(true);
+    });
+  });
+
+  describe('gameOverPieces — a held piece only counts when retrievable', () => {
+    const A = createPiece('domino_h', 1);
+    const B = createPiece('tri_l', 2);
+    const C = createPiece('single', 3);
+    const held = createPiece('tetra_sq', 4);
+
+    it('FULL tray excludes the held piece (it cannot be retrieved into a full tray)', () => {
+      // The soft-lock guard: after a refill/swap/continue the tray is full, so a
+      // held piece is unreachable and must NOT count as a move.
+      const pool = gameOverPieces([A, B, C], held);
+      expect(pool).toEqual([A, B, C]); // held dropped
+      expect(pool).not.toContain(held);
+    });
+
+    it('tray with an empty slot INCLUDES the held piece (retrievable)', () => {
+      const pool = gameOverPieces([A, null, C], held);
+      expect(pool).toContain(held);
+      expect(pool).toHaveLength(3); // A, C, held
+    });
+
+    it('no held piece returns just the non-null tray pieces', () => {
+      expect(gameOverPieces([A, null, C], null)).toEqual([A, C]);
+      expect(gameOverPieces([A, B, C], null)).toEqual([A, B, C]);
+    });
+
+    it('an empty tray with a held piece counts the held piece (slots are free)', () => {
+      expect(gameOverPieces([null, null, null], held)).toEqual([held]);
     });
   });
 });

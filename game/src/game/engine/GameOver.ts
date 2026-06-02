@@ -58,3 +58,24 @@ export function isGameOver(grid: Grid, remainingPieces: Piece[]): boolean {
   if (remainingPieces.length === 0) return false; // All pieces placed, new set coming
   return !hasValidMove(grid, remainingPieces);
 }
+
+/**
+ * The pieces that count toward "a legal move exists" for the game-over check.
+ *
+ * The tray pieces always count. The HELD piece counts ONLY when the tray has an
+ * empty slot — `retrieveHeldPiece` moves the held piece into an empty slot, so
+ * on a FULL tray the held piece is UNREACHABLE. Including an unreachable held
+ * piece would treat a phantom move as real: a full tray of all-unplaceable
+ * pieces plus a placeable-but-unretrievable held piece is a genuine game over,
+ * not a "keep playing" state — counting the held piece there soft-locks the run
+ * (status stays 'playing', no legal move, no game-over modal). This bites right
+ * after a refill / swap / continue, when the tray is freshly full while a piece
+ * is still held.
+ *
+ * Pass the POST-turn tray (the `(Piece|null)[]` with empty slots as null).
+ */
+export function gameOverPieces(tray: (Piece | null)[], heldPiece: Piece | null): Piece[] {
+  const pieces = tray.filter((p): p is Piece => p !== null);
+  const trayHasEmptySlot = tray.some((p) => p === null);
+  return heldPiece && trayHasEmptySlot ? [...pieces, heldPiece] : pieces;
+}

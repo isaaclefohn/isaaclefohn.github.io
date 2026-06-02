@@ -7,7 +7,7 @@ import { Grid, createGrid, executePlacement, canPlace, placePiece, findFullLines
 import { getWaveForPieces } from '../levels/EndlessWaves';
 import { Piece, PieceType, createPiece, getPieceCells, PIECE_POOLS, rotatePiece } from './Piece';
 import { ScoreEvent, scorePlacement, scoreClear, calculateStars } from './Scoring';
-import { isGameOver } from './GameOver';
+import { isGameOver, gameOverPieces } from './GameOver';
 import { SeededRandom } from '../../utils/seededRandom';
 import { PIECES_PER_TURN, COLORS } from '../../utils/constants';
 
@@ -376,8 +376,11 @@ export function processTurn(
     // puzzle / level modes stay null so seeds remain deterministic.
     const newGoldenPieceIndex =
       state.level === 0 ? maybeRollGoldenPieceIndex(rng) : null;
-    // Check for game over with the new set (plus any held piece)
-    const gameOverPool = heldPiece ? [...newSet, heldPiece] : newSet;
+    // The refilled tray (newSet) is FULL (3 pieces), so a held piece cannot be
+    // retrieved into it — gameOverPieces drops it. Otherwise a full set of
+    // all-unplaceable pieces plus a placeable-but-unretrievable held piece
+    // would leave status 'playing' with no legal move (a soft-lock).
+    const gameOverPool = gameOverPieces(newSet, heldPiece);
     const gameOver = isGameOver(result.grid, gameOverPool);
     // Check for win
     const won = checkObjective(state.objective, newScore, state.chromaticClears + scoreEvent.chromaticClears);
@@ -402,8 +405,9 @@ export function processTurn(
     };
   }
 
-  // Check for game over with remaining pieces (plus any held piece)
-  const gameOverPool = heldPiece ? [...remainingPieces, heldPiece] : remainingPieces;
+  // Non-refill branch: the just-placed slot in newAvailable is empty, so a held
+  // piece IS retrievable here — gameOverPieces includes it.
+  const gameOverPool = gameOverPieces(newAvailable, heldPiece);
   const gameOver = isGameOver(result.grid, gameOverPool);
   const won = checkObjective(state.objective, newScore, state.chromaticClears + scoreEvent.chromaticClears);
 
