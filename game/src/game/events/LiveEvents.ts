@@ -66,8 +66,7 @@ const EVENT_SCHEDULE: LiveEvent[] = [
 ];
 
 /** Check if a recurring weekend event is active (Friday 6pm - Sunday 11:59pm local) */
-function isWeekendEventActive(): boolean {
-  const now = new Date();
+function isWeekendEventActive(now: Date): boolean {
   const day = now.getDay(); // 0=Sun, 5=Fri, 6=Sat
   const hour = now.getHours();
 
@@ -78,24 +77,40 @@ function isWeekendEventActive(): boolean {
 }
 
 /** Check if midweek event is active (Wednesday all day) */
-function isMidweekEventActive(): boolean {
-  const now = new Date();
+function isMidweekEventActive(now: Date): boolean {
   return now.getDay() === 3; // Wednesday
 }
 
-/** Get which week number of the month it is (1-based) */
-function getWeekOfMonth(): number {
-  const now = new Date();
-  return Math.ceil(now.getDate() / 7);
+/**
+ * Alternation key for the weekend event, anchored to THIS weekend's
+ * Friday so the event type is identical across Fri/Sat/Sun.
+ *
+ * The previous version keyed off `Math.ceil(now.getDate() / 7)` using the
+ * CURRENT day, so a weekend that straddled a week-number boundary (e.g.
+ * Fri the 7th → Sat the 8th: ceil(7/7)=1 odd, ceil(8/7)=2 even) flipped
+ * from "2x Score Weekend" to "Coin Rush" mid-weekend — changing both the
+ * applied reward and the banner label. Anchoring to the weekend's Friday
+ * date makes all three days resolve to the same parity. (For a Sunday
+ * whose Friday fell in the previous month, JS Date normalizes the
+ * negative day-of-month; the resulting date is still a stable, consistent
+ * key for the whole weekend.)
+ */
+function getWeekendAnchorWeek(now: Date): number {
+  const day = now.getDay(); // 5=Fri, 6=Sat, 0=Sun
+  const daysSinceFriday = day === 5 ? 0 : day === 6 ? 1 : 2; // Sun is 2 days past Fri
+  const friday = new Date(now);
+  friday.setDate(now.getDate() - daysSinceFriday);
+  return Math.ceil(friday.getDate() / 7);
 }
 
-/** Get all currently active events */
-export function getActiveEvents(): LiveEvent[] {
+/** Get all currently active events. `now` is injectable for testing. */
+export function getActiveEvents(now: Date = new Date()): LiveEvent[] {
   const active: LiveEvent[] = [];
-  const weekNum = getWeekOfMonth();
 
-  // Weekend events alternate between score multiplier and coin rush
-  if (isWeekendEventActive()) {
+  // Weekend events alternate between score multiplier and coin rush, keyed
+  // on the weekend's Friday so the type stays stable Fri→Sun.
+  if (isWeekendEventActive(now)) {
+    const weekNum = getWeekendAnchorWeek(now);
     const weekendEvent = weekNum % 2 === 1
       ? EVENT_SCHEDULE[0]  // 2x Score Weekend (odd weeks)
       : EVENT_SCHEDULE[2]; // Coin Rush (even weeks)
@@ -103,7 +118,7 @@ export function getActiveEvents(): LiveEvent[] {
   }
 
   // Midweek XP boost every Wednesday
-  if (isMidweekEventActive()) {
+  if (isMidweekEventActive(now)) {
     active.push(EVENT_SCHEDULE[1]);
   }
 
@@ -111,30 +126,27 @@ export function getActiveEvents(): LiveEvent[] {
 }
 
 /** Get the score multiplier from active events (multiplicative) */
-export function getScoreMultiplier(): number {
-  const events = getActiveEvents();
-  return events
+export function getScoreMultiplier(now: Date = new Date()): number {
+  return getActiveEvents(now)
     .filter(e => e.type === 'score_multiplier')
     .reduce((mult, e) => mult * e.multiplier, 1);
 }
 
 /** Get the XP multiplier from active events */
-export function getXPMultiplier(): number {
-  const events = getActiveEvents();
-  return events
+export function getXPMultiplier(now: Date = new Date()): number {
+  return getActiveEvents(now)
     .filter(e => e.type === 'xp_boost')
     .reduce((mult, e) => mult * e.multiplier, 1);
 }
 
 /** Get the coin multiplier from active events */
-export function getCoinMultiplier(): number {
-  const events = getActiveEvents();
-  return events
+export function getCoinMultiplier(now: Date = new Date()): number {
+  return getActiveEvents(now)
     .filter(e => e.type === 'coin_rush')
     .reduce((mult, e) => mult * e.multiplier, 1);
 }
 
 /** Check if any event is currently active */
-export function hasActiveEvent(): boolean {
-  return getActiveEvents().length > 0;
+export function hasActiveEvent(now: Date = new Date()): boolean {
+  return getActiveEvents(now).length > 0;
 }
