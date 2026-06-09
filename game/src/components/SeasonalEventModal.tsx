@@ -31,10 +31,7 @@ export const SeasonalEventModal: React.FC<SeasonalEventModalProps> = ({
     seasonalEventId,
     seasonalEventPoints,
     seasonalMilestonesClaimed,
-    claimSeasonalMilestone,
-    addCoins,
-    addGems,
-    addPowerUp,
+    claimSeasonalMilestoneAtomic,
   } = usePlayerStore();
 
   const event = getActiveEvent();
@@ -65,13 +62,11 @@ export const SeasonalEventModal: React.FC<SeasonalEventModalProps> = ({
     const milestone = event.milestones[index];
     if (!isMilestoneReached(milestone, points)) return;
     const key = `${instanceId}_${index}`;
-    if (seasonalMilestonesClaimed.includes(key)) return;
-    if (milestone.reward.coins) addCoins(milestone.reward.coins, { boostable: true });
-    if (milestone.reward.gems) addGems(milestone.reward.gems);
-    if (milestone.reward.bomb) addPowerUp('bomb', milestone.reward.bomb);
-    if (milestone.reward.rowClear) addPowerUp('rowClear', milestone.reward.rowClear);
-    if (milestone.reward.colorClear) addPowerUp('colorClear', milestone.reward.colorClear);
-    claimSeasonalMilestone(key);
+    // Atomic claim: live-state guard + boost-aware credit + stamp in one set(),
+    // so a double-tap can't double-credit. milestone.reward is already shaped
+    // like RewardBundle ({coins,gems,bomb,rowClear,colorClear}). Coins stay
+    // boostable, matching the prior addCoins({ boostable: true }) behavior.
+    claimSeasonalMilestoneAtomic(key, milestone.reward);
   };
 
   return (

@@ -563,6 +563,10 @@ interface PlayerStore extends PlayerStoreState {
   // Seasonal events
   addSeasonalPoints: (instanceId: string, points: number) => void;
   claimSeasonalMilestone: (key: string) => void;
+  /** Atomic seasonal-milestone claim — credits the bundle AND stamps the key in
+   *  one set(), guarded on LIVE state. Returns false if already claimed. Closes
+   *  the double-tap double-credit the separate-grant/stale-closure path allowed. */
+  claimSeasonalMilestoneAtomic: (key: string, bundle: RewardBundle) => boolean;
   // Mystery shop
   recordMysteryPurchase: (bucket: number, itemId: string) => void;
   // Block mastery
@@ -1543,6 +1547,21 @@ export const usePlayerStore = create<PlayerStore>()(
             ? s.seasonalMilestonesClaimed
             : [...s.seasonalMilestonesClaimed, key],
         }));
+      },
+
+      claimSeasonalMilestoneAtomic: (key, bundle) => {
+        // Live-state guard + atomic credit+stamp. The old SeasonalEventModal path
+        // checked a STALE render-closure copy of seasonalMilestonesClaimed and did
+        // separate grant + stamp set()s, so a fast double-tap (the shared Button
+        // has no press-lock) could pass the guard twice and double-credit — up to
+        // 60 gems + 3000 coins. This is the last reward surface to adopt the
+        // ...Atomic pattern the rest of the codebase standardized on.
+        if (get().seasonalMilestonesClaimed.includes(key)) return false;
+        set((s) => ({
+          seasonalMilestonesClaimed: [...s.seasonalMilestonesClaimed, key],
+          ...rewardBundleDelta(s, bundle, Date.now()),
+        }));
+        return true;
       },
 
       recordMysteryPurchase: (bucket: number, itemId: string) => {

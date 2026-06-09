@@ -200,3 +200,34 @@ describe('playerStore.claimLuckyLevelAtomic (milestone replay-faucet guard)', ()
     expect(ps().claimedLuckyLevels).toEqual([100, 200]);
   });
 });
+
+describe('playerStore.claimSeasonalMilestoneAtomic (double-tap double-credit guard)', () => {
+  beforeEach(() => usePlayerStore.setState({
+    coins: 0, gems: 0, seasonalMilestonesClaimed: [],
+    powerUps: { bomb: 0, rowClear: 0, colorClear: 0 },
+    activeBoostUntil: {},
+  }));
+
+  it('credits the bundle once and stamps the milestone key', () => {
+    const ok = ps().claimSeasonalMilestoneAtomic('summer_3', { coins: 3000, gems: 60, colorClear: 1 });
+    expect(ok).toBe(true);
+    expect(ps().coins).toBe(3000);
+    expect(ps().gems).toBe(60);
+    expect(ps().powerUps.colorClear).toBe(1);
+    expect(ps().seasonalMilestonesClaimed).toEqual(['summer_3']);
+  });
+
+  it('refuses a second claim of the same key and credits nothing (the double-tap bug)', () => {
+    expect(ps().claimSeasonalMilestoneAtomic('summer_3', { gems: 60 })).toBe(true);
+    expect(ps().claimSeasonalMilestoneAtomic('summer_3', { gems: 60 })).toBe(false);
+    expect(ps().gems).toBe(60); // not 120
+    expect(ps().seasonalMilestonesClaimed).toEqual(['summer_3']); // no duplicate stamp
+  });
+
+  it('distinct milestone keys claim independently', () => {
+    ps().claimSeasonalMilestoneAtomic('summer_0', { coins: 100 });
+    ps().claimSeasonalMilestoneAtomic('summer_1', { coins: 200 });
+    expect(ps().coins).toBe(300);
+    expect(ps().seasonalMilestonesClaimed).toEqual(['summer_0', 'summer_1']);
+  });
+});
