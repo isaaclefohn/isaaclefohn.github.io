@@ -42,7 +42,7 @@ jest.mock('../services/analytics', () => ({
 
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
-import { applyLoseAccounting } from '../game/systems/RunAccounting';
+import { applyLoseAccounting, applyWinGamesPlayed } from '../game/systems/RunAccounting';
 import { getLevel, getEndlessConfig } from '../game/levels/LevelGenerator';
 import { getWaveForPieces } from '../game/levels/EndlessWaves';
 import type { GameState, LevelConfig } from '../game/engine/GameLoop';
@@ -165,5 +165,57 @@ describe('applyLoseAccounting — non-idempotent accounting fires once per run',
     expect(ps().zenBestLinesCleared).toBe(20);
     expect(ps().bestCombo).toBe(6);
     expect(ps().bestWaveReached).toBe(getWaveForPieces(120).wave); // later wave landed
+  });
+});
+
+describe('applyWinGamesPlayed — a WON run counts once, even across Continue', () => {
+  beforeEach(() => {
+    usePlayerStore.setState({
+      totalGamesPlayed: 0,
+      gamesPlayedToday: 0,
+      gamesPlayedDate: '',
+      bestCombo: 0,
+    });
+    gs().startLevel(campaignConfig());
+  });
+
+  it('a fresh win counts the run once and folds the run combo', () => {
+    useGameStore.setState({ gameState: { ...gs().gameState!, status: 'won', maxComboThisRun: 4 } });
+    applyWinGamesPlayed(gs().gameState!, false);
+    expect(ps().totalGamesPlayed).toBe(1);
+    expect(ps().gamesPlayedToday).toBe(1);
+    expect(ps().bestCombo).toBe(4);
+  });
+
+  it('re-firing on the same won run (status effect re-run) does not double-count', () => {
+    useGameStore.setState({ gameState: { ...gs().gameState!, status: 'won', maxComboThisRun: 4 } });
+    applyWinGamesPlayed(gs().gameState!, false);
+    applyWinGamesPlayed(gs().gameState!, false);
+    expect(ps().totalGamesPlayed).toBe(1);
+    expect(ps().gamesPlayedToday).toBe(1);
+  });
+
+  it('lose -> Continue -> WIN counts the run ONCE (the bug) and records the FINAL combo', () => {
+    // First loss at combo 3 accounts the run + stamps its runId.
+    useGameStore.setState({ gameState: { ...gs().gameState!, status: 'lost', maxComboThisRun: 3 } });
+    applyLoseAccounting(gs().gameState!, gs().levelConfig!);
+    expect(ps().totalGamesPlayed).toBe(1);
+    expect(ps().bestCombo).toBe(3);
+
+    // Pay to Continue (preserves runId), then recover and WIN at a higher combo.
+    expect(gs().continueGame()).toBe(true);
+    useGameStore.setState({ gameState: { ...gs().gameState!, status: 'won', maxComboThisRun: 7 } });
+    applyWinGamesPlayed(gs().gameState!, false);
+
+    expect(ps().totalGamesPlayed).toBe(1); // the bug produced 2
+    expect(ps().gamesPlayedToday).toBe(1); // the bug produced 2
+    expect(ps().bestCombo).toBe(7);        // recordRunBests still folded the final peak
+  });
+
+  it('a daily win skips the lifetime counter (recordDailyPuzzleResult owns it) but bumps daily', () => {
+    useGameStore.setState({ gameState: { ...gs().gameState!, status: 'won', maxComboThisRun: 2 } });
+    applyWinGamesPlayed(gs().gameState!, true); // isDaily
+    expect(ps().totalGamesPlayed).toBe(0); // lifetime NOT bumped for daily
+    expect(ps().gamesPlayedToday).toBe(1); // daily counter still bumps
   });
 });

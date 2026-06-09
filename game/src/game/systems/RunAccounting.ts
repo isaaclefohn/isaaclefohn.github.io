@@ -136,3 +136,41 @@ export function applyLoseAccounting(gameState: GameState, levelConfig: LevelConf
 
   player.incrementGamesPlayedToday();
 }
+
+/**
+ * Games-played accounting for a WON run, gated to once per runId — the mirror of
+ * the non-idempotent half of applyLoseAccounting.
+ *
+ * THE BUG THIS GUARDS AGAINST
+ * The original runId fix gated the LOSE branch but left the win branch's
+ * counters inline + ungated in useGameEngine. continueGame preserves runId
+ * across lost -> playing, so a lose -> Continue -> WIN run (the near-miss
+ * recovery the Continue button exists for) had already stamped its runId on the
+ * first loss; the win then re-ran recordGamePlayed + incrementGamesPlayedToday,
+ * counting the SAME run twice in lifetime + daily games-played.
+ *
+ * THE SPLIT (same as applyLoseAccounting)
+ *   - recordRunBests (Math.max bestCombo) is UNGATED: it re-runs on the win so a
+ *     post-continue win's higher final combo lands.
+ *   - recordGamePlayed (+1 lifetime) and incrementGamesPlayedToday (+1 daily) are
+ *     gated to once per runId. Daily counts its play via recordDailyPuzzleResult,
+ *     so lifetime recordGamePlayed is skipped for daily (matching the old inline
+ *     `if (!isDaily)`); the daily counter still bumps.
+ *
+ * The win REWARDS (completeLevel / coins / SR gain / XP / seasonal / mastery /
+ * quests / rating prompts) stay in useGameEngine and fire on every win — only
+ * these two counters are once-per-run.
+ */
+export function applyWinGamesPlayed(gameState: GameState, isDaily: boolean): void {
+  const game = useGameStore.getState();
+  const player = usePlayerStore.getState();
+  const maxCombo = gameState.maxComboThisRun ?? 0;
+
+  player.recordRunBests({ combo: maxCombo }); // idempotent — every terminal
+
+  if (game.lastAccountedRunId === gameState.runId) return; // already counted (e.g. a prior loss this run)
+  game.markRunAccounted(gameState.runId);
+
+  if (!isDaily) player.recordGamePlayed(maxCombo);
+  player.incrementGamesPlayedToday();
+}

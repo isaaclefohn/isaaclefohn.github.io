@@ -19,7 +19,7 @@ import { calculateSRChange } from '../game/systems/SkillRating';
 import { calculateReplayReward } from '../game/rewards/ReplayRewards';
 import { getActiveEvent, getEventInstanceId } from '../game/events/SeasonalEvent';
 import { trackGameEvent } from '../services/analytics';
-import { applyLoseAccounting } from '../game/systems/RunAccounting';
+import { applyLoseAccounting, applyWinGamesPlayed } from '../game/systems/RunAccounting';
 
 export function useGameEngine() {
   const {
@@ -160,11 +160,13 @@ export function useGameEngine() {
         }
       }
 
-      // Skip for daily — recordDailyPuzzleResult already counted this play
-      // (and the daily branch folded in bestCombo). Calling recordGamePlayed
-      // too would double-count the daily win in lifetime games.
-      if (!isDaily) recordGamePlayed(gameState.maxComboThisRun ?? 0);
-      incrementGamesPlayedToday();
+      // Games-played counters, gated to once per runId (mirrors the lose path's
+      // applyLoseAccounting) so a lose -> Continue -> WIN run is not counted
+      // twice in lifetime + daily games-played. recordRunBests inside still
+      // folds the final combo every win; the win rewards above already fired.
+      // (Daily already counts via recordDailyPuzzleResult, so lifetime
+      // games-played is skipped for daily inside the helper.)
+      applyWinGamesPlayed(gameState, isDaily);
       resetFailures();
       checkAchievements();
 
