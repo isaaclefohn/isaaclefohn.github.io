@@ -192,6 +192,21 @@ describe('gameStore.undoLastMove', () => {
     // one-shot: a second undo with no new placement is refused
     expect(gs().undoLastMove()).toBe(false);
   });
+
+  it('works from a LOST state — the lose-modal "Oops! Undo (Free)" recovery offer', () => {
+    // The losing placement creates the snapshot, then the run ends. The lose
+    // modal deliberately offers a free undo of the fatal move, so undoLastMove
+    // intentionally has NO status guard: it must revive a lost run by restoring
+    // the pre-placement (status 'playing') snapshot. runId is preserved, so the
+    // revived run's eventual second game-over stays once-per-run in accounting.
+    gs().placePiece(0, 0, 0); // snapshot created by the placement
+    const runId = gs().gameState!.runId;
+    useGameStore.setState({ gameState: { ...gs().gameState!, status: 'lost' } });
+    expect(gs().undoLastMove()).toBe(true);
+    expect(gs().gameState!.status).toBe('playing'); // run revived
+    expect(gs().gameState!.grid.flat().every(c => c === 0)).toBe(true); // fatal move reverted
+    expect(gs().gameState!.runId).toBe(runId); // same run — accounting gate intact
+  });
 });
 
 describe('gameStore.applyPowerUp', () => {
