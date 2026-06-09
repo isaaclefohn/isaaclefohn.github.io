@@ -7,7 +7,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { LuckyLevelReward, LUCKY_TIER_COLORS } from '../game/rewards/LuckyLevel';
-import { usePlayerStore } from '../store/playerStore';
+import { usePlayerStore, type RewardBundle } from '../store/playerStore';
 import { Modal } from './common/Modal';
 import { Button } from './common/Button';
 import { GameIcon } from './GameIcon';
@@ -22,7 +22,7 @@ interface LuckyLevelModalProps {
 
 export const LuckyLevelModal: React.FC<LuckyLevelModalProps> = ({ visible, reward, level, onClose }) => {
   const [claimed, setClaimed] = useState(false);
-  const { addCoins, addGems, addPowerUp } = usePlayerStore();
+  const { claimLuckyLevelAtomic } = usePlayerStore();
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -40,11 +40,13 @@ export const LuckyLevelModal: React.FC<LuckyLevelModalProps> = ({ visible, rewar
 
   const handleClaim = () => {
     if (!reward || claimed) return;
-    addCoins(reward.coins, { boostable: true });
-    if (reward.gems > 0) addGems(reward.gems);
-    if (reward.powerUp) {
-      addPowerUp(reward.powerUp.type, reward.powerUp.count);
-    }
+    // Atomic credit + persistent ledger stamp (claimedLuckyLevels), so a milestone
+    // level's bonus is granted at most once even across replays. The GameScreen
+    // trigger also gates the modal on the ledger, so a no-op here is the rare
+    // force-quit-before-collect case (which correctly re-offers, then grants once).
+    const bundle: RewardBundle = { coins: reward.coins, gems: reward.gems };
+    if (reward.powerUp) bundle[reward.powerUp.type] = reward.powerUp.count;
+    claimLuckyLevelAtomic(level, bundle);
     setClaimed(true);
   };
 

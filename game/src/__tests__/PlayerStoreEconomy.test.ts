@@ -168,3 +168,35 @@ describe('playerStore misc setters', () => {
     expect(ps().adFree).toBe(true);
   });
 });
+
+describe('playerStore.claimLuckyLevelAtomic (milestone replay-faucet guard)', () => {
+  beforeEach(() => usePlayerStore.setState({
+    coins: 0, gems: 0, claimedLuckyLevels: [],
+    powerUps: { bomb: 0, rowClear: 0, colorClear: 0 },
+    activeBoostUntil: {},
+  }));
+
+  it('credits the bundle once and stamps the milestone level', () => {
+    const ok = ps().claimLuckyLevelAtomic(100, { coins: 500, gems: 20, colorClear: 2 });
+    expect(ok).toBe(true);
+    expect(ps().coins).toBe(500);
+    expect(ps().gems).toBe(20);
+    expect(ps().powerUps.colorClear).toBe(2);
+    expect(ps().claimedLuckyLevels).toEqual([100]);
+  });
+
+  it('refuses a REPLAY re-grant (the faucet bug) and credits nothing the second time', () => {
+    expect(ps().claimLuckyLevelAtomic(100, { coins: 500, gems: 20 })).toBe(true);
+    expect(ps().claimLuckyLevelAtomic(100, { coins: 500, gems: 20 })).toBe(false);
+    expect(ps().coins).toBe(500); // not 1000
+    expect(ps().gems).toBe(20);   // not 40
+    expect(ps().claimedLuckyLevels).toEqual([100]); // no duplicate stamp
+  });
+
+  it('different milestone levels claim independently', () => {
+    ps().claimLuckyLevelAtomic(100, { coins: 500 });
+    ps().claimLuckyLevelAtomic(200, { coins: 800 });
+    expect(ps().coins).toBe(1300);
+    expect(ps().claimedLuckyLevels).toEqual([100, 200]);
+  });
+});

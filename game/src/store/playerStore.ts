@@ -256,6 +256,10 @@ interface PlayerStoreState {
   // World Completion
   claimedWorldClears: number[];
   claimedWorldPerfects: number[];
+  /** Milestone levels whose Lucky-Level bonus has already been granted.
+   *  Without this persistent ledger, replaying a passed milestone level
+   *  re-granted the reward every win (a currency faucet). */
+  claimedLuckyLevels: number[];
   // Login Calendar
   calendarLastDay: number;
   calendarMonth: string | null;
@@ -607,6 +611,10 @@ interface PlayerStore extends PlayerStoreState {
    *  (persistent guard) AND credits the bundle in one set(). Returns
    *  false if already claimed today. */
   claimComebackBonusAtomic: (bundle: RewardBundle) => boolean;
+  /** Atomic lucky-level milestone claim — credits the bundle AND stamps the
+   *  level into the persistent claimedLuckyLevels ledger in one set(). Returns
+   *  false if the milestone was already claimed (stops replay re-grants). */
+  claimLuckyLevelAtomic: (level: number, bundle: RewardBundle) => boolean;
   loadDemoState: () => void;
 }
 
@@ -689,6 +697,7 @@ export const usePlayerStore = create<PlayerStore>()(
       powerUpLevels: { bomb: 1, rowClear: 1, colorClear: 1 },
       claimedWorldClears: [],
       claimedWorldPerfects: [],
+      claimedLuckyLevels: [],
       calendarLastDay: 0,
       calendarMonth: null,
       lastDealClaimed: null,
@@ -1638,6 +1647,19 @@ export const usePlayerStore = create<PlayerStore>()(
         if (get().lastComebackClaimedDate === today) return false;
         set((s) => ({
           lastComebackClaimedDate: today,
+          ...rewardBundleDelta(s, bundle, Date.now()),
+        }));
+        return true;
+      },
+
+      claimLuckyLevelAtomic: (level, bundle) => {
+        // Persistent ledger guard — refuse a re-grant for a milestone level
+        // already claimed, regardless of the modal's per-mount `claimed` reset.
+        // Credit + stamp fold into one set() so a sub-frame double-tap can't
+        // double-credit before the ledger updates.
+        if (get().claimedLuckyLevels.includes(level)) return false;
+        set((s) => ({
+          claimedLuckyLevels: [...s.claimedLuckyLevels, level],
           ...rewardBundleDelta(s, bundle, Date.now()),
         }));
         return true;

@@ -296,9 +296,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
             setShowFeatureUnlock(true);
           }, 1200);
         }
-        // Check for lucky level milestone
+        // Check for lucky level milestone — gated on the persistent ledger so a
+        // REPLAY of a passed milestone level can't re-grant the bonus (the
+        // modal's per-mount `claimed` flag resets on every open, so it cannot
+        // gate replays). Mirrors the world-clear `!claimedWorld*.includes` guard
+        // right below. The claim itself stamps claimedLuckyLevels.
         const lucky = getLuckyLevelReward(level);
-        if (lucky) {
+        if (lucky && !usePlayerStore.getState().claimedLuckyLevels.includes(level)) {
           setLuckyReward(lucky);
           setTimeout(() => setShowLuckyLevel(true), 1800);
         }
