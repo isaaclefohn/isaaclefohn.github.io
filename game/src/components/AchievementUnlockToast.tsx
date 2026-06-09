@@ -27,13 +27,21 @@ const SLIDE_OUT_MS = 280;
 export const AchievementUnlockToast: React.FC = () => {
   const head = useToastQueueStore((s) => s.queue[0] ?? null);
   const dequeue = useToastQueueStore((s) => s.dequeue);
+  // Suspend playback while any native modal is visible — native modals render
+  // in a window above the root view, so a toast playing "under" the win/lose
+  // modal holds invisibly and self-dequeues unseen. Suspending keeps the head
+  // queued; when the last modal closes, modalDepth drops to 0, this effect
+  // re-runs, and the toast plays in full view. (If a modal opens MID-toast,
+  // the dep change stops the sequence with finished=false — no dequeue — and
+  // the same toast replays from the top after the modal closes.)
+  const suspended = useToastQueueStore((s) => s.modalDepth > 0);
   const reducedMotion = useSettingsStore((s) => s.reducedMotion);
 
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (!head) return;
+    if (!head || suspended) return;
     // Reset to off-screen so each new toast starts from the same place.
     translateY.setValue(-100);
     opacity.setValue(0);
@@ -93,9 +101,11 @@ export const AchievementUnlockToast: React.FC = () => {
       // next mount drains it.
       sequence.stop();
     };
-  }, [head, dequeue, opacity, translateY, reducedMotion]);
+  }, [head, suspended, dequeue, opacity, translateY, reducedMotion]);
 
-  if (!head) return null;
+  // Render nothing while suspended too — a sequence stopped mid-slide would
+  // otherwise leave a half-visible frozen toast wherever the animation halted.
+  if (!head || suspended) return null;
 
   return (
     <Animated.View

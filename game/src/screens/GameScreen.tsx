@@ -165,6 +165,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   const [milestoneMsg, setMilestoneMsg] = useState('');
   const [showMilestone, setShowMilestone] = useState(false);
   const milestoneShownRef = useRef(false);
+  // Pre-win highestLevel, captured at mount. The feature-unlock announcement
+  // must fire only on a genuine FIRST cross of a gate level — using `level - 1`
+  // as "previous highest" is only true for first-time linear completion. On a
+  // REPLAY (level <= this captured value) the banner used to re-announce
+  // "unlocked!" on every win. Mount capture is effect-ordering-proof: it does
+  // not matter that useGameEngine's completeLevel bumps highestLevel before
+  // GameScreen's own win effect reads it.
+  const preWinHighestLevelRef = useRef(usePlayerStore.getState().highestLevel);
+  // Remaining features at a dual-gate level (8: daily_challenge+skill_rating;
+  // 10: piggy_bank+weekly_challenge) — announced sequentially via the banner's
+  // onDismiss. Previously only newFeatures[0] was ever shown, so the second
+  // feature was never announced even on a genuine first cross.
+  const pendingFeatureUnlocksRef = useRef<FeatureGate[]>([]);
   const [hintCells, setHintCells] = useState<{ row: number; col: number; colorIndex: number }[]>([]);
   const [rescueClaimed, setRescueClaimed] = useState(false);
   const [continueUsed, setContinueUsed] = useState(false);
@@ -287,14 +300,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         });
         setSrChange(change);
       }
-      // Check for feature unlocks (previous highest was level-1 since we just completed `level`)
       if (!isEndless && level > 0) {
-        const newFeatures = getNewlyUnlockedFeatures(level - 1, level);
-        if (newFeatures.length > 0) {
-          setTimeout(() => {
-            setUnlockedFeature(newFeatures[0]);
-            setShowFeatureUnlock(true);
-          }, 1200);
+        // Feature-unlock announcement — only on a genuine FIRST clear (this win
+        // pushed highestLevel past its pre-run value). Replays of a gate level
+        // re-announced the unlock every win when the window was computed from
+        // `level - 1` unconditionally. On a first clear, linear progression
+        // guarantees the previous highest WAS level - 1, so the window is exact.
+        if (level > preWinHighestLevelRef.current) {
+          const newFeatures = getNewlyUnlockedFeatures(level - 1, level);
+          if (newFeatures.length > 0) {
+            pendingFeatureUnlocksRef.current = newFeatures.slice(1);
+            setTimeout(() => {
+              setUnlockedFeature(newFeatures[0]);
+              setShowFeatureUnlock(true);
+            }, 1200);
+          }
         }
         // Check for lucky level milestone — gated on the persistent ledger so a
         // REPLAY of a passed milestone level can't re-grant the bonus (the
@@ -408,6 +428,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
         // (first_chromatic / chromatic_25 / chromatic_100). Distinct
         // from the pity counter above which gets reset by jackpots.
         incrementTotalChromaticClears(event.chromaticClears);
+        // Check achievements RIGHT HERE — the canonical bump+check "milestone
+        // moment" pair (same as the wave boundary below). Without it, the
+        // chromatic tiers only stamped at the NEXT check (game-over), missing
+        // the designed triple-attribution moment (cascade + label + unlock
+        // toast) — and at game-over the toast is obscured by the win/lose
+        // modal anyway. Mid-run there is no modal, so the toast lands in full
+        // view at the dopamine peak. Idempotent via the unlocked-set guard.
+        usePlayerStore.getState().checkAchievements();
         const tier: CelebrationTier = roll.tier;
         // Tier amplification table — multipliers/overrides applied to the
         // existing celebration knobs. Mini/normal use defaults (the standard
@@ -1636,7 +1664,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
       <FeatureUnlockBanner
         feature={unlockedFeature}
         visible={showFeatureUnlock}
-        onDismiss={() => setShowFeatureUnlock(false)}
+        onDismiss={() => {
+          setShowFeatureUnlock(false);
+          // Dual-gate levels unlock two features — show the next one after the
+          // banner's hide animation settles instead of dropping it.
+          const next = pendingFeatureUnlocksRef.current.shift();
+          if (next) {
+            setTimeout(() => {
+              setUnlockedFeature(next);
+              setShowFeatureUnlock(true);
+            }, 500);
+          }
+        }}
       />
 
       {/* Lucky level milestone modal */}

@@ -87,3 +87,38 @@ describe('toastQueueStore', () => {
     expect(useToastQueueStore.getState().queue.map((a) => a.id)).toEqual(['a']);
   });
 });
+
+describe('toastQueueStore modal-suspension depth', () => {
+  beforeEach(() => useToastQueueStore.setState({ queue: [], modalDepth: 0 }));
+
+  it('tracks nested modals (open/open/close/close)', () => {
+    const s = () => useToastQueueStore.getState();
+    s().modalOpened();
+    s().modalOpened(); // a modal stacked over a modal
+    expect(s().modalDepth).toBe(2);
+    s().modalClosed();
+    expect(s().modalDepth).toBe(1); // still suspended — one modal remains
+    s().modalClosed();
+    expect(s().modalDepth).toBe(0); // playback resumes
+  });
+
+  it('clamps at 0 on unbalanced closes (a never-shown modal unmounting cannot wedge playback)', () => {
+    const s = () => useToastQueueStore.getState();
+    s().modalClosed();
+    s().modalClosed();
+    expect(s().modalDepth).toBe(0);
+    s().modalOpened();
+    expect(s().modalDepth).toBe(1); // counting still coherent afterward
+  });
+
+  it('suspension does not touch the queue — game-over unlocks stay queued under the modal', () => {
+    const s = () => useToastQueueStore.getState();
+    s().modalOpened(); // the win/lose modal is up
+    s().enqueue(mkAchievement('stamped_at_game_over'));
+    expect(s().queue).toHaveLength(1); // queued, not dropped
+    s().modalClosed();
+    // Still the head when the modal closes — the component plays it now,
+    // in full view, instead of having self-dequeued unseen underneath.
+    expect(s().queue.map((a) => a.id)).toEqual(['stamped_at_game_over']);
+  });
+});

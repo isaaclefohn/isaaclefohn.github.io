@@ -12,6 +12,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { COLORS, SHADOWS, RADII } from '../../utils/constants';
+import { useToastQueueStore } from '../../store/toastQueueStore';
 
 interface ModalProps {
   visible: boolean;
@@ -29,6 +30,18 @@ export const Modal: React.FC<ModalProps> = ({
   const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
+
+  // Register this modal's visibility with the toast queue. Native modals
+  // render in a window above the entire root view, so the achievement-unlock
+  // toast suspends playback while any modal is up (modalDepth > 0) and plays
+  // the moment the last one closes — instead of sliding in underneath the
+  // win/lose modal and self-dequeuing unseen. Cleanup decrements on hide AND
+  // unmount, and the store clamps at 0, so playback can't wedge.
+  useEffect(() => {
+    if (!visible) return;
+    useToastQueueStore.getState().modalOpened();
+    return () => useToastQueueStore.getState().modalClosed();
+  }, [visible]);
 
   useEffect(() => {
     if (visible) {
