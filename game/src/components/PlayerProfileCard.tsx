@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { usePlayerStore } from '../store/playerStore';
+import { usePlayerStore, ACHIEVEMENTS } from '../store/playerStore';
 import { Modal } from './common/Modal';
 import { GameIcon } from './GameIcon';
 import { COLORS, RADII, SPACING, SHADOWS } from '../utils/constants';
@@ -156,7 +156,7 @@ export const PlayerProfileCard: React.FC<PlayerProfileCardProps> = ({ visible, o
           <StatRow icon="map" label="Games Played" value={totalGamesPlayed} />
           <StatRow icon="fire" label="Current Streak" value={`${currentStreak} days`} color={currentStreak >= 7 ? COLORS.accent : undefined} />
           <StatRow icon="trophy" label="Longest Streak" value={`${longestStreak} days`} color={COLORS.accentGold} />
-          <StatRow icon="star" label="Achievements" value={`${unlockedAchievements.length}/15`} />
+          <StatRow icon="star" label="Achievements" value={`${unlockedAchievements.length}/${ACHIEVEMENTS.length}`} />
           <StatRow icon="gem" label="Battle Pass XP" value={formatCompact(battlePassXP)} color={COLORS.info} />
         </View>
 
