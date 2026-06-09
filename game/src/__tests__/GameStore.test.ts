@@ -440,4 +440,15 @@ describe('gameStore undo-snapshot invalidation by swap / power-up', () => {
     expect(gs().canUndo()).toBe(false); // undo can't resurrect the bombed cells
     expect(gs().undoLastMove()).toBe(false);
   });
+
+  it('continueGame invalidates the losing-placement snapshot (no gem-wasting revert)', () => {
+    gs().placePiece(0, 0, 0); // snapshot created, status 'playing'
+    expect(gs().canUndo()).toBe(true);
+    // Simulate that placement having ended the run (the snapshot survives — it's
+    // a top-level store field, not part of gameState).
+    useGameStore.setState({ gameState: { ...gs().gameState!, status: 'lost' } });
+    expect(gs().continueGame()).toBe(true);
+    expect(gs().gameState!.status).toBe('playing');
+    expect(gs().canUndo()).toBe(false); // can't undo the loss you paid to continue past
+  });
 });

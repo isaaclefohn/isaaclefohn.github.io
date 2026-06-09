@@ -445,6 +445,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         availablePieces: newPieces,
       },
       selectedPieceIndex: null,
+      // Invalidate the losing-placement undo snapshot. The run is committed once
+      // you pay to Continue; without this, a later Undo would revert the fatal
+      // placement and DISCARD the fresh tray the player just spent 10 gems on
+      // (and the snapshot's pre-placement tray would replace it). Same stale-
+      // snapshot family as swapPieces / applyPowerUp / holdPiece.
+      undoSnapshot: null,
     });
     // Note: lastAccountedRunId is intentionally NOT touched here. The spread
     // above preserves the run's runId, so the gate set when this run's FIRST
