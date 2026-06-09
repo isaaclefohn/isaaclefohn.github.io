@@ -226,7 +226,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newAvailable = [...gameState.availablePieces];
     newAvailable[pieceIndex] = heldPiece;
     set({
-      gameState: { ...gameState, availablePieces: newAvailable },
+      gameState: {
+        ...gameState,
+        availablePieces: newAvailable,
+        // goldenPieceIndex tracks a tray SLOT, and the golden 2x bonus is paid
+        // by matching the PLACED slot (GameLoop). Holding the golden piece moves
+        // it OUT of the tray into the hold slot, so leaving the marker would
+        // transfer the 2x bonus to whatever piece now sits at that slot (or
+        // strand it on a null slot). Clear it — holding the golden piece
+        // forfeits the bonus, which is coherent and far better than silently
+        // mis-paying a different piece. (Endless-only; golden is null elsewhere.)
+        goldenPieceIndex:
+          gameState.goldenPieceIndex === pieceIndex ? null : gameState.goldenPieceIndex,
+      },
       heldPiece: piece,
       selectedPieceIndex: null,
       // Invalidate the undo snapshot. The snapshot captured the PRE-HOLD

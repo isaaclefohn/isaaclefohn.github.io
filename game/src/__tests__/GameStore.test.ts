@@ -452,3 +452,22 @@ describe('gameStore undo-snapshot invalidation by swap / power-up', () => {
     expect(gs().canUndo()).toBe(false); // can't undo the loss you paid to continue past
   });
 });
+
+describe('gameStore golden-piece marker stays aligned through hold (endless)', () => {
+  beforeEach(() => gs().startLevel(getEndlessConfig()));
+
+  it('holding the golden piece clears the marker (no 2x bonus transfer to the wrong slot)', () => {
+    // Force a known golden slot for determinism.
+    useGameStore.setState({ gameState: { ...gs().gameState!, goldenPieceIndex: 1 } });
+    expect(gs().gameState!.goldenPieceIndex).toBe(1);
+    expect(gs().holdPiece(1)).toBe(true); // hold the golden piece itself
+    // The marker must NOT still point at slot 1 (now holding the old held / null).
+    expect(gs().gameState!.goldenPieceIndex).toBeNull();
+  });
+
+  it('holding a NON-golden piece leaves the golden marker intact (it did not move)', () => {
+    useGameStore.setState({ gameState: { ...gs().gameState!, goldenPieceIndex: 2 } });
+    expect(gs().holdPiece(0)).toBe(true); // hold a different slot
+    expect(gs().gameState!.goldenPieceIndex).toBe(2); // golden piece at slot 2 untouched
+  });
+});
