@@ -219,3 +219,38 @@ describe('applyWinGamesPlayed — a WON run counts once, even across Continue', 
     expect(ps().gamesPlayedToday).toBe(1); // daily counter still bumps
   });
 });
+
+describe('applyLoseAccounting — weekly best is a run-best (re-runs across Continue/undo)', () => {
+  beforeEach(() => {
+    usePlayerStore.setState({
+      totalGamesPlayed: 0,
+      gamesPlayedToday: 0,
+      gamesPlayedDate: '',
+      bestCombo: 0,
+      weeklyBestScore: 0,
+      weeklyBestStars: 0,
+      weeklyLastWeekId: null,
+    });
+    // levelNumber -1 marks the weekly challenge in the accounting branches.
+    gs().startLevel({ ...campaignConfig(), levelNumber: -1 });
+  });
+
+  it('lose -> Continue -> lose again at a HIGHER score updates weeklyBestScore, counted once', () => {
+    forceLost({ score: 400, maxComboThisRun: 2 });
+    applyLoseAccounting(gs().gameState!, gs().levelConfig!);
+    expect(ps().weeklyBestScore).toBe(400);
+    expect(ps().totalGamesPlayed).toBe(1);
+
+    // Pay to Continue (preserves runId), play on, lose again with a better score.
+    expect(gs().continueGame()).toBe(true);
+    forceLost({ score: 950, maxComboThisRun: 5 });
+    applyLoseAccounting(gs().gameState!, gs().levelConfig!);
+
+    // When completeWeeklyChallenge sat in the runId-gated half, this stayed 400
+    // while the leaderboard (server-side max) recorded 950 — local stats and
+    // the board diverged.
+    expect(ps().weeklyBestScore).toBe(950);
+    expect(ps().totalGamesPlayed).toBe(1); // the +1 counter is still once-per-run
+    expect(ps().bestCombo).toBe(5);        // final peak landed too
+  });
+});

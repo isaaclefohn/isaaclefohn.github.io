@@ -84,6 +84,18 @@ export function applyLoseAccounting(gameState: GameState, levelConfig: LevelConf
   } else {
     player.recordRunBests({ combo: maxCombo });
   }
+  // The weekly best is a per-week Math.max stat (completeWeeklyChallenge keeps
+  // the best score/stars within the week) — a run-best, NOT a counter, so it
+  // belongs on this EVERY-loss side. When it sat in the gated half, a
+  // post-undo / post-Continue re-loss with a HIGHER final score never landed
+  // locally: weeklyBestScore stayed at the first-loss value while the
+  // leaderboard (server-side ZADD gt max) recorded the higher one — local
+  // stats and the board diverged. Re-running it is safe everywhere: within a
+  // run the score is monotonic, and across separate weekly attempts
+  // best-of-week is exactly the intended semantics.
+  if (isWeekly) {
+    player.completeWeeklyChallenge(getCurrentWeekId(), 0, gameState.score);
+  }
   player.checkAchievements();
 
   // --- (2) Non-idempotent accounting: ONCE per run. ---
@@ -99,8 +111,8 @@ export function applyLoseAccounting(gameState: GameState, levelConfig: LevelConf
     const zenXpMult = getXPMultiplier();
     player.addBattlePassXP(Math.round((20 + Math.min(gameState.linesCleared * 3, 60)) * zenXpMult), { boostable: true });
   } else if (isWeekly) {
-    const weekId = getCurrentWeekId();
-    player.completeWeeklyChallenge(weekId, 0, gameState.score);
+    // completeWeeklyChallenge moved to the idempotent half above — only the
+    // +1 lifetime counter stays once-per-run here.
     player.recordGamePlayed(maxCombo);
   } else if (isDaily) {
     // Daily "loss" = run ended. recordDailyPuzzleResult is itself idempotent
