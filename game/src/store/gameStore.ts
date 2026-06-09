@@ -207,6 +207,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         goldenPieceIndex: gameState.level === 0 ? maybeRollGoldenPieceIndex(rng) : null,
       },
       selectedPieceIndex: null,
+      // Invalidate the placement undo snapshot. It captured the PRE-placement
+      // tray + RNG cursor; a swap rerolls the tray and advances the RNG, neither
+      // of which the snapshot reflects. Leaving it would let a later Undo revert
+      // to a stale state that erases the swap (and never refunds its coin cost
+      // or restores swapsUsed) — same hazard holdPiece guards against.
+      undoSnapshot: null,
     });
     return true;
   },
@@ -356,6 +362,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lastClearedRows: cascade.clearedRows,
         lastClearedCols: cascade.clearedCols,
       },
+      // Invalidate the placement undo snapshot: the power-up just rewrote the
+      // board (cleared cells, cascade, gravity). A later Undo would revert to
+      // the PRE-placement board, resurrecting the cells the power-up cleared and
+      // silently un-spending the consumed power-up. holdPiece guards the same way.
+      undoSnapshot: null,
     });
 
     return { cellsCleared: result.cellsCleared + cascade.cellsCleared };

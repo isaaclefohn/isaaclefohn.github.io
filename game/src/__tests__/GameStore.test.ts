@@ -412,3 +412,32 @@ describe('gameStore runId + lastAccountedRunId (once-per-run gate)', () => {
     expect(gs().lastAccountedRunId).toBe(r);
   });
 });
+
+describe('gameStore undo-snapshot invalidation by swap / power-up', () => {
+  beforeEach(() => {
+    gs().startLevel(testConfig());
+    usePlayerStore.setState({ coins: 1000 });
+  });
+
+  it('swapPieces invalidates the placement undo snapshot (no stale revert)', () => {
+    gs().placePiece(0, 0, 0); // creates an undo snapshot
+    expect(gs().canUndo()).toBe(true);
+    gs().swapPieces(); // rerolls the tray + advances RNG -> snapshot is now stale
+    expect(gs().canUndo()).toBe(false);
+    expect(gs().undoLastMove()).toBe(false); // can't revert to a state that erases the swap
+  });
+
+  it('applyPowerUp invalidates the placement undo snapshot (no resurrected cells)', () => {
+    gs().placePiece(0, 0, 0); // creates an undo snapshot
+    expect(gs().canUndo()).toBe(true);
+    // Hand-fill a 3x3 block so the bomb actually clears cells (the set() runs).
+    const s = gs().gameState!;
+    const grid = s.grid.map((r) => [...r]);
+    for (let r = 2; r < 5; r++) for (let c = 2; c < 5; c++) grid[r][c] = 1;
+    useGameStore.setState({ gameState: { ...s, grid } });
+    const res = gs().applyPowerUp('bomb', 3, 3);
+    expect(res).not.toBeNull(); // cleared cells -> the power-up write executed
+    expect(gs().canUndo()).toBe(false); // undo can't resurrect the bombed cells
+    expect(gs().undoLastMove()).toBe(false);
+  });
+});
