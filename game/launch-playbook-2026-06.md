@@ -55,30 +55,35 @@ EAS environment variables live in the **EAS dashboard at expo.dev**,
 scoped per environment (`development` / `preview` / `production`), NOT
 committed to `eas.json`.
 
-```bash
-# from /Users/isaaclefohn/isaaclefohn.github.io/game/
+> **Corrected 2026-06-09:** the original list here had FOUR vars; `.env`
+> actually defines **NINE** `EXPO_PUBLIC_*` vars. The omitted ones included
+> the three AdMob IDs — and `ads.ts` silently falls back to **Google test ad
+> units** when they're blank, so a production build missing them serves test
+> ads (zero revenue + AdMob policy violation). The "silent failure" warning
+> above applies hardest to the vars the old list forgot.
+>
+> Prerequisite: `eas login` (Isaac — needs your Expo credentials; everything
+> below is blocked on this single step). `eas.json` production profile already
+> has `"environment": "production"` (done 2026-06-09).
 
-eas env:create --name EXPO_PUBLIC_API_URL \
-  --value "https://api-rho-one-97.vercel.app" \
-  --environment production --visibility plaintext
+All nine, from `.env` (`set -a; source .env; set +a` first, then each
+`eas env:create --environment production --name <NAME> --value "$<NAME>" --visibility <vis>`):
 
-eas env:create --name EXPO_PUBLIC_SUPABASE_URL \
-  --value "https://mqngqpgjzuyhxlbnixyt.supabase.co" \
-  --environment production --visibility plaintext
+| Var | Visibility | Notes |
+|---|---|---|
+| `EXPO_PUBLIC_API_URL` | plaintext | Vercel leaderboard/daily API |
+| `EXPO_PUBLIC_SUPABASE_URL` | plaintext | |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | sensitive | public-by-design client key (RLS gates access) |
+| `EXPO_PUBLIC_POSTHOG_KEY` | sensitive | |
+| `EXPO_PUBLIC_POSTHOG_HOST` | plaintext | |
+| `EXPO_PUBLIC_SENTRY_DSN` | sensitive | optional — errors silently skip if blank; set it anyway |
+| `EXPO_PUBLIC_ADMOB_APP_ID` | plaintext | **REQUIRED before prod build** — blank = test ads |
+| `EXPO_PUBLIC_ADMOB_REWARDED_ID` | plaintext | same; needs the AdMob account first |
+| `EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID` | plaintext | same |
 
-eas env:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY \
-  --value "$(cat .env | grep ANON_KEY | cut -d= -f2)" \
-  --environment production --visibility sensitive
-
-eas env:create --name EXPO_PUBLIC_POSTHOG_KEY \
-  --value "$(cat .env | grep POSTHOG | cut -d= -f2)" \
-  --environment production --visibility sensitive
-```
-
-Then in `eas.json`:
-```json
-{ "build": { "production": { "environment": "production" } } }
-```
+The three AdMob values don't exist until the AdMob account/app is created —
+that's fine: create the six known ones now, add AdMob's when the account
+lands (or ship v1 with ads feature-flagged off; see ads research brief).
 
 **NB on visibility:** `EXPO_PUBLIC_*` vars are always shipped to the
 client by design. Supabase anon key is meant to be public (RLS gates
