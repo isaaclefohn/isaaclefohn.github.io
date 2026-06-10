@@ -140,13 +140,21 @@ throwaway emails (`kiwilefohn+sandbox1@gmail.com`). Once an email is
 sandbox-burned it cannot become a real Apple ID.
 
 **Receipt validation end-to-end:**
-1. Remove DEV STUB in `ShopScreen.tsx handleBuyIAP` — wire
-   `requestPurchase`.
-2. On device + sandbox account: buy a coin pack.
-3. POST receipt to `validate-receipt.ts`.
-4. Server logs: confirm Apple's `/verifyReceipt` returns `status: 0`.
-5. **Always hit sandbox endpoint for sandbox receipts** (`sandbox.itunes.apple.com`). Try production first; if `status: 21007`, retry against sandbox. Apple's reviewers use sandbox on a production build — this dual-path is mandatory.
-6. Run all 12 product IDs through this. Yes, all 12.
+
+> **Superseded 2026-06-09 — see `iap-implementation-plan-2026-06.md`.** The
+> `/verifyReceipt` + `21007` dual-path described here is Apple's DEPRECATED
+> legacy flow; do not build it. The current plan: react-native-iap v15 hands
+> the StoreKit 2 **JWS** as `purchase.purchaseToken`; the server verifies it
+> locally with `@apple/app-store-server-library` (no call to Apple needed).
+> Also note the CRITICAL pre-step: `purchases.ts` is written against the v12
+> API and must be migrated to v15 (`transactionReceipt` no longer exists) or
+> every real purchase charges without crediting.
+
+1. Phase 0 (client v15 migration + StoreKit config file) and Phase 1 (JWS
+   validator) per the IAP plan doc.
+2. On device + sandbox account: buy a coin pack; confirm server validates the
+   JWS and the credit lands once (replay a second POST → 400, no double-credit).
+3. Run all 12 product IDs through this. Yes, all 12.
 
 ## 4. TestFlight 1.0 pipeline
 
@@ -198,7 +206,11 @@ Treat as **2-3 weekend pushes + nightly 1-hour windows**, not a single sprint.
 - Day 1: submit individual enrollment ($99, individual, NOT org). Confirm Apple Account legal name = "Isaac Lefohn." Save Enrollment ID.
 - Day 1-2: EAS env vars for all four `EXPO_PUBLIC_*` in production env. Update `eas.json` production profile. `eas env:pull` to verify.
 - Day 2-3: prepare ASC product registration spreadsheet (12 rows × required fields). Do NOT enter into ASC yet (membership not active).
-- Day 4-7: remove DEV STUB in ShopScreen.tsx; wire `requestPurchase`; build receipt-validation client/server round trip; unit-test against a mock returning `21007` to verify sandbox fallback.
+- Day 4-7: IAP Phase 0 + Phase 1 per `iap-implementation-plan-2026-06.md` —
+  v15 API migration in purchases.ts (CRITICAL: v12-era calls silently break
+  on-device), JWS validator with @apple/app-store-server-library, StoreKit
+  config file for simulator testing. (The old "mock 21007 sandbox fallback"
+  step belonged to the deprecated verifyReceipt flow — dropped.)
 
 ### Week 2 (post-finals — wait state on enrollment)
 - Wait for Apple enrollment.
