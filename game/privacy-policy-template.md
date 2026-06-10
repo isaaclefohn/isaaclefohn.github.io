@@ -1,5 +1,14 @@
 # CHROMA Privacy Policy — TEMPLATE
 
+> **➡️ SUPERSEDED 2026-06-09:** a publication-ready page now lives at
+> `chroma/privacy/index.html` (repo root, this branch) — it goes live at
+> `https://isaaclefohn.com/chroma/privacy/` when merged to main. The page
+> CORRECTS two false claims in this template: (1) the app ships with NO ATT
+> prompt (NPA-only ads — the template's ATT language described UI that does
+> not exist), and (2) there is NO in-app analytics opt-out toggle (email-based
+> opt-out instead; toggle queued as a feature). The lawyer/generator review
+> advice below still applies before submission.
+
 > **⚠️ THIS IS A TEMPLATE, NOT LEGAL ADVICE.**
 >
 > This document is a starting point grounded in what CHROMA's code
