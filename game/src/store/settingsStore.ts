@@ -37,6 +37,11 @@ interface SettingsStore {
   colorblindMode: boolean;
   reducedMotion: boolean;
   notificationsEnabled: boolean;
+  /** Anonymous usage analytics opt-out (privacy-policy commitment: the
+   *  published policy describes an in-app analytics opt-out). Gates the
+   *  trackEvent funnel in services/analytics; crash reporting is separate
+   *  and disclosed separately. Default ON. */
+  analyticsEnabled: boolean;
   /** Track which tutorial tips have been shown (one-time each) */
   shownTips: string[];
   /** Whether comeback bonus was already shown this session */
@@ -55,6 +60,7 @@ interface SettingsStore {
   toggleColorblindMode: () => void;
   toggleReducedMotion: () => void;
   toggleNotifications: () => void;
+  toggleAnalytics: () => void;
   markTipShown: (tipId: string) => void;
   hasTipBeenShown: (tipId: string) => boolean;
   setComebackShownDate: (date: string) => void;
@@ -76,6 +82,7 @@ export const useSettingsStore = create<SettingsStore>()(
       colorblindMode: false,
       reducedMotion: false,
       notificationsEnabled: true,
+      analyticsEnabled: true,
       shownTips: [],
       comebackShownDate: null,
 
@@ -121,6 +128,7 @@ export const useSettingsStore = create<SettingsStore>()(
           void cancelAllNotifications();
         }
       },
+      toggleAnalytics: () => set((s) => ({ analyticsEnabled: !s.analyticsEnabled })),
       markTipShown: (tipId: string) => set((s) => ({
         shownTips: s.shownTips.includes(tipId) ? s.shownTips : [...s.shownTips, tipId],
       })),

@@ -189,6 +189,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
               onToggle={settings.toggleNotifications}
             />
             <Divider />
+            {/* The published privacy policy describes this opt-out — the
+                toggle and the policy must stay in sync (policy-vs-app
+                inconsistency is a documented rejection trigger). */}
+            <SettingRow
+              icon="star"
+              label="Anonymous Analytics"
+              value={settings.analyticsEnabled}
+              onToggle={settings.toggleAnalytics}
+            />
+            <Divider />
             <SegmentedRow
               icon="gamepad"
               label="Graphics Quality"

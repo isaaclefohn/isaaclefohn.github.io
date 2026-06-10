@@ -55,8 +55,27 @@ export function isSentryConfigured(): boolean {
   return Boolean(SENTRY_DSN) && !isExpoGo;
 }
 
+/**
+ * The privacy policy promises an in-app analytics opt-out; this is it.
+ * Lazy require (not a top-level import) because settingsStore imports the
+ * notifications service, which can chain back here — a top-level cycle
+ * would give one side an undefined module depending on load order. If the
+ * store isn't loadable yet (very early init), default to tracking — the
+ * persisted toggle re-applies on every later call.
+ */
+function analyticsOptedOut(): boolean {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useSettingsStore } = require('../store/settingsStore');
+    return useSettingsStore.getState().analyticsEnabled === false;
+  } catch {
+    return false;
+  }
+}
+
 /** Track a custom analytics event */
 export function trackEvent(name: string, data?: Record<string, unknown>): void {
+  if (analyticsOptedOut()) return;
   if (__DEV__) {
     console.log(`[Analytics] ${name}`, data ?? '');
   }
