@@ -126,7 +126,12 @@ const BADGE_LABELS: Record<string, { text: string; color: string }> = {
 const ProductCard: React.FC<{
   product: Product;
   onBuy: (product: Product) => void;
-}> = ({ product, onBuy }) => {
+  /** Owned non-consumables show an OWNED pill instead of a buy button.
+   *  Without this, a player who owns VIP could still pay $2.99 for
+   *  Remove Ads and receive nothing new — they're different SKUs, so
+   *  StoreKit happily charges for the second one. */
+  owned?: boolean;
+}> = ({ product, onBuy, owned = false }) => {
   const isPremium = product.reward.type === 'ad_free' || product.reward.type === 'vip';
   const isBundle = product.reward.type === 'bundle';
   const badgeInfo = product.badge ? BADGE_LABELS[product.badge] : null;
@@ -163,14 +168,20 @@ const ProductCard: React.FC<{
         </View>
       </View>
 
-      <Button
-        title={product.price}
-        onPress={() => onBuy(product)}
-        variant={isPremium ? 'secondary' : 'primary'}
-        size="small"
-        style={isPremium ? styles.premiumButton : styles.priceButton}
-        textStyle={styles.priceButtonText}
-      />
+      {owned ? (
+        <View style={styles.ownedPill}>
+          <Text style={styles.ownedPillText}>OWNED ✓</Text>
+        </View>
+      ) : (
+        <Button
+          title={product.price}
+          onPress={() => onBuy(product)}
+          variant={isPremium ? 'secondary' : 'primary'}
+          size="small"
+          style={isPremium ? styles.premiumButton : styles.priceButton}
+          textStyle={styles.priceButtonText}
+        />
+      )}
     </View>
   );
 };
@@ -388,7 +399,20 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({ navigation }) => {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Premium</Text>
               {getPremiumProducts().map((product) => (
-                <ProductCard key={product.id} product={product} onBuy={handleBuyIAP} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onBuy={handleBuyIAP}
+                  // remove_ads is owned once ANY ad-free entitlement exists
+                  // (VIP and Starter Pack also grant it); vip_pass while the
+                  // lifetime entitlement is active. Bundles stay purchasable:
+                  // their consumable contents are new value even for ad-free
+                  // owners, and StoreKit blocks exact-SKU re-purchase itself.
+                  owned={
+                    (product.reward.type === 'ad_free' && player.adFree) ||
+                    (product.reward.type === 'vip' && (player.vipUntil ?? 0) > Date.now())
+                  }
+                />
               ))}
               {/* Restore Purchases — Apple Guideline 3.1.1 REQUIRES
                   this surface for non-consumable IAPs (Remove Ads,
@@ -916,6 +940,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 3,
+  },
+  ownedPill: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: RADII.sm,
+    backgroundColor: `${COLORS.success}15`,
+  },
+  ownedPillText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: COLORS.success,
+    letterSpacing: 0.5,
   },
   itemOwned: {
     fontSize: 11,

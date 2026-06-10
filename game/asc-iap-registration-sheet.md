@@ -71,9 +71,12 @@ these are not load-bearing.
   itself is allowed, **but as of 2026-06-09 ShopScreen renders all products
   unconditionally — no owned-state check** (`ProductCard`, ShopScreen.tsx:127+).
   A player who owns VIP can still buy Remove Ads ($2.99) and gain nothing new,
-  since they're different SKUs and StoreKit will charge. **Fix before
-  submission:** hide (or mark OWNED) `remove_ads` when any ad-free entitlement
-  is held, and `starter_pack`/`vip_pass` when already purchased. Tracked as a
-  pre-launch code task.
+  since they're different SKUs and StoreKit will charge. **FIXED 2026-06-09:**
+  ProductCard now renders an OWNED pill (no buy button) for `remove_ads` when
+  any ad-free entitlement is held and for `vip_pass` while VIP is active —
+  verified both ways in the web preview. `starter_pack` deliberately stays
+  purchasable: its consumable contents are new value even for ad-free owners,
+  and StoreKit blocks exact-SKU re-purchase itself (no per-SKU ownership
+  record exists client-side to gate on).
 - The daily wheel odds-disclosure screen already exists (Guideline 3.1.1) —
   reference it in the app-level review notes, not per-product.

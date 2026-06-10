@@ -485,7 +485,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 'com.isaaclefohn.chromadrop.power_bundle',
     title: 'Power Bundle',
-    description: '10x Bomb, 10x Row Clear, 10x Color Swap',
+    description: '10x Bomb, 10x Row Clear, 10x Color Clear',
     price: '$6.99',
     type: 'consumable',
     reward: {
