@@ -115,8 +115,12 @@ export async function initializePurchases(): Promise<void> {
     purchaseUpdateSubscription = IAP.purchaseUpdatedListener(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (purchase: any) => {
-        const receipt = purchase?.transactionReceipt;
-        if (!receipt) return;
+        // v15 API: the StoreKit 2 JWS arrives as the unified `purchaseToken`
+        // field. The v12-era `transactionReceipt` no longer exists — reading
+        // it returned undefined and made this listener early-return on EVERY
+        // real purchase (user charged, never credited, txn stuck in queue).
+        const jws = purchase?.purchaseToken;
+        if (!jws) return;
         // Look up the product once so we know how to finish the transaction
         // (consumables and non-consumables use different finish semantics —
         // getting this wrong causes Apple to redeliver the transaction
@@ -155,7 +159,7 @@ export async function initializePurchases(): Promise<void> {
         // no redelivery possible.
         let shouldFinalize = true;
         try {
-          const result = await validateReceipt(receipt, purchase.productId);
+          const result = await validateReceipt(jws, purchase.productId, txnId);
           if (result.valid) {
             // Source of truth for crediting lives client-side via the
             // product catalog. Server only confirms the receipt is real —
@@ -222,10 +226,11 @@ export async function initializePurchases(): Promise<void> {
     );
 
     // Warm up the product catalog so the store screen renders fast.
+    // (v15: `getProducts` was removed; `fetchProducts` + type is the API.)
     try {
-      await IAP.getProducts({ skus: PRODUCTS.map((p) => p.id) });
+      await IAP.fetchProducts({ skus: PRODUCTS.map((p) => p.id), type: 'in-app' });
     } catch (err) {
-      console.warn('[IAP] getProducts failed', err);
+      console.warn('[IAP] fetchProducts failed', err);
     }
   } catch (err) {
     console.warn('[IAP] initConnection failed', err);
@@ -288,7 +293,14 @@ export async function requestPurchase(productId: string): Promise<boolean> {
   if (!iapInitialized) await initializePurchases();
   track('iap.purchase_initiated', { productId, price, source: 'storekit' });
   try {
-    await IAP.requestPurchase({ sku: productId, andDangerouslyFinishTransactionAutomaticallyIOS: false });
+    // v15 request shape: platform-keyed `request` + mandatory `type`. The
+    // old flat `{sku, andDangerouslyFinishTransactionAutomaticallyIOS}` form
+    // throws on v15. Auto-finish stays OFF — crediting happens in the
+    // listener only after server validation, then we finish explicitly.
+    await IAP.requestPurchase({
+      request: { apple: { sku: productId, andDangerouslyFinishTransactionAutomatically: false } },
+      type: 'in-app',
+    });
     // NB: success/failure of the actual purchase fires later in
     // `purchaseUpdatedListener`. Here we only know we handed the request
     // off to StoreKit — the user could still cancel, the receipt could
@@ -370,7 +382,7 @@ export async function fetchStoreProducts(): Promise<any[]> {
   if (isExpoGo || !loadIAP() || !IAP) return [];
   if (!iapInitialized) await initializePurchases();
   try {
-    return await IAP.getProducts({ skus: PRODUCTS.map((p) => p.id) });
+    return await IAP.fetchProducts({ skus: PRODUCTS.map((p) => p.id), type: 'in-app' });
   } catch (err) {
     console.warn('[IAP] fetchStoreProducts failed', err);
     return [];
@@ -566,8 +578,9 @@ export function getPremiumProducts(): Product[] {
  * was already finished.
  */
 export async function validateReceipt(
-  receiptData: string,
-  productId: string
+  jws: string,
+  productId: string,
+  transactionId?: string
 ): Promise<{ valid: boolean; transient?: boolean; credits?: { type: string; amount: number } }> {
   if (!API_URL) {
     console.warn('API_URL not configured, skipping receipt validation');
@@ -583,8 +596,15 @@ export async function validateReceipt(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         platform: 'apple',
-        receiptData,
+        // StoreKit 2 JWS from rn-iap v15's unified `purchaseToken`. The
+        // Phase 1 server verifies it locally via Apple's
+        // app-store-server-library; `receiptData` duplicates it under the
+        // legacy field name so the currently-deployed stub-mode validator
+        // keeps accepting the request until the new server ships.
+        jws,
+        receiptData: jws,
         productId,
+        transactionId,
       }),
     });
 

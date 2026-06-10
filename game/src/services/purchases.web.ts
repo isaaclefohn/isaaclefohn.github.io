@@ -192,8 +192,9 @@ export async function fetchStoreProducts(): Promise<any[]> {
 }
 
 export async function validateReceipt(
-  _receiptData: string,
-  _productId: string
+  _jws: string,
+  _productId: string,
+  _transactionId?: string
 ): Promise<{ valid: boolean; credits?: { type: string; amount: number } }> {
   return { valid: false };
 }
