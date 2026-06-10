@@ -24,6 +24,42 @@ const MAX_REWARDED_PER_HOUR = 5;
 const INTERSTITIAL_EVERY_N_LEVELS = 3;
 const MIN_INTERSTITIAL_INTERVAL_MS = 120_000; // 2 minutes
 
+// Remote kill switch (launch-readiness item: disable ads without an app
+// update if AdMob misbehaves during the v1 limited-serving window). A static
+// JSON on the website — no server logic. FAIL-OPEN by design: a 404 (file
+// not yet merged to main), network error, or malformed body leaves ads
+// enabled; only an explicit {"adsEnabled": false} disables them.
+const REMOTE_ADS_CONFIG_URL = 'https://isaaclefohn.com/chroma/config.json';
+let remoteAdsEnabled = true;
+
+/**
+ * Best-effort fetch of the remote ads config. Called fire-and-forget from
+ * initializeAds so a slow fetch never delays ad SDK init. Exported (with an
+ * injectable URL) so the fail-open semantics are unit-testable.
+ */
+export async function refreshRemoteAdsConfig(
+  url: string = REMOTE_ADS_CONFIG_URL,
+  timeoutMs: number = 4000
+): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      if (res.ok) {
+        const json = await res.json();
+        // Only an explicit false flips the switch — absent key stays open.
+        remoteAdsEnabled = json?.adsEnabled !== false;
+      }
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    remoteAdsEnabled = true; // fail-open
+  }
+  return remoteAdsEnabled;
+}
+
 let rewardedCount = 0;
 let rewardedResetTime = Date.now() + 3600_000;
 let lastInterstitialTime = 0;
@@ -54,7 +90,20 @@ export async function initializeAds(): Promise<void> {
   if (adsInitialized) return;
   if (!loadAdsModule() || !AdsModule) return;
 
+  // Fire-and-forget: never let a slow config fetch delay SDK init.
+  void refreshRemoteAdsConfig();
+
   try {
+    // Age-rating consistency (launch-readiness item 5): the game answers the
+    // ASC questionnaire as 4+, so ad CONTENT must stay 4+-appropriate too.
+    // G = general audiences. Set before initialize per AdMob docs.
+    try {
+      await AdsModule.default().setRequestConfiguration({
+        maxAdContentRating: AdsModule.MaxAdContentRating?.G ?? 'G',
+      });
+    } catch (err) {
+      console.warn('[Ads] setRequestConfiguration failed', err);
+    }
     await AdsModule.default().initialize();
     adsInitialized = true;
     preloadInterstitial();
@@ -85,9 +134,9 @@ function preloadInterstitial(): void {
   }
 }
 
-/** Check if ads should be shown (respects ad-free purchase) */
+/** Check if ads should be shown (respects ad-free purchase + remote kill switch) */
 export function shouldShowAds(): boolean {
-  return !usePlayerStore.getState().adFree;
+  return remoteAdsEnabled && !usePlayerStore.getState().adFree;
 }
 
 /**

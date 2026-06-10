@@ -321,8 +321,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
               />
             </View>
             <View style={styles.privacyNote}>
+              {/* Must stay truthful — the app syncs anonymous gameplay data
+                  to our backend and uses analytics/crash/ads SDKs. The old
+                  "no data is sent to external servers" copy contradicted the
+                  privacy policy and actual behavior, which is a documented
+                  5.1.1 metadata-accuracy rejection vector. */}
               <Text style={styles.privacyText}>
-                All data is stored locally on your device. No data is sent to external servers.
+                Game progress is saved on your device. Anonymous scores and
+                gameplay stats sync to our servers for leaderboards — never
+                your name, email, or contacts. See the Privacy Policy below
+                for the full picture.
               </Text>
             </View>
           </View>
