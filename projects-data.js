@@ -9,6 +9,38 @@
 
 const PROJECTS = [
     {
+        id: 'polymarket-insider',
+        type: 'Quant / Data Engineering',
+        title: 'Polymarket Insider-Detection & Smart-Money Tracker',
+        hook: 'Runs through public Polymarket trade records, scores every wallet on how hard its accuracy is to explain by luck (exact Poisson-binomial test), surfaces likely informed/insider flow, and runs every candidate trade through a 10-rule checklist — STRONG / MODERATE / WATCH / AVOID, always with the reasons attached.',
+        tools: ['Python', 'Polymarket API', 'Poisson-Binomial', 'Statistical Testing', 'Rule Engine', 'pandas', 'matplotlib', 'Excel'],
+        status: 'published',
+        details: `
+            <p><strong>The idea:</strong> On a prediction market the <em>price of an outcome is the market-implied probability</em>. So an uninformed trader's expected number of winning bets across N resolved positions is just the sum of their entry prices, and the win count is a sum of independent Bernoulli draws — a <strong>Poisson-binomial</strong> distribution. Computing the exact one-sided p-value <code>P(W &ge; observed)</code> tells you how improbable a wallet's track record is. Win far more low-probability bets than the market priced as possible, across enough bets, and you are looking at edge or non-public information.</p>
+            <img src="projects/polymarket-insider/polymarket_insider_summary.png" alt="Left: scatter of every scored wallet's actual wins versus market-implied expected wins, with a no-edge diagonal; outliers sit well above it. Right: horizontal bar chart of the most statistically anomalous wallets by suspicion score, annotated with Poisson-binomial p-values." loading="lazy">
+            <div class="project-kpis">
+                <div class="project-kpi"><span class="project-kpi-label">Wallets Scored</span><span class="project-kpi-value">208</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Top Anomaly</span><span class="project-kpi-value">355 / 362</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Its p-value</span><span class="project-kpi-value">1e&minus;73</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Biggest Edge</span><span class="project-kpi-value">+131 wins</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Longshot Wins (1 wallet)</span><span class="project-kpi-value">126</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Trade Rules</span><span class="project-kpi-value">10 (4 gating)</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Signals Checked</span><span class="project-kpi-value">40</span></div>
+                <div class="project-kpi"><span class="project-kpi-label">Passed as MODERATE</span><span class="project-kpi-value">14</span></div>
+            </div>
+            <p><strong>What it found:</strong> The single most anomalous wallet won <strong>355 of 362 resolved bets</strong> where the market's own prices implied only ~228 winners — a Poisson-binomial p-value around <strong>1&times;10<sup>&minus;73</sup></strong>. A second wallet bought <strong>126 separate longshots (under 20&cent;) that hit</strong>, beating market expectation by +131 wins. Those are not luck; they are the fingerprint the detector exists to surface. The chart's left panel plots every wallet's actual wins against market-implied expected wins — the diagonal is the no-edge line, and the flagged wallets sit far above it.</p>
+            <p><strong>The 0&ndash;100 suspicion score</strong> blends the calibration p-value (34%) with five corroborating, individually-explained signals: longshot-winner profile, calibration edge, concentration in information-prone categories (politics / corporate / geopolitics), conviction sizing, and realised ROI. Small samples are down-weighted so a 3-for-3 fluke can't top the board. Every score is fully auditable — it ships with the list of signals that fired and why.</p>
+            <p><strong>The trade rule engine (the thorough check):</strong> a candidate is any market a flagged wallet currently holds. Before it is ever suggested it must survive <strong>ten rules</strong>; four are <em>gating</em> — a single FAIL blocks the trade outright: <strong>R4 Liquidity, R5 Time-to-resolution, R6 Signal recency, R7 No smart contradiction</strong>. The non-gating rules (consensus, lead-trader quality, edge-still-available, capital commitment, category competence) feed a weighted score, and R10 sizes a half-Kelly stake hard-capped at 5% of bankroll. Each rule returns PASS / WARN / FAIL with a written rationale, so a recommendation like &ldquo;MODERATE — entered &lsquo;No&rsquo; on Ghana at 0.92, now 0.94, $433k liquidity, resolves in 1.2 days, no skilled wallet on the other side&rdquo; carries its full support.</p>
+            <p><strong>Approach:</strong> A read-only client (cache + retry) pulls the public trade tape to discover active wallets, then each wallet's positions and activity from Polymarket's data + gamma APIs — no auth, no keys, no order placement. <code>metrics.py</code> holds the exact O(N²) Poisson-binomial DP; <code>insider_signals.py</code> the weighted score; <code>rule_engine.py</code> the checklist with every threshold as a named constant. Output is a four-sheet Excel workbook (Suspicion Board / Suggested Trades / Rule Detail / Methodology) plus a reproducible JSON snapshot so the whole thing reruns offline.</p>
+            <p><strong>Important framing:</strong> a high suspicion score is a <em>statistical flag, not an accusation</em> and not financial advice. Wallets can be linked or sybil, the positions API undercounts fully-redeemed history, and resolution is point-in-time. Outputs are leads for investigation, not conclusions.</p>
+            <div class="project-links">
+                <a href="projects/polymarket-insider/polymarket_insider.xlsx" download>Download Excel report (.xlsx)</a>
+                <a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/polymarket-insider/run_analysis.py" target="_blank" rel="noopener">View Python source</a>
+                <a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/polymarket-insider/README.md" target="_blank" rel="noopener">Read the README</a>
+            </div>
+        `
+    },
+    {
         id: 'dcf-valuation',
         type: 'Valuation',
         title: 'DCF Valuation — Waste Management (NYSE: WM)',
