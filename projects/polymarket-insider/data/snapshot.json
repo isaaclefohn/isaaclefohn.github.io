@@ -1,0 +1,4735 @@
+{
+  "generated": "2026-06-21 18:34 UTC",
+  "traders": [
+    {
+      "wallet": "0x7ea571c40408f340c1c8fc8eaacebab53c1bde7b",
+      "name": "",
+      "score": 60.6,
+      "band": "ELEVATED \u2014 notable edge",
+      "n_resolved": 362,
+      "wins": 355,
+      "expected_wins": 228.07,
+      "edge": 126.93,
+      "win_rate": 0.9807,
+      "p_value": 1.072753370766164e-73,
+      "longshot_wins": 14,
+      "realized_pnl": 136652.06,
+      "roi": 0.2139,
+      "fired": [
+        "S1",
+        "S3",
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x1abc2b469b5ded495d6c8b21fc79dcb8d8f345e7",
+      "name": "",
+      "score": 44.5,
+      "band": "MODERATE \u2014 above average",
+      "n_resolved": 230,
+      "wins": 196,
+      "expected_wins": 64.9,
+      "edge": 131.1,
+      "win_rate": 0.8522,
+      "p_value": 0.0,
+      "longshot_wins": 126,
+      "realized_pnl": -8569.82,
+      "roi": -0.3471,
+      "fired": [
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "wallet": "0x1cdd071bb612de6d66d0c882b676c663697de595",
+      "name": "",
+      "score": 43.6,
+      "band": "MODERATE \u2014 above average",
+      "n_resolved": 127,
+      "wins": 104,
+      "expected_wins": 85.63,
+      "edge": 18.37,
+      "win_rate": 0.8189,
+      "p_value": 7.131886973278694e-06,
+      "longshot_wins": 1,
+      "realized_pnl": 764.18,
+      "roi": 0.0301,
+      "fired": [
+        "S1",
+        "S3"
+      ]
+    },
+    {
+      "wallet": "0x38e59b36aae31b164200d0cad7c3fe5e0ee795e7",
+      "name": "",
+      "score": 38.9,
+      "band": "MODERATE \u2014 above average",
+      "n_resolved": 74,
+      "wins": 66,
+      "expected_wins": 56.87,
+      "edge": 9.13,
+      "win_rate": 0.8919,
+      "p_value": 0.000500444120320951,
+      "longshot_wins": 0,
+      "realized_pnl": 19859.87,
+      "roi": 0.0685,
+      "fired": [
+        "S1",
+        "S3",
+        "S4",
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6",
+      "name": "",
+      "score": 37.4,
+      "band": "MODERATE \u2014 above average",
+      "n_resolved": 220,
+      "wins": 127,
+      "expected_wins": 105.64,
+      "edge": 21.36,
+      "win_rate": 0.5773,
+      "p_value": 7.199710471240976e-05,
+      "longshot_wins": 2,
+      "realized_pnl": 111031.85,
+      "roi": 0.0665,
+      "fired": [
+        "S1",
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xd218e474776403a330142299f7796e8ba32eb5c9",
+      "name": "",
+      "score": 36.4,
+      "band": "MODERATE \u2014 above average",
+      "n_resolved": 304,
+      "wins": 235,
+      "expected_wins": 221.49,
+      "edge": 13.51,
+      "win_rate": 0.773,
+      "p_value": 0.00014585830823541363,
+      "longshot_wins": 4,
+      "realized_pnl": -293646.16,
+      "roi": -0.4443,
+      "fired": [
+        "S1",
+        "S4",
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xd443a2ba4725b4fb0bd3e23bf80d95baf0c05f71",
+      "name": "",
+      "score": 32.6,
+      "band": "MODERATE \u2014 above average",
+      "n_resolved": 228,
+      "wins": 109,
+      "expected_wins": 88.33,
+      "edge": 20.67,
+      "win_rate": 0.4781,
+      "p_value": 0.00020162144038196242,
+      "longshot_wins": 13,
+      "realized_pnl": -696.31,
+      "roi": -0.09,
+      "fired": [
+        "S1"
+      ]
+    },
+    {
+      "wallet": "0x0d2d845a6ff64e31e04a70afce8a573940767ff5",
+      "name": "",
+      "score": 26.0,
+      "band": "MODERATE \u2014 above average",
+      "n_resolved": 146,
+      "wins": 101,
+      "expected_wins": 87.3,
+      "edge": 13.7,
+      "win_rate": 0.6918,
+      "p_value": 0.0031070157047900743,
+      "longshot_wins": 2,
+      "realized_pnl": 2475.97,
+      "roi": 0.0513,
+      "fired": [
+        "S1"
+      ]
+    },
+    {
+      "wallet": "0x6ffc9ad31733a945eb256ba5c3102487547d29ba",
+      "name": "",
+      "score": 25.5,
+      "band": "MODERATE \u2014 above average",
+      "n_resolved": 500,
+      "wins": 1,
+      "expected_wins": 239.05,
+      "edge": -238.05,
+      "win_rate": 0.002,
+      "p_value": 1.0000000000000002,
+      "longshot_wins": 1,
+      "realized_pnl": -26779.36,
+      "roi": -0.9932,
+      "fired": []
+    },
+    {
+      "wallet": "0x6630c34aa5836d4610fb6303d0ee9d966cd42f4e",
+      "name": "",
+      "score": 20.9,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 8,
+      "wins": 8,
+      "expected_wins": 6.73,
+      "edge": 1.27,
+      "win_rate": 1.0,
+      "p_value": 0.24066703838469827,
+      "longshot_wins": 0,
+      "realized_pnl": 2374.35,
+      "roi": 0.0813,
+      "fired": [
+        "S3",
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x275cfee6b4d1da10cb6ea5b63107589e07d86090",
+      "name": "",
+      "score": 20.7,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 28,
+      "wins": 28,
+      "expected_wins": 25.2,
+      "edge": 2.8,
+      "win_rate": 1.0,
+      "p_value": 0.04910893711901407,
+      "longshot_wins": 0,
+      "realized_pnl": 539.19,
+      "roi": 0.0242,
+      "fired": [
+        "S3"
+      ]
+    },
+    {
+      "wallet": "0xce25e214d5cfe4f459cf67f08df581885aae7fdc",
+      "name": "",
+      "score": 19.7,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 15,
+      "wins": 8,
+      "expected_wins": 6.68,
+      "edge": 1.32,
+      "win_rate": 0.5333,
+      "p_value": 0.29481358481209324,
+      "longshot_wins": 2,
+      "realized_pnl": 143.38,
+      "roi": 0.2608,
+      "fired": []
+    },
+    {
+      "wallet": "0x511f9c771449162349795d17becf8b37031acbe1",
+      "name": "",
+      "score": 18.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 441,
+      "wins": 6,
+      "expected_wins": 19.43,
+      "edge": -13.43,
+      "win_rate": 0.0136,
+      "p_value": 0.9999925778851364,
+      "longshot_wins": 2,
+      "realized_pnl": -52505.6,
+      "roi": -0.9563,
+      "fired": []
+    },
+    {
+      "wallet": "0x21ffd2b7a212a6f277ed3eca1a9f8efcbca90d71",
+      "name": "",
+      "score": 15.2,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 139,
+      "wins": 83,
+      "expected_wins": 81.06,
+      "edge": 1.94,
+      "win_rate": 0.5971,
+      "p_value": 0.2649386014572788,
+      "longshot_wins": 0,
+      "realized_pnl": -10021.67,
+      "roi": -0.06,
+      "fired": [
+        "S4",
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xa3c2ec158f222f3f4f5f4f57b113d761a4d3df3d",
+      "name": "",
+      "score": 14.9,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 193,
+      "wins": 135,
+      "expected_wins": 124.54,
+      "edge": 10.46,
+      "win_rate": 0.6995,
+      "p_value": 0.03598643153558739,
+      "longshot_wins": 0,
+      "realized_pnl": 156.78,
+      "roi": 0.0128,
+      "fired": []
+    },
+    {
+      "wallet": "0x945a49252f772a10c6ddd1d1e1e24ee20438a48c",
+      "name": "",
+      "score": 14.4,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 159,
+      "wins": 91,
+      "expected_wins": 83.0,
+      "edge": 8.0,
+      "win_rate": 0.5723,
+      "p_value": 0.06585934377137492,
+      "longshot_wins": 0,
+      "realized_pnl": 717.53,
+      "roi": 0.0671,
+      "fired": []
+    },
+    {
+      "wallet": "0x19cd345dcd11a9f1aedb29fc45577d8d57a0af9a",
+      "name": "",
+      "score": 13.4,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 62,
+      "wins": 36,
+      "expected_wins": 31.23,
+      "edge": 4.77,
+      "win_rate": 0.5806,
+      "p_value": 0.13853744114965924,
+      "longshot_wins": 0,
+      "realized_pnl": -66.15,
+      "roi": -0.0071,
+      "fired": []
+    },
+    {
+      "wallet": "0x1015bb260154f51e5f432cb0a3227c1619fcbac8",
+      "name": "",
+      "score": 12.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 500,
+      "wins": 3,
+      "expected_wins": 139.85,
+      "edge": -136.85,
+      "win_rate": 0.006,
+      "p_value": 0.9999999999999976,
+      "longshot_wins": 1,
+      "realized_pnl": -8762.82,
+      "roi": -0.976,
+      "fired": []
+    },
+    {
+      "wallet": "0xcf7379b4b891c06d88807f6f70efa75378120215",
+      "name": "",
+      "score": 12.4,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 155,
+      "wins": 103,
+      "expected_wins": 97.49,
+      "edge": 5.51,
+      "win_rate": 0.6645,
+      "p_value": 0.14141144254874974,
+      "longshot_wins": 0,
+      "realized_pnl": -33.69,
+      "roi": -0.0003,
+      "fired": []
+    },
+    {
+      "wallet": "0x5b6331e7ff0831a3fe2ed12004747db1a9c911a4",
+      "name": "",
+      "score": 12.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 116,
+      "wins": 38,
+      "expected_wins": 37.49,
+      "edge": 0.51,
+      "win_rate": 0.3276,
+      "p_value": 0.49696722127122983,
+      "longshot_wins": 0,
+      "realized_pnl": -12552.05,
+      "roi": -0.0236,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xdf7930e89a2c47560165331863c31deca0733dcd",
+      "name": "",
+      "score": 11.2,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 12,
+      "wins": 7,
+      "expected_wins": 6.23,
+      "edge": 0.77,
+      "win_rate": 0.5833,
+      "p_value": 0.4399847148754862,
+      "longshot_wins": 0,
+      "realized_pnl": -344.85,
+      "roi": -0.0388,
+      "fired": []
+    },
+    {
+      "wallet": "0x16c7f9b7b239c980929a2aa5d53b23c5cac03931",
+      "name": "",
+      "score": 10.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 28,
+      "wins": 1,
+      "expected_wins": 7.13,
+      "edge": -6.13,
+      "win_rate": 0.0357,
+      "p_value": 0.9999194242840207,
+      "longshot_wins": 0,
+      "realized_pnl": -262013.9,
+      "roi": -0.9147,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x67af214764bd6eda61fadb25cdcbea6d13d761ee",
+      "name": "",
+      "score": 10.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 197,
+      "wins": 99,
+      "expected_wins": 92.41,
+      "edge": 6.59,
+      "win_rate": 0.5025,
+      "p_value": 0.13803901384052436,
+      "longshot_wins": 3,
+      "realized_pnl": 124.76,
+      "roi": 0.0287,
+      "fired": []
+    },
+    {
+      "wallet": "0x9703676286b93c2eca71ca96e8757104519a69c2",
+      "name": "",
+      "score": 10.4,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 347,
+      "wins": 25,
+      "expected_wins": 70.38,
+      "edge": -45.38,
+      "win_rate": 0.072,
+      "p_value": 0.9999999999999994,
+      "longshot_wins": 0,
+      "realized_pnl": -295096.13,
+      "roi": -0.2325,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x458c5bfd9bff538f98216a67b156832e7486c504",
+      "name": "",
+      "score": 10.3,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 136,
+      "wins": 136,
+      "expected_wins": 134.31,
+      "edge": 1.69,
+      "win_rate": 1.0,
+      "p_value": 0.18113123026383884,
+      "longshot_wins": 0,
+      "realized_pnl": -262.87,
+      "roi": -0.0231,
+      "fired": []
+    },
+    {
+      "wallet": "0x5d92479e33a7e19b8d4195ca5330a9ddaba948e4",
+      "name": "",
+      "score": 10.1,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 31,
+      "wins": 3,
+      "expected_wins": 7.44,
+      "edge": -4.44,
+      "win_rate": 0.0968,
+      "p_value": 0.9999542786705348,
+      "longshot_wins": 0,
+      "realized_pnl": -241.33,
+      "roi": -0.6123,
+      "fired": [
+        "S4"
+      ]
+    },
+    {
+      "wallet": "0x2d6ac4f70307102ac46e9e6ded67f3838ddf8add",
+      "name": "",
+      "score": 9.6,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 142,
+      "wins": 89,
+      "expected_wins": 86.37,
+      "edge": 2.63,
+      "win_rate": 0.6268,
+      "p_value": 0.31444141548291393,
+      "longshot_wins": 0,
+      "realized_pnl": 967.03,
+      "roi": 0.0096,
+      "fired": []
+    },
+    {
+      "wallet": "0x1e6356be8bf81f6e8478974b5d9bb397d31d7267",
+      "name": "",
+      "score": 9.3,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 15,
+      "wins": 15,
+      "expected_wins": 14.93,
+      "edge": 0.07,
+      "win_rate": 1.0,
+      "p_value": 0.9348289826446259,
+      "longshot_wins": 0,
+      "realized_pnl": -0.01,
+      "roi": -0.0005,
+      "fired": [
+        "S4"
+      ]
+    },
+    {
+      "wallet": "0xad99bffce03cc56ac1b697ac15a173700e54dbab",
+      "name": "",
+      "score": 9.1,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 22,
+      "wins": 9,
+      "expected_wins": 10.57,
+      "edge": -1.57,
+      "win_rate": 0.4091,
+      "p_value": 0.8625108103612792,
+      "longshot_wins": 0,
+      "realized_pnl": 55.19,
+      "roi": 0.006,
+      "fired": []
+    },
+    {
+      "wallet": "0xfe41328c99802a1103d74514f71a16b0eee19f23",
+      "name": "",
+      "score": 9.1,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 53,
+      "wins": 2,
+      "expected_wins": 4.11,
+      "edge": -2.11,
+      "win_rate": 0.0377,
+      "p_value": 0.9835728380131936,
+      "longshot_wins": 0,
+      "realized_pnl": -506.47,
+      "roi": -0.1172,
+      "fired": [
+        "S4"
+      ]
+    },
+    {
+      "wallet": "0x40a75505ba4e7deb9bf55e839e5a34dd6c9becb7",
+      "name": "",
+      "score": 8.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 81,
+      "wins": 39,
+      "expected_wins": 37.93,
+      "edge": 1.07,
+      "win_rate": 0.4815,
+      "p_value": 0.3329500968719177,
+      "longshot_wins": 0,
+      "realized_pnl": -1007.99,
+      "roi": -0.1159,
+      "fired": []
+    },
+    {
+      "wallet": "0x5cca9a5232157e90c0bea7070c1b937029bf6633",
+      "name": "",
+      "score": 8.2,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 3,
+      "wins": 3,
+      "expected_wins": 2.43,
+      "edge": 0.57,
+      "win_rate": 1.0,
+      "p_value": 0.523404124299,
+      "longshot_wins": 0,
+      "realized_pnl": 9.11,
+      "roi": 0.0251,
+      "fired": []
+    },
+    {
+      "wallet": "0x2c335066fe58fe9237c3d3dc7b275c2a034a0563",
+      "name": "",
+      "score": 8.1,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 431,
+      "wins": 11,
+      "expected_wins": 159.76,
+      "edge": -148.76,
+      "win_rate": 0.0255,
+      "p_value": 1.000000000000002,
+      "longshot_wins": 0,
+      "realized_pnl": -2465823.43,
+      "roi": -0.5551,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x5c3a1a602848565bb16165fcd460b00c3d43020b",
+      "name": "",
+      "score": 8.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 130,
+      "wins": 12,
+      "expected_wins": 59.8,
+      "edge": -47.8,
+      "win_rate": 0.0923,
+      "p_value": 1.0000000000000004,
+      "longshot_wins": 0,
+      "realized_pnl": -2628975.32,
+      "roi": -0.8852,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xf0318c32136c2db7fec88b84869aee6a1106c80c",
+      "name": "",
+      "score": 8.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 107,
+      "wins": 0,
+      "expected_wins": 41.08,
+      "edge": -41.08,
+      "win_rate": 0.0,
+      "p_value": 1.0,
+      "longshot_wins": 0,
+      "realized_pnl": -10378892.5,
+      "roi": -0.9699,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xb8a47d387beb9ec7fd4baaec05396e9677cea13b",
+      "name": "",
+      "score": 8.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 186,
+      "wins": 47,
+      "expected_wins": 47.51,
+      "edge": -0.51,
+      "win_rate": 0.2527,
+      "p_value": 0.7274904059550371,
+      "longshot_wins": 0,
+      "realized_pnl": 35.83,
+      "roi": 0.0147,
+      "fired": [
+        "S4"
+      ]
+    },
+    {
+      "wallet": "0xe4fc1041edb5c205e449fb6a5967e9db24418af7",
+      "name": "",
+      "score": 7.9,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 8,
+      "wins": 4,
+      "expected_wins": 4.1,
+      "edge": -0.1,
+      "win_rate": 0.5,
+      "p_value": 0.694684577945827,
+      "longshot_wins": 0,
+      "realized_pnl": -466.83,
+      "roi": -0.0192,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xc29198ad764bd6adaf7bb971a3757a689ece5d74",
+      "name": "",
+      "score": 7.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 494,
+      "wins": 98,
+      "expected_wins": 189.96,
+      "edge": -91.96,
+      "win_rate": 0.1984,
+      "p_value": 0.9999999999999978,
+      "longshot_wins": 8,
+      "realized_pnl": -22879.06,
+      "roi": -0.1099,
+      "fired": []
+    },
+    {
+      "wallet": "0xfe3878d88560b22c3c26e4843aefc12e8613cb63",
+      "name": "",
+      "score": 7.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 3,
+      "wins": 3,
+      "expected_wins": 2.05,
+      "edge": 0.95,
+      "win_rate": 1.0,
+      "p_value": 0.3186882666,
+      "longshot_wins": 0,
+      "realized_pnl": 11.14,
+      "roi": 0.084,
+      "fired": []
+    },
+    {
+      "wallet": "0x224a89dbe0db0d6124b335edabd15b3f877da3d5",
+      "name": "",
+      "score": 7.7,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 480,
+      "wins": 104,
+      "expected_wins": 228.39,
+      "edge": -124.39,
+      "win_rate": 0.2167,
+      "p_value": 1.000000000000003,
+      "longshot_wins": 0,
+      "realized_pnl": -2573227.43,
+      "roi": -0.7202,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x84ad9c5c547a82ec9a08547b94bd922446e5bfb7",
+      "name": "",
+      "score": 7.5,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 26,
+      "wins": 12,
+      "expected_wins": 13.36,
+      "edge": -1.36,
+      "win_rate": 0.4615,
+      "p_value": 0.7843822558259336,
+      "longshot_wins": 0,
+      "realized_pnl": 4430.72,
+      "roi": 0.0999,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x3d1487b9a384635dcd7e438eb183e95351b5ee01",
+      "name": "",
+      "score": 7.1,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 70,
+      "wins": 18,
+      "expected_wins": 32.6,
+      "edge": -14.6,
+      "win_rate": 0.2571,
+      "p_value": 0.9999999998751169,
+      "longshot_wins": 0,
+      "realized_pnl": -27252.9,
+      "roi": -0.7683,
+      "fired": []
+    },
+    {
+      "wallet": "0xa804390f80019699ab34a282c0df7528fba82a75",
+      "name": "",
+      "score": 7.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 136,
+      "wins": 4,
+      "expected_wins": 59.92,
+      "edge": -55.92,
+      "win_rate": 0.0294,
+      "p_value": 1.0000000000000004,
+      "longshot_wins": 0,
+      "realized_pnl": -403441.19,
+      "roi": -0.9233,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x52d93dcf81444f793dda7fedc370f7a35101fb1a",
+      "name": "",
+      "score": 7.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 497,
+      "wins": 37,
+      "expected_wins": 152.49,
+      "edge": -115.49,
+      "win_rate": 0.0744,
+      "p_value": 0.9999999999999994,
+      "longshot_wins": 3,
+      "realized_pnl": -44552.48,
+      "roi": -0.5085,
+      "fired": []
+    },
+    {
+      "wallet": "0x63201419bfb98ec0eee7d5c8b71a07b313e67e94",
+      "name": "",
+      "score": 7.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 11,
+      "wins": 2,
+      "expected_wins": 2.23,
+      "edge": -0.23,
+      "win_rate": 0.1818,
+      "p_value": 0.7774886514993348,
+      "longshot_wins": 0,
+      "realized_pnl": -2519.33,
+      "roi": -0.147,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x9106cf79b02f85d8f1e546802ed916648f44afcb",
+      "name": "",
+      "score": 6.9,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 191,
+      "wins": 7,
+      "expected_wins": 62.14,
+      "edge": -55.14,
+      "win_rate": 0.0366,
+      "p_value": 1.0000000000000007,
+      "longshot_wins": 0,
+      "realized_pnl": -496551.32,
+      "roi": -0.931,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x0346afae2603313d2bbee96b628536c8cbe352a5",
+      "name": "",
+      "score": 6.9,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 366,
+      "wins": 61,
+      "expected_wins": 118.85,
+      "edge": -57.85,
+      "win_rate": 0.1667,
+      "p_value": 0.9999999999999979,
+      "longshot_wins": 0,
+      "realized_pnl": -21847.34,
+      "roi": -0.0221,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x224f7ef690d952cf551a471846d5afb4892e514a",
+      "name": "",
+      "score": 6.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 246,
+      "wins": 10,
+      "expected_wins": 99.48,
+      "edge": -89.48,
+      "win_rate": 0.0407,
+      "p_value": 1.0000000000000009,
+      "longshot_wins": 0,
+      "realized_pnl": -490588.39,
+      "roi": -0.8391,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x2f5bb96e2da56a85e7bfddcad6e48f73e9bbe747",
+      "name": "",
+      "score": 6.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 9,
+      "wins": 2,
+      "expected_wins": 3.51,
+      "edge": -1.51,
+      "win_rate": 0.2222,
+      "p_value": 0.9495929668720919,
+      "longshot_wins": 0,
+      "realized_pnl": -288.98,
+      "roi": -0.0144,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x49ac66d01a4fbe612693951f3c74caea58322f1e",
+      "name": "",
+      "score": 6.6,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 10,
+      "wins": 0,
+      "expected_wins": 1.82,
+      "edge": -1.82,
+      "win_rate": 0.0,
+      "p_value": 1.0,
+      "longshot_wins": 0,
+      "realized_pnl": -1014.01,
+      "roi": -0.1875,
+      "fired": []
+    },
+    {
+      "wallet": "0x2d395d11014415644fe9a8599fe050e7f3a06053",
+      "name": "",
+      "score": 6.5,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 186,
+      "wins": 8,
+      "expected_wins": 64.72,
+      "edge": -56.72,
+      "win_rate": 0.043,
+      "p_value": 0.9999999999999994,
+      "longshot_wins": 0,
+      "realized_pnl": -224163.81,
+      "roi": -0.846,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x032eb1bc893940263ad0b01889f262fc232f2a9e",
+      "name": "",
+      "score": 6.4,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 405,
+      "wins": 62,
+      "expected_wins": 170.71,
+      "edge": -108.71,
+      "win_rate": 0.1531,
+      "p_value": 1.000000000000001,
+      "longshot_wins": 0,
+      "realized_pnl": -243319.01,
+      "roi": -0.4644,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xee80057634470bfd53bb449936719f3ea883f34e",
+      "name": "",
+      "score": 6.2,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 38,
+      "wins": 2,
+      "expected_wins": 20.38,
+      "edge": -18.38,
+      "win_rate": 0.0526,
+      "p_value": 0.9999999999993932,
+      "longshot_wins": 0,
+      "realized_pnl": -38318.03,
+      "roi": -0.7697,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x8740bd5653381dfef90bbda456e871a54c676fac",
+      "name": "",
+      "score": 6.2,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 192,
+      "wins": 1,
+      "expected_wins": 10.05,
+      "edge": -9.05,
+      "win_rate": 0.0052,
+      "p_value": 0.9999961322559667,
+      "longshot_wins": 0,
+      "realized_pnl": -99208.54,
+      "roi": -0.82,
+      "fired": []
+    },
+    {
+      "wallet": "0xc0df1962fe833018dca318301b3344a43a965974",
+      "name": "",
+      "score": 6.2,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 100,
+      "wins": 0,
+      "expected_wins": 39.36,
+      "edge": -39.36,
+      "win_rate": 0.0,
+      "p_value": 1.0,
+      "longshot_wins": 0,
+      "realized_pnl": -128520.13,
+      "roi": -0.9963,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x2005d16a84ceefa912d4e380cd32e7ff827875ea",
+      "name": "",
+      "score": 6.1,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 442,
+      "wins": 57,
+      "expected_wins": 141.72,
+      "edge": -84.72,
+      "win_rate": 0.129,
+      "p_value": 0.9999999999999999,
+      "longshot_wins": 0,
+      "realized_pnl": -220922.49,
+      "roi": -0.4232,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x2e83cf9ab4484e42d6c98510fc65e64ac5a75839",
+      "name": "",
+      "score": 6.1,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 5,
+      "wins": 5,
+      "expected_wins": 4.91,
+      "edge": 0.09,
+      "win_rate": 1.0,
+      "p_value": 0.9109047746435421,
+      "longshot_wins": 0,
+      "realized_pnl": -0.14,
+      "roi": -0.0023,
+      "fired": []
+    },
+    {
+      "wallet": "0xcde3e47b06e874c863498cbb47cdb4bf554b534d",
+      "name": "",
+      "score": 6.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 6,
+      "wins": 0,
+      "expected_wins": 0.76,
+      "edge": -0.76,
+      "win_rate": 0.0,
+      "p_value": 1.0,
+      "longshot_wins": 0,
+      "realized_pnl": -158563.15,
+      "roi": -0.935,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0xeebde7a0e019a63e6b476eb425505b7b3e6eba30",
+      "name": "",
+      "score": 6.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 500,
+      "wins": 52,
+      "expected_wins": 175.49,
+      "edge": -123.49,
+      "win_rate": 0.104,
+      "p_value": 0.999999999999999,
+      "longshot_wins": 4,
+      "realized_pnl": -12554.58,
+      "roi": -0.375,
+      "fired": []
+    },
+    {
+      "wallet": "0xa6e6d6ecf658d8e1207c9c838081d93963a2d5b8",
+      "name": "",
+      "score": 5.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 7,
+      "wins": 1,
+      "expected_wins": 2.8,
+      "edge": -1.8,
+      "win_rate": 0.1429,
+      "p_value": 0.9927429000250698,
+      "longshot_wins": 0,
+      "realized_pnl": -12483.38,
+      "roi": -0.8678,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x20592197a0ce7803a0b54fd11ef0c689eb84f3ad",
+      "name": "",
+      "score": 5.7,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 13,
+      "wins": 0,
+      "expected_wins": 5.78,
+      "edge": -5.78,
+      "win_rate": 0.0,
+      "p_value": 1.0,
+      "longshot_wins": 0,
+      "realized_pnl": -7566.8,
+      "roi": -0.8108,
+      "fired": []
+    },
+    {
+      "wallet": "0x94d22bf045f9a1d1cb37a40a4a8c86fd8917cfbd",
+      "name": "",
+      "score": 5.7,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 71,
+      "wins": 10,
+      "expected_wins": 23.76,
+      "edge": -13.76,
+      "win_rate": 0.1408,
+      "p_value": 0.9999826105211156,
+      "longshot_wins": 1,
+      "realized_pnl": -648.97,
+      "roi": -0.537,
+      "fired": []
+    },
+    {
+      "wallet": "0x4c25c5d02450647868e34bbed62467492571c3be",
+      "name": "",
+      "score": 5.7,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 33,
+      "wins": 4,
+      "expected_wins": 14.68,
+      "edge": -10.68,
+      "win_rate": 0.1212,
+      "p_value": 0.9999977282055634,
+      "longshot_wins": 0,
+      "realized_pnl": -962.0,
+      "roi": -0.0404,
+      "fired": []
+    },
+    {
+      "wallet": "0xdb83e85ffd22faa4009273034770f96ffc5b1e50",
+      "name": "",
+      "score": 5.5,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 456,
+      "wins": 76,
+      "expected_wins": 189.9,
+      "edge": -113.9,
+      "win_rate": 0.1667,
+      "p_value": 1.0000000000000002,
+      "longshot_wins": 0,
+      "realized_pnl": -79678.52,
+      "roi": -0.3697,
+      "fired": []
+    },
+    {
+      "wallet": "0x30d5a7e1a1ec19fb4dbdc250a19a5bb3734f36bf",
+      "name": "",
+      "score": 5.4,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 312,
+      "wins": 0,
+      "expected_wins": 89.26,
+      "edge": -89.26,
+      "win_rate": 0.0,
+      "p_value": 1.0,
+      "longshot_wins": 0,
+      "realized_pnl": -142423.04,
+      "roi": -0.9195,
+      "fired": []
+    },
+    {
+      "wallet": "0xf3ef6ac0510c9eabc42fbb146b5c3c64edc1ca6b",
+      "name": "",
+      "score": 5.3,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 500,
+      "wins": 8,
+      "expected_wins": 196.85,
+      "edge": -188.85,
+      "win_rate": 0.016,
+      "p_value": 1.0000000000000036,
+      "longshot_wins": 0,
+      "realized_pnl": -166315.06,
+      "roi": -0.9419,
+      "fired": []
+    },
+    {
+      "wallet": "0x1943ada1083d8b3b7e4356cc179ee942ea2c1561",
+      "name": "",
+      "score": 5.3,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 140,
+      "wins": 7,
+      "expected_wins": 56.92,
+      "edge": -49.92,
+      "win_rate": 0.05,
+      "p_value": 0.9999999999999997,
+      "longshot_wins": 0,
+      "realized_pnl": -56562.12,
+      "roi": -0.8916,
+      "fired": []
+    },
+    {
+      "wallet": "0x1418d1d10cc82124d6e3ba689062bfe0d2876fef",
+      "name": "",
+      "score": 5.3,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 6,
+      "wins": 2,
+      "expected_wins": 2.49,
+      "edge": -0.49,
+      "win_rate": 0.3333,
+      "p_value": 0.8367571300257999,
+      "longshot_wins": 0,
+      "realized_pnl": -310.58,
+      "roi": -0.0144,
+      "fired": [
+        "S5"
+      ]
+    },
+    {
+      "wallet": "0x1d1302ac82a59e04805831b74bffc7b84a573c2f",
+      "name": "",
+      "score": 5.3,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 151,
+      "wins": 13,
+      "expected_wins": 64.25,
+      "edge": -51.25,
+      "win_rate": 0.0861,
+      "p_value": 0.9999999999999998,
+      "longshot_wins": 0,
+      "realized_pnl": -35697.27,
+      "roi": -0.7019,
+      "fired": []
+    },
+    {
+      "wallet": "0xe9cbb1c9b3f7f411dd4fdf2ea7afa780c8b4d096",
+      "name": "",
+      "score": 5.3,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 41,
+      "wins": 0,
+      "expected_wins": 18.01,
+      "edge": -18.01,
+      "win_rate": 0.0,
+      "p_value": 1.0,
+      "longshot_wins": 0,
+      "realized_pnl": -1871.27,
+      "roi": -0.1063,
+      "fired": []
+    },
+    {
+      "wallet": "0x612782a5b2080cf786590211dcfbaffc082a27de",
+      "name": "",
+      "score": 5.3,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 19,
+      "wins": 0,
+      "expected_wins": 1.43,
+      "edge": -1.43,
+      "win_rate": 0.0,
+      "p_value": 1.0,
+      "longshot_wins": 0,
+      "realized_pnl": -142.49,
+      "roi": -0.5091,
+      "fired": []
+    },
+    {
+      "wallet": "0x6832c74809f5b0ace45acacfed7ffa9195b0831f",
+      "name": "",
+      "score": 5.3,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 137,
+      "wins": 3,
+      "expected_wins": 29.02,
+      "edge": -26.02,
+      "win_rate": 0.0219,
+      "p_value": 0.9999999999999933,
+      "longshot_wins": 0,
+      "realized_pnl": -38574.85,
+      "roi": -0.6008,
+      "fired": []
+    },
+    {
+      "wallet": "0xab7136c0bdedf6fa95be8c70cca9b396056c2ada",
+      "name": "",
+      "score": 5.2,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 115,
+      "wins": 1,
+      "expected_wins": 51.6,
+      "edge": -50.6,
+      "win_rate": 0.0087,
+      "p_value": 0.9999999999999998,
+      "longshot_wins": 0,
+      "realized_pnl": -39018.01,
+      "roi": -0.952,
+      "fired": []
+    },
+    {
+      "wallet": "0x53685989c332366675257535f28abd6d17782d62",
+      "name": "",
+      "score": 5.1,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 424,
+      "wins": 9,
+      "expected_wins": 95.21,
+      "edge": -86.21,
+      "win_rate": 0.0212,
+      "p_value": 0.9999999999999991,
+      "longshot_wins": 1,
+      "realized_pnl": -2190.54,
+      "roi": -0.8665,
+      "fired": []
+    },
+    {
+      "wallet": "0xc3bfe4509fa514a77d415c4c0b7e1efb5033e70f",
+      "name": "",
+      "score": 5.1,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 159,
+      "wins": 7,
+      "expected_wins": 15.13,
+      "edge": -8.13,
+      "win_rate": 0.044,
+      "p_value": 0.9999275188555594,
+      "longshot_wins": 0,
+      "realized_pnl": -7541.81,
+      "roi": -0.2868,
+      "fired": []
+    },
+    {
+      "wallet": "0xec690ecdbe75275f390d9460b112dfc53ae36fba",
+      "name": "",
+      "score": 5.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 500,
+      "wins": 1,
+      "expected_wins": 177.65,
+      "edge": -176.65,
+      "win_rate": 0.002,
+      "p_value": 1.0000000000000007,
+      "longshot_wins": 0,
+      "realized_pnl": -129637.41,
+      "roi": -0.9937,
+      "fired": []
+    },
+    {
+      "wallet": "0xeb2eb26918c91e8c2845ac49e08f952916d77821",
+      "name": "",
+      "score": 5.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 75,
+      "wins": 26,
+      "expected_wins": 27.73,
+      "edge": -1.73,
+      "win_rate": 0.3467,
+      "p_value": 0.7498666965419938,
+      "longshot_wins": 0,
+      "realized_pnl": -638.05,
+      "roi": -0.059,
+      "fired": []
+    },
+    {
+      "wallet": "0x5e5175106a7dbbd92b10f1b56458fc8c1bdd42ce",
+      "name": "",
+      "score": 5.0,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 86,
+      "wins": 8,
+      "expected_wins": 32.88,
+      "edge": -24.88,
+      "win_rate": 0.093,
+      "p_value": 0.9999999999999999,
+      "longshot_wins": 0,
+      "realized_pnl": -13262.21,
+      "roi": -0.6438,
+      "fired": []
+    },
+    {
+      "wallet": "0x48eea23704165e005efbc36f0afc6cac31b50db4",
+      "name": "",
+      "score": 4.8,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 314,
+      "wins": 0,
+      "expected_wins": 128.48,
+      "edge": -128.48,
+      "win_rate": 0.0,
+      "p_value": 1.0,
+      "longshot_wins": 0,
+      "realized_pnl": -70883.22,
+      "roi": -0.9916,
+      "fired": []
+    },
+    {
+      "wallet": "0x775d9de0c72c76a459fadfbb4cd79d5715236beb",
+      "name": "",
+      "score": 4.7,
+      "band": "LOW \u2014 consistent with luck/skill",
+      "n_resolved": 496,
+      "wins": 4,
+      "expected_wins": 173.23,
+      "edge": -169.23,
+      "win_rate": 0.0081,
+      "p_value": 0.9999999999999999,
+      "longshot_wins": 0,
+      "realized_pnl": -77488.22,
+      "roi": -0.9611,
+      "fired": []
+    }
+  ],
+  "suggestions": [
+    {
+      "title": "Will Ghana win on 2026-06-23?",
+      "outcome": "No",
+      "slug": "fifwc-eng-gha-2026-06-23-gha",
+      "recommendation": "MODERATE",
+      "score": 91.0,
+      "price": 0.935,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 91/100). Passed 8 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.92; price now 0.94 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $433,509; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~1.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.2 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $24,883 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.94 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will United States win on 2026-06-25?",
+      "outcome": "No",
+      "slug": "fifwc-tur-usa-2026-06-25-usa",
+      "recommendation": "MODERATE",
+      "score": 91.0,
+      "price": 0.505,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 91/100). Passed 8 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.56; price now 0.51 (drift -0.05). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $407,688; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~4.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.2 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $18,804 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.51 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Tunisia win on 2026-06-25?",
+      "outcome": "No",
+      "slug": "fifwc-tun-nld-2026-06-25-tun",
+      "recommendation": "MODERATE",
+      "score": 91.0,
+      "price": 0.955,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 91/100). Passed 8 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.88; price now 0.95 (drift +0.08). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $337,520; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~3.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.1 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $7,079 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.95 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Cura\u00e7ao win on 2026-06-25?",
+      "outcome": "No",
+      "slug": "fifwc-kor-civ-2026-06-25-kor",
+      "recommendation": "MODERATE",
+      "score": 91.0,
+      "price": 0.945,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 91/100). Passed 8 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.93; price now 0.94 (drift +0.02). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $347,760; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~3.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.1 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $6,171 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.94 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Jordan win on 2026-06-27?",
+      "outcome": "No",
+      "slug": "fifwc-jor-arg-2026-06-27-jor",
+      "recommendation": "MODERATE",
+      "score": 91.0,
+      "price": 0.931,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 91/100). Passed 8 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.93; price now 0.93 (drift -0.00). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $304,411; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~6.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,807 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.93 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Algeria win on 2026-06-22?",
+      "outcome": "No",
+      "slug": "fifwc-jor-alg-2026-06-22-alg",
+      "recommendation": "MODERATE",
+      "score": 91.0,
+      "price": 0.375,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 91/100). Passed 8 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.38; price now 0.38 (drift -0.00). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $598,275; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~1.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.1 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,147 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.38 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Spread: United States (-1.5)",
+      "outcome": "T\u00fcrkiye",
+      "slug": "fifwc-tur-usa-2026-06-25-spread-away-1pt5",
+      "recommendation": "MODERATE",
+      "score": 91.0,
+      "price": 0.735,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 91/100). Passed 8 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'T\u00fcrkiye'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.76; price now 0.73 (drift -0.02). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $46,572; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~4.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.1 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $804 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.73 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Colombia win on 2026-06-23?",
+      "outcome": "No",
+      "slug": "fifwc-col-cdr-2026-06-23-col",
+      "recommendation": "MODERATE",
+      "score": 91.0,
+      "price": 0.355,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 91/100). Passed 8 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.35; price now 0.35 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $397,270; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~2.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.1 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $732 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.35 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Netherlands win on 2026-06-25?",
+      "outcome": "No",
+      "slug": "fifwc-tun-nld-2026-06-25-nld",
+      "recommendation": "MODERATE",
+      "score": 88.5,
+      "price": 0.135,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 88/100). Passed 7 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.21; price now 0.14 (drift -0.08). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $344,497; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~3.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.3 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "Backers committed $350 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.14 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Tunisia vs. Netherlands end in a draw?",
+      "outcome": "No",
+      "slug": "fifwc-tun-nld-2026-06-25-draw",
+      "recommendation": "MODERATE",
+      "score": 88.5,
+      "price": 0.895,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 88/100). Passed 7 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.84; price now 0.90 (drift +0.05). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $355,952; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~3.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.2 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "Backers committed $300 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.90 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will DR Congo win on 2026-06-23?",
+      "outcome": "No",
+      "slug": "fifwc-col-cdr-2026-06-23-cdr",
+      "recommendation": "MODERATE",
+      "score": 88.5,
+      "price": 0.875,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 88/100). Passed 7 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.87; price now 0.88 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $318,774; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~2.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "Backers committed $291 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.88 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will France win on 2026-06-26?",
+      "outcome": "No",
+      "slug": "fifwc-nor-fra-2026-06-26-fra",
+      "recommendation": "MODERATE",
+      "score": 88.5,
+      "price": 0.455,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 88/100). Passed 7 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.45; price now 0.46 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $418,077; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~4.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "Backers committed $215 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.46 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Spread: Switzerland (-1.5)",
+      "outcome": "Canada",
+      "slug": "fifwc-che-can-2026-06-24-spread-home-1pt5",
+      "recommendation": "MODERATE",
+      "score": 88.5,
+      "price": 0.825,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 88/100). Passed 7 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Canada'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.82; price now 0.82 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $30,064; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~2.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.1 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "Backers committed $189 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.82 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Czechia vs. Mexico: O/U 2.5",
+      "outcome": "Over",
+      "slug": "fifwc-cze-mex-2026-06-24-total-2pt5",
+      "recommendation": "MODERATE",
+      "score": 88.5,
+      "price": 0.455,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.05,
+      "summary": "MODERATE (score 88/100). Passed 7 of 9 weighted rules.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Over'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.43; price now 0.46 (drift +0.03). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $82,447; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~3.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "Backers committed $155 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.46 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will England vs. Ghana end in a draw?",
+      "outcome": "No",
+      "slug": "fifwc-eng-gha-2026-06-23-draw",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.855,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.85; price now 0.85 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $479,532; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~1.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $10,670 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.85 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Argentina win on 2026-06-22?",
+      "outcome": "No",
+      "slug": "fifwc-arg-aut-2026-06-22-arg",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.365,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R5 Time-to-resolution.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.37; price now 0.36 (drift -0.00). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $851,914; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "~0.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.3 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $6,685 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.36 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Scotland win on 2026-06-24?",
+      "outcome": "No",
+      "slug": "fifwc-sco-bra-2026-06-24-sco",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.885,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.86; price now 0.89 (drift +0.03). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $456,582; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~2.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $5,729 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.89 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Belgium vs. IR Iran end in a draw?",
+      "outcome": "No",
+      "slug": "fifwc-bel-irn-2026-06-21-draw",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.805,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R5 Time-to-resolution.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.80; price now 0.81 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $927,794; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "~0.0 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.1 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $4,584 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.81 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Norway win on 2026-06-22?",
+      "outcome": "No",
+      "slug": "fifwc-nor-sen-2026-06-22-nor",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.575,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.57; price now 0.57 (drift +0.00). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $742,735; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~1.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $3,857 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.57 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will New Zealand win on 2026-06-26?",
+      "outcome": "No",
+      "slug": "fifwc-nzl-bel-2026-06-26-nzl",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.925,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.92; price now 0.93 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $317,323; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~5.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $3,634 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.93 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Iraq win on 2026-06-26?",
+      "outcome": "No",
+      "slug": "fifwc-sen-irq-2026-06-26-irq",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.915,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.89; price now 0.92 (drift +0.03). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $313,413; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~4.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $3,620 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.92 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Uzbekistan win on 2026-06-23?",
+      "outcome": "No",
+      "slug": "fifwc-prt-uzb-2026-06-23-uzb",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.945,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.93; price now 0.94 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $523,552; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~1.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $2,851 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.94 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Panama win on 2026-06-27?",
+      "outcome": "No",
+      "slug": "fifwc-pan-eng-2026-06-27-pan",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.915,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.90; price now 0.92 (drift +0.02). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $332,120; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~5.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $2,580 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.92 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Spread: Uruguay (-1.5)",
+      "outcome": "Cabo Verde",
+      "slug": "fifwc-ury-cvi-2026-06-21-spread-home-1pt5",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.585,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R5 Time-to-resolution.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Cabo Verde'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.59; price now 0.58 (drift -0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $334,786; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "~0.0 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $2,071 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.58 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Haiti win on 2026-06-24?",
+      "outcome": "No",
+      "slug": "fifwc-mar-hai-2026-06-24-hai",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.945,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.91; price now 0.94 (drift +0.03). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $406,523; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~2.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,928 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.94 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Qatar win on 2026-06-24?",
+      "outcome": "No",
+      "slug": "fifwc-bih-qat-2026-06-24-qat",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.865,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.85; price now 0.86 (drift +0.02). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $339,904; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~2.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,710 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.86 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Cabo Verde win on 2026-06-21?",
+      "outcome": "No",
+      "slug": "fifwc-ury-cvi-2026-06-21-cvi",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.905,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R5 Time-to-resolution.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.89; price now 0.91 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $2,085,172; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "~0.0 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,699 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.91 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Bosnia and Herzegovina vs. Qatar: O/U 1.5",
+      "outcome": "Over",
+      "slug": "fifwc-bih-qat-2026-06-24-total-1pt5",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.805,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Over'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.79; price now 0.81 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $47,873; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~2.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,612 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.81 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Sweden win on 2026-06-25?",
+      "outcome": "No",
+      "slug": "fifwc-jpn-swe-2026-06-25-swe",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.775,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.74; price now 0.78 (drift +0.04). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $401,855; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~3.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,610 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.78 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Ghana win on 2026-06-27?",
+      "outcome": "No",
+      "slug": "fifwc-hrv-gha-2026-06-27-gha",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.845,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.85; price now 0.84 (drift -0.00). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $301,102; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~5.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,333 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.84 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will T\u00fcrkiye vs. United States end in a draw?",
+      "outcome": "Yes",
+      "slug": "fifwc-tur-usa-2026-06-25-draw",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.225,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Yes'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.22; price now 0.23 (drift +0.00). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $372,357; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~4.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,245 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.23 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Paraguay win on 2026-06-25?",
+      "outcome": "No",
+      "slug": "fifwc-par-aus-2026-06-25-par",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.665,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.60; price now 0.67 (drift +0.06). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $567,225; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~4.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,207 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.67 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will DR Congo win on 2026-06-27?",
+      "outcome": "Yes",
+      "slug": "fifwc-cdr-uzb-2026-06-27-cdr",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.465,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Yes'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.45; price now 0.47 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $290,931; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~5.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,043 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.47 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Ecuador vs. Germany: O/U 1.5",
+      "outcome": "Over",
+      "slug": "fifwc-ecu-ger-2026-06-25-total-1pt5",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.765,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Over'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.73; price now 0.77 (drift +0.03). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $61,546; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~3.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $1,020 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.77 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Spread: Scotland (-1.5)",
+      "outcome": "Brazil",
+      "slug": "fifwc-sco-bra-2026-06-24-spread-home-1pt5",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.969,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Brazil'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.96; price now 0.97 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $20,802; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~2.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $952 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.97 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Bosnia and Herzegovina win on 2026-06-24?",
+      "outcome": "Yes",
+      "slug": "fifwc-bih-qat-2026-06-24-bih",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.675,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Yes'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.61; price now 0.68 (drift +0.07). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $314,468; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~2.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $927 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.68 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Jordan win on 2026-06-22?",
+      "outcome": "No",
+      "slug": "fifwc-jor-alg-2026-06-22-jor",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.845,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.87; price now 0.84 (drift -0.03). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $626,823; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~1.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $897 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.84 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Norway vs. Senegal end in a draw?",
+      "outcome": "No",
+      "slug": "fifwc-nor-sen-2026-06-22-draw",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.725,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.73; price now 0.72 (drift -0.00). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $535,274; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~1.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $875 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.72 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Will Uzbekistan win on 2026-06-27?",
+      "outcome": "No",
+      "slug": "fifwc-cdr-uzb-2026-06-27-uzb",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.715,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R6 Signal recency.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'No'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.71; price now 0.71 (drift +0.01). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $314,810; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "~5.2 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 999.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $831 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.71 price. Cap per market at 5% regardless."
+        }
+      ]
+    },
+    {
+      "title": "Uruguay vs. Cabo Verde: O/U 1.5",
+      "outcome": "Under",
+      "slug": "fifwc-ury-cvi-2026-06-21-total-1pt5",
+      "recommendation": "AVOID",
+      "score": 83.0,
+      "price": 0.315,
+      "n_backers": 1,
+      "lead_score": 60.6,
+      "stake_frac": 0.0,
+      "summary": "Blocked by gating rule(s): R5 Time-to-resolution.",
+      "rules": [
+        {
+          "code": "R1",
+          "name": "Smart-money consensus",
+          "verdict": "WARN",
+          "gating": false,
+          "detail": "1 flagged wallet(s) hold 'Under'. Need >= 2 independent backers for consensus."
+        },
+        {
+          "code": "R2",
+          "name": "Lead-trader quality",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Top backer 0x7ea571c4\u2026 scores 61/100 (ELEVATED \u2014 notable edge). Threshold 45."
+        },
+        {
+          "code": "R3",
+          "name": "Edge still available",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Smart money entered as low as 0.28; price now 0.32 (drift +0.03). Above +0.12 means the move is likely already gone."
+        },
+        {
+          "code": "R4",
+          "name": "Liquidity",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Market liquidity $288,994; need >= $5,000 to enter and exit without excessive slippage."
+        },
+        {
+          "code": "R5",
+          "name": "Time-to-resolution",
+          "verdict": "FAIL",
+          "gating": true,
+          "detail": "~0.0 days to resolution. Window is [0.25, 120.0] days; too soon risks no fill, too far ties up capital."
+        },
+        {
+          "code": "R6",
+          "name": "Signal recency",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "Most recent smart-money entry was 0.0 days ago (max 14). Stale edges are usually priced in."
+        },
+        {
+          "code": "R7",
+          "name": "No smart contradiction",
+          "verdict": "PASS",
+          "gating": true,
+          "detail": "No comparably-skilled wallet is on the other side."
+        },
+        {
+          "code": "R8",
+          "name": "Capital commitment",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Backers committed $783 combined (min $500). Real size > lottery tickets."
+        },
+        {
+          "code": "R9",
+          "name": "Category competence",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "1/1 backer(s) have a demonstrated win record in this market's category. Edge tends to be domain-specific."
+        },
+        {
+          "code": "R10",
+          "name": "Suggested position size",
+          "verdict": "PASS",
+          "gating": false,
+          "detail": "Half-Kelly stake ~5.0% of bankroll, derived from the lead backer's edge and the 0.32 price. Cap per market at 5% regardless."
+        }
+      ]
+    }
+  ]
+}
