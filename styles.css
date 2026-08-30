@@ -618,6 +618,13 @@ nav {
     font-weight: 600;
 }
 
+.timeline-content h3 .role-qualifier {
+    font-size: 0.7em;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    letter-spacing: 0.3px;
+}
+
 .timeline-content h4 {
     color: var(--color-accent);
     font-weight: 600;
