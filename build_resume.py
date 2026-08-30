@@ -124,10 +124,10 @@ EXPERIENCE = [
         "date": "July 2026 – Present",
         "org": "Whole Foods Market, Bridgeport — Tigard, OR",
         "bullets": [
-            "Handle front-end tender in a high-volume flagship store — cash, card, and EBT — "
-            "counting and reconciling the drawer against the register report at every shift close",
-            "Resolve pricing discrepancies, returns, and customer escalations on the floor while "
-            "holding checkout throughput through peak grocery hours",
+            "Ring high-volume front-end transactions in a flagship-format store, handling cash and "
+            "card tender accurately at pace through peak grocery hours",
+            "Resolve pricing questions, returns, and customer escalations at the register, "
+            "escalating to the team lead when an issue exceeds register-level authority",
         ],
     },
     {
