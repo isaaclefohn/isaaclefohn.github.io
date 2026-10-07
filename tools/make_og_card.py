@@ -23,7 +23,7 @@ from PIL import Image, ImageDraw, ImageFont
 # Copy (no em dashes; keep in step with the hero, the footer and og:image:alt)
 NAME = "Isaac Lefohn"
 CREDENTIAL = "B.S. Finance · Oregon State University · Expected Dec 2027"
-ASK = "Seeking a Summer 2027 internship in wealth or asset management"
+ASK = "Seeking a Summer 2027 finance internship, especially in wealth and asset management"
 DOMAIN = "isaaclefohn.com"
 
 # Colours (contrast on NAVY: white 12.12, LIGHT 9.65, GOLD_TEXT 7.28)
