@@ -1,0 +1,21 @@
+{
+  "_about": "Frozen inputs for the April 23, 2026 BANR takeout memo. build_takeout.py uses this file by default so a rebuild reproduces the published figures exactly; pass --live to re-pull SEC EDGAR + Yahoo Finance data instead. Values match banr_takeout_analysis.xlsx as built on April 23, 2026.",
+  "as_of": "2026-04-23",
+  "memo_date": "April 23, 2026",
+  "revision_note": "Text and formatting revised October 2026; acquirer asset sizes corrected to each bank's SEC filings available on April 23, 2026. Valuation figures unchanged from April 23, 2026.",
+  "current_price": 67.76,
+  "market_cap": 2295376640,
+  "shares_out": 33875098,
+  "assets": 16354488000,
+  "total_equity": 1946297000,
+  "net_income": 195382000,
+  "goodwill": 373121000,
+  "intangibles": 0,
+  "other_intangibles_not_deducted": {
+    "value": 1491000,
+    "note": "EDGAR tag OtherIntangibleAssetsNet at 2025-12-31. The pipeline looks for IntangibleAssetsNetExcludingGoodwill, which Banner does not report, so this amount was not deducted (about $0.04 per share of TBV)."
+  },
+  "pe_trailing": 11.407408,
+  "standalone_target": 82.02,
+  "standalone_upside_pct": 21.1
+}

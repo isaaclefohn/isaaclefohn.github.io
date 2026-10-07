@@ -3,82 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Isaac Lefohn's finance projects: DCF valuation models, Python portfolio analysis, and sector research writeups.">
+    <title>Investment research by Isaac Lefohn</title>
+    <meta name="description" content="Investment research by Isaac Lefohn, a finance student at Oregon State University: a portfolio risk study, a BANR stock pitch and takeout cross-check, a Pacific Northwest bank comparison, and a Waste Management DCF.">
     <meta name="author" content="Isaac Lefohn">
-    <title>Projects | Isaac Lefohn</title>
     <link rel="canonical" href="https://isaaclefohn.com/projects.html">
 
-    <meta property="og:type" content="profile">
-    <meta property="og:title" content="Projects | Isaac Lefohn">
-    <meta property="og:description" content="Finance projects: valuation models, Python-based portfolio analysis, and regional bank sector research.">
+    <!-- Open Graph / link previews (iMessage reads og:title and og:image) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Investment research by Isaac Lefohn">
+    <meta property="og:description" content="Five published analyses: a portfolio risk study, a BANR stock pitch and takeout cross-check, a Pacific Northwest bank comparison, and a Waste Management DCF.">
     <meta property="og:url" content="https://isaaclefohn.com/projects.html">
     <meta property="og:site_name" content="Isaac Lefohn">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="https://isaaclefohn.com/og-card-2026-10.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Isaac Lefohn. B.S. Finance, Oregon State University, expected December 2027. Seeking a Summer 2027 internship in wealth or asset management.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://isaaclefohn.com/og-card-2026-10.png">
+    <meta name="twitter:image:alt" content="Isaac Lefohn. B.S. Finance, Oregon State University, expected December 2027. Seeking a Summer 2027 internship in wealth or asset management.">
 
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231a1a1a'/%3E%3Ctext x='32' y='44' font-family='-apple-system,sans-serif' font-size='32' font-weight='600' text-anchor='middle' fill='%23c5a572'%3EIL%3C/text%3E%3C/svg%3E">
-
-    <script>
-        (function() {
-            try {
-                var stored = localStorage.getItem('theme');
-                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.documentElement.setAttribute('data-theme', stored || (prefersDark ? 'dark' : 'light'));
-            } catch (e) {}
-        })();
-    </script>
+    <meta name="theme-color" content="#ffffff">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <script>try{if(localStorage.getItem('theme-2026')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
 </head>
 <body>
-    <a href="#main" class="skip-link">Skip to main content</a>
+<a class="skip-link" href="#main">Skip to main content</a>
+<header class="site-header"><div class="wrap">
+  <a class="wordmark" href="/">Isaac Lefohn</a>
+  <nav class="site-nav" aria-label="Primary"><ul>
+    <li><a href="/projects.html" aria-current="page">Research</a></li>
+    <li><a href="/experience.html">Experience</a></li>
+    <li><a href="/resume.html">Resume</a></li>
+    <li><a href="/contact.html">Contact</a></li>
+  </ul></nav>
+</div></header>
 
-    <nav aria-label="Primary">
-        <div class="nav-container">
-            <a href="index.html" class="logo">IL</a>
-            <div class="nav-right">
-                <ul class="nav-links" id="navLinks">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="experience.html">Experience</a></li>
-                    <li><a href="projects.html" class="active" aria-current="page">Projects</a></li>
-                    <li><a href="skills.html">Skills</a></li>
-                    <li><a href="resume.html">Resume</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-                <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle color theme" aria-pressed="false">
-                    <svg class="icon-sun" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-                    <svg class="icon-moon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                </button>
-                <button class="mobile-menu-btn" onclick="toggleMenu()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navLinks">&#9776;</button>
-            </div>
-        </div>
-    </nav>
+<main id="main">
+<div class="wrap">
 
-    <main id="main">
-        <div class="page-header">
-            <h1>Projects &amp; Case Studies</h1>
-            <p>Finance-focused work: valuation models, quantitative analysis, and sector research</p>
-        </div>
+    <header class="page-head">
+        <h1>Investment research</h1>
+        <p class="dek">Five analyses published in April 2026, each with its Excel workbook or PDF memo and the Python code behind it. Prices and market data are as of April 23, 2026 and have not been updated since.</p>
+        <ul class="toc" aria-label="Jump to a study">
+            <li><a href="#portfolio-analysis">Portfolio risk study</a></li>
+            <li><a href="#pnw-banks">Bank comparison</a></li>
+            <li><a href="#stock-pitch-banr">BANR pitch</a></li>
+            <li><a href="#banr-takeout">BANR takeout</a></li>
+            <li><a href="#dcf-wm">WM DCF</a></li>
+        </ul>
+    </header>
 
-        <div class="container">
-            <div id="project-grid" class="project-grid" aria-live="polite">
-                <!-- Projects render here from projects-data.js -->
-            </div>
+    <!-- STUDY TEMPLATE: copy this whole <article> to add a study. Keep the id equal to the
+         folder name under /projects/ (so /projects.html#<id> and the /projects/<id>/ stub work).
+         Reading order: question, result, caveat, files, chart, then Method (collapsed).
+         No em dashes. Every price, target, multiple or return needs its as-of date.
+         Set width/height on every <img>; only the first chart on the page skips loading="lazy". -->
 
-            <section class="cta-block fade-in" aria-labelledby="cta-heading">
-                <h3 id="cta-heading">Want to dig into any of these?</h3>
-                <p>Happy to walk through the modeling assumptions or share the underlying spreadsheet / notebook.</p>
-                <div class="cta-buttons">
-                    <a href="contact.html" class="btn btn-primary">Get in Touch</a>
-                    <a href="experience.html" class="btn btn-secondary">View Experience</a>
-                </div>
-            </section>
-        </div>
-    </main>
+    <!-- ===== Study 1: portfolio risk study ===== -->
+    <article class="study" id="portfolio-analysis" aria-labelledby="t-portfolio-analysis">
+        <header class="study-head">
+            <p class="kind">Portfolio risk study &middot; April 2026</p>
+            <h2 id="t-portfolio-analysis">Defensive stock portfolio vs. the S&amp;P 500, April 2021 to April 2026</h2>
+            <p class="dek"><strong>Question:</strong> Can five low-beta, dividend-paying stocks keep pace with the market while falling less in a downturn?</p>
+        </header>
+        <table class="result-table">
+            <caption class="visually-hidden">Defensive portfolio vs. S&amp;P 500 (SPY), April 2021 to April 2026</caption>
+            <thead><tr><th scope="col"><span class="visually-hidden">Metric</span></th>
+                       <th scope="col">Portfolio</th><th scope="col">S&amp;P 500 (SPY)</th></tr></thead>
+            <tbody>
+                <tr><th scope="row">Annual return (CAGR)</th><td>11.49%</td><td>11.75%</td></tr>
+                <tr class="hl"><th scope="row">Max drawdown <span class="hint">smaller loss is better</span></th><td>&minus;15.7%</td><td>&minus;24.5%</td></tr>
+                <tr><th scope="row">Volatility</th><td>12.5%</td><td>17.1%</td></tr>
+                <tr><th scope="row">Sharpe ratio <span class="hint">higher is better</span></th><td>0.58</td><td>0.44</td></tr>
+                <tr><th scope="row">Beta to S&amp;P 500</th><td>0.36</td><td>1.00</td></tr>
+            </tbody>
+        </table>
+        <p class="finding"><strong>Result:</strong> Nearly the same annual return (11.49% vs. 11.75%), a smaller worst fall (&minus;15.7% vs. &minus;24.5%), about 27% less volatility (12.5% vs. 17.1%).</p>
+        <p class="caveat"><strong>Caveat:</strong> The five names were chosen in 2026, knowing how they had held up, so this is a backtest with selection bias. It describes how this kind of portfolio behaved over one five-year window; it is not a forecast.</p>
+        <ul class="files" aria-label="Files for the portfolio study">
+            <li><a class="btn btn-secondary" href="/projects/portfolio-analysis/portfolio_metrics.xlsx">Excel output <span class="ft">.xlsx</span></a></li>
+            <li><a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/portfolio-analysis/analyze_portfolio.py" target="_blank" rel="noopener">Python code <span class="ft">GitHub</span><span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        </ul>
+        <figure class="figure">
+            <a href="/projects/portfolio-analysis/portfolio_summary.png"><img src="/projects/portfolio-analysis/portfolio_summary.png" width="1400" height="621" alt="Two charts, April 2021 to April 2026. Left: growth of one dollar, the portfolio and the S&amp;P 500 end close together. Right: drawdown from peak, the S&amp;P 500 falls to about &minus;24.5% in 2022 while the portfolio bottoms near &minus;15.7%."></a>
+            <figcaption>Growth of one dollar and drawdown from the running peak, April 2021 to April 2026. <span class="mobile-only">Tap the chart to enlarge.</span></figcaption>
+        </figure>
+        <details class="method">
+            <summary>Method and full write-up<span class="visually-hidden"> for the portfolio study</span></summary>
+            <p><strong>Approach:</strong> Daily adjusted closes from Yahoo Finance (April 1, 2021 to April 1, 2026), simple daily returns, and an equal 20% weight in each name (rebalanced daily, no optimization). Annualized on 252 trading days. Sharpe uses a 4.25% risk-free rate (10-year Treasury, the same rate used in the WM DCF). Beta is cov(stock, SPY) / var(SPY). Tickers and weights are set at the top of <code>analyze_portfolio.py</code>.</p>
+            <p class="small">Built with: Python (pandas, NumPy, yfinance, matplotlib), Excel</p>
+        </details>
+    </article>
 
-    <footer>
-        <p>&copy; 2026 Isaac Lefohn. All rights reserved.</p>
-    </footer>
+    <p class="label">Bank research series, April 2026</p>
 
-    <script src="projects-data.js"></script>
-    <script src="script.js"></script>
+    <!-- ===== Study 2: bank series, part 1 of 3 ===== -->
+    <article class="study" id="pnw-banks" aria-labelledby="t-pnw-banks">
+        <header class="study-head">
+            <p class="kind">Bank research series, part 1 of 3 &middot; Sector comparison &middot; April 2026</p>
+            <h2 id="t-pnw-banks">Pacific Northwest regional banks: Columbia, Banner and Heritage</h2>
+            <p class="dek"><strong>Question:</strong> Same region, different strategies: which balance sheet would I rather own?</p>
+        </header>
+        <dl class="kpis">
+            <div class="kpi"><dt>BANR ROE</dt><dd>10.04% <small>COLB 7.02%</small></dd></div>
+            <div class="kpi"><dt>BANR P/E</dt><dd>11.4&times; <small>lowest of three</small></dd></div>
+            <div class="kpi"><dt>BANR 5-year total return</dt><dd>+32.8% <small>KRE +11.7%</small></dd></div>
+            <div class="kpi"><dt>HFWA equity/assets</dt><dd>13.23% <small>highest; the defensive option</small></dd></div>
+        </dl>
+        <p class="asof">Market multiples as of April 23, 2026. Five-year total returns cover April 2021 to April 2026. Fundamentals are from each bank's most recent 10-K at the time.</p>
+        <p class="finding"><strong>Result:</strong> BANR stands out. It leads the group on every profitability measure in the table (ROA 1.19%, ROE 10.04%, estimated NIM 3.59%), has the lowest P/E of the three (11.4&times;), and returned +32.8% over five years vs. +11.7% for the KRE regional-bank ETF.</p>
+        <p class="caveat"><strong>Caveat:</strong> Estimated NIM is net interest income over total assets, an approximation.</p>
+        <ul class="files" aria-label="Files for the bank comparison">
+            <li><a class="btn btn-secondary" href="/projects/pnw-banks/pnw_banks_comp.xlsx">Comp table <span class="ft">.xlsx</span></a></li>
+            <li><a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/pnw-banks/build_comp_table.py" target="_blank" rel="noopener">Python code <span class="ft">GitHub</span><span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        </ul>
+        <figure class="figure">
+            <a href="/projects/pnw-banks/pnw_banks_summary.png"><img src="/projects/pnw-banks/pnw_banks_summary.png" width="1400" height="621" loading="lazy" alt="Two charts. Left: ROA, ROE and estimated NIM for COLB, BANR and HFWA, with BANR highest on all three (ROE 10.04%). Right: five-year total return, BANR +32.8%, KRE +11.7%, HFWA +10.6% and COLB &minus;18.0%."></a>
+            <figcaption>Profitability from each bank&rsquo;s most recent fiscal year, and growth of one dollar from April 2021 to April 2026. <span class="mobile-only">Tap the chart to enlarge.</span></figcaption>
+        </figure>
+        <details class="method">
+            <summary>Method and full write-up<span class="visually-hidden"> for the bank comparison</span></summary>
+            <p><strong>Setup:</strong> Three publicly traded banks with heavy Oregon and Washington exposure: Columbia Banking System (COLB, $66.8B in assets, post-Umpqua merger), Banner Corp (BANR, $16.4B), and Heritage Financial (HFWA, $7.0B, the highest equity/assets of the three). Same geography, different strategies.</p>
+            <p><strong>COLB</strong> is by far the largest, but it has the lowest ROE in the set (7.02%) and a &minus;18.0% five-year total return. The case for it depends on post-Umpqua cost savings showing up in earnings, which gets harder if NIM compresses.</p>
+            <p><strong>HFWA</strong> is the defensive option: the smallest by assets, but the highest equity/assets (13.23%) and the lowest beta (0.48). Its return tracked the benchmark (+10.6% vs. +11.7%). Not a growth story, but a capital cushion if commercial real estate credit weakens.</p>
+            <p><strong>Approach:</strong> Fundamentals come from SEC EDGAR's XBRL companyfacts API (<code>data.sec.gov</code>). Banks report the same item under different XBRL tags, so the script checks a list of fallback tags (<code>first_available()</code>). Market multiples come from Yahoo Finance via yfinance. Estimated NIM is net interest income divided by total assets, an approximation (true NIM uses average earning assets).</p>
+            <p class="small">Built with: Python (yfinance), SEC EDGAR XBRL API</p>
+        </details>
+    </article>
+
+    <!-- ===== Study 3: bank series, part 2 of 3 ===== -->
+    <article class="study" id="stock-pitch-banr" aria-labelledby="t-stock-pitch-banr">
+        <header class="study-head">
+            <p class="kind">Bank research series, part 2 of 3 &middot; Stock pitch &middot; April 2026</p>
+            <h2 id="t-stock-pitch-banr">Banner Corporation (BANR): long pitch memo</h2>
+            <p class="dek"><strong>Question:</strong> Is Banner priced below what its profitability supports?</p>
+        </header>
+        <p class="asof">Pitch dated April 23, 2026 at $67.76. Not updated since.</p>
+        <dl class="kpis">
+            <div class="kpi"><dt>Price target (BUY)</dt><dd>$82.02 <small>+21.1% from $67.76</small></dd></div>
+            <div class="kpi"><dt>Valuation</dt><dd>Average of 3 methods <small>peer P/E, normalized P/E, P/B</small></dd></div>
+            <div class="kpi"><dt>ROE</dt><dd>10.04% <small>highest of 3 peers</small></dd></div>
+            <div class="kpi"><dt>Dividend yield</dt><dd>3.09% <small>payout under 50% of trailing earnings</small></dd></div>
+        </dl>
+        <p class="finding"><strong>Thesis in one line:</strong> The market prices BANR like an average regional bank, but its ROE is 43% higher than COLB's while it trades at about a 12% lower P/E.</p>
+        <p class="caveat"><strong>What would break it:</strong> commercial real estate credit stress and deposit outflows.</p>
+        <ul class="files" aria-label="Files for the Banner pitch">
+            <li><a class="btn btn-secondary" href="/projects/stock-pitch-banr/banr_pitch.pdf">Pitch memo <span class="ft">PDF, 2 pages</span></a></li>
+            <li><a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/stock-pitch-banr/build_pitch.py" target="_blank" rel="noopener">Python code <span class="ft">GitHub</span><span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        </ul>
+        <figure class="figure">
+            <a href="/projects/stock-pitch-banr/banr_pitch_chart.png"><img src="/projects/stock-pitch-banr/banr_pitch_chart.png" width="1400" height="578" loading="lazy" alt="Two charts. Left: BANR five-year total return rebased to 100, finishing above the KRE regional-bank ETF. Right: trailing P/E for COLB, BANR and HFWA, with BANR lowest at 11.4&times;."></a>
+            <figcaption>Five-year total return from April 2021, and trailing P/E as of April 23, 2026. <span class="mobile-only">Tap the chart to enlarge.</span></figcaption>
+        </figure>
+        <details class="method">
+            <summary>Method and full write-up<span class="visually-hidden"> for the Banner pitch</span></summary>
+            <p><strong>Valuation, $82.02 target:</strong> (1) Peer P/E re-rate to 13.5&times; (COLB/HFWA average) &rarr; $80.26. (2) Normalized P/E (13.5x community-bank norm) &rarr; $80.19. (3) P/B re-rate to 1.5&times; for a 10%-ROE bank &rarr; $85.62. The target is the simple average of the three (+21.1% vs. $67.76). The two P/E methods use the same 13.5&times; multiple, so the price-to-book method and the separate takeout analysis are the real cross-checks.</p>
+            <p><strong>Four-part thesis:</strong> (1) Highest ROE of the three peers, yet the lowest P/E. (2) Lower execution risk: no major integration underway as of April 2026, compared with COLB's post-Umpqua merger. (3) Equity/assets of 11.9% supports the dividend and buybacks and gives a cushion if credit turns. (4) A 3.09% dividend yield, with a payout under 50% of trailing earnings, pays you while waiting for a re-rating.</p>
+            <p><strong>Risks &amp; mitigants:</strong> Commercial real estate stress (the main risk to watch; community-bank CRE lending has a different profile than big-bank office exposure), deposit outflow (loans were 84% of deposits at fiscal 2025, below COLB's 87%), regional-bank contagion (equity/assets of 11.9%, a thicker capital cushion than the banks that failed in 2023), and NIM compression (it would hit peers too, so BANR's relative position holds).</p>
+            <p><strong>Approach:</strong> The memo follows a standard pitch format: recommendation box (rating, target, upside), situation, numbered thesis, catalysts, valuation table, risks and mitigants, peer metrics, and bottom line. Fundamentals come from SEC EDGAR XBRL filings and market data from Yahoo Finance, using the same code as the Pacific Northwest bank comparison. <code>build_pitch.py</code> lays out the PDF with ReportLab.</p>
+            <p class="small">Prices as of April 23, 2026. Five-year total returns cover April 2021 to April 2026. Fundamentals are from Banner's most recent 10-K at the time.</p>
+            <p class="small">Built with: Python (ReportLab), SEC EDGAR XBRL API</p>
+        </details>
+    </article>
+
+    <!-- ===== Study 4: bank series, part 3 of 3 ===== -->
+    <article class="study" id="banr-takeout" aria-labelledby="t-banr-takeout">
+        <header class="study-head">
+            <p class="kind">Bank research series, part 3 of 3 &middot; Valuation cross-check &middot; April 2026</p>
+            <h2 id="t-banr-takeout">Banner Corporation: takeover-value cross-check</h2>
+            <p class="dek"><strong>Question:</strong> What would a bank acquirer plausibly pay, and does that support my own $82.02 target?</p>
+        </header>
+        <dl class="kpis">
+            <div class="kpi"><dt>P/TBV at pitch (April 23, 2026)</dt><dd>1.46&times;</dd></div>
+            <div class="kpi"><dt>Base-case takeout (1.55&times;)</dt><dd>$71.98</dd></div>
+            <div class="kpi"><dt>Strategic premium (1.80&times;)</dt><dd>$83.59</dd></div>
+            <div class="kpi"><dt>Standalone target</dt><dd>$82.02</dd></div>
+        </dl>
+        <p class="asof">Prices as of April 23, 2026. Tangible equity is from Banner's most recent 10-K at the time; shares outstanding are from Yahoo Finance.</p>
+        <p class="finding"><strong>Result:</strong> Only the strategic-premium case reaches the target, so a takeover is optionality, not extra upside.</p>
+        <p class="caveat"><strong>Caveat:</strong> A framework exercise using general industry multiples. No deal is announced or rumored.</p>
+        <ul class="files" aria-label="Files for the Banner takeover cross-check">
+            <li><a class="btn btn-secondary" href="/projects/banr-takeout/banr_takeout_memo.pdf">Deal memo <span class="ft">PDF</span></a></li>
+            <li><a href="/projects/banr-takeout/banr_takeout_analysis.xlsx">Excel workbook <span class="ft">.xlsx</span></a></li>
+            <li><a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/banr-takeout/build_takeout.py" target="_blank" rel="noopener">Python code <span class="ft">GitHub</span><span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        </ul>
+        <figure class="figure">
+            <a href="/projects/banr-takeout/banr_takeout_chart.png"><img src="/projects/banr-takeout/banr_takeout_chart.png" width="1400" height="653" loading="lazy" alt="Football-field chart of implied takeout prices at four P/TBV multiples: $55.73 at 1.20&times;, $62.69 at 1.35&times;, $71.98 at 1.55&times; and $83.59 at 1.80&times;, against the $67.76 price on April 23, 2026."></a>
+            <figcaption>Takeover multiples applied to tangible book value of $46.44 per share. Price as of April 23, 2026. <span class="mobile-only">Tap the chart to enlarge.</span></figcaption>
+        </figure>
+        <details class="method">
+            <summary>Method and full write-up<span class="visually-hidden"> for the Banner takeover cross-check</span></summary>
+            <p><strong>Why this exists:</strong> The BANR pitch reaches its $82.02 target with peer P/E, normalized P/E, and price-to-book. This memo asks a different question: what would a strategic acquirer plausibly pay? Price to tangible book value (P/TBV) is the standard bank-M&amp;A yardstick, so it tests the target from a franchise-value angle instead of an earnings angle.</p>
+            <p><strong>Finding, convergence rather than extra upside:</strong> BANR already trades at 1.46&times; P/TBV, above the routine-deal multiple used here (1.35&times;), so the market already prices in some takeover value. The base-case takeout of $71.98 is below the $82.02 standalone target. Only the strategic-premium scenario ($83.59) lines up with the long thesis. Takeaway: a takeover is optionality, not extra upside on top of the pitch.</p>
+            <p><strong>Why BANR could be a target:</strong> (1) Size: $16.4B in assets, large enough to matter and small enough for a regional acquirer to absorb. (2) Franchise: a Washington, Oregon, California, and Idaho community-banking footprint that would be hard to replicate quickly. (3) Profitability: 10.04% ROE and 1.19% ROA, the highest of the three Pacific Northwest peers in the comparison. (4) Capital: equity/assets of 11.9%.</p>
+            <p><strong>Plausible acquirers (illustrative):</strong> GBCI (Glacier Bancorp: Mountain West and Northwest community-bank focus, grows through acquisitions), ZION (Zions: western regional with a relatively small Oregon/Washington presence), FIBK (First Interstate: recent Great Western acquisition), and WAFD (WaFd Bank: recent Luther Burbank acquisition, neighboring footprint). None reflects any actual or reported interest.</p>
+            <p><strong>Approach:</strong> BANR fundamentals come from SEC EDGAR XBRL, using the same code as the Pacific Northwest bank comparison. Goodwill ($373M) is subtracted from equity to get tangible equity, which is divided by shares outstanding for TBV per share. Banner's $1.5M of other intangibles was not deducted (about $0.04 per share). The four P/TBV scenarios (1.20&times;, 1.35&times;, 1.55&times;, 1.80&times;) are general industry ranges for community-bank deals, not multiples from specific comparable transactions. Outputs: a football-field chart (matplotlib), a three-sheet workbook (summary, acquirers, methodology), and a two-page deal memo PDF (ReportLab).</p>
+            <p><strong>Caveats:</strong> This is a framework exercise, not a deal prediction; no transaction is announced or rumored. Bank Holding Company Act control rules make private-equity buyouts of banks rare, which is why it looks only at bank acquirers. Acquirer accretion/dilution is not modeled; that would require the acquirer's financials, purchase accounting, synergies, and financing mix.</p>
+            <p class="small">Built with: Python (matplotlib, ReportLab), SEC EDGAR XBRL API</p>
+        </details>
+    </article>
+
+    <!-- ===== Study 5: DCF ===== -->
+    <article class="study" id="dcf-wm" aria-labelledby="t-dcf-wm">
+        <header class="study-head">
+            <p class="kind">DCF valuation &middot; April 2026</p>
+            <h2 id="t-dcf-wm">Waste Management: five-year DCF valuation</h2>
+            <p class="dek"><strong>Question:</strong> What is a steady, low-beta business worth on its cash flows alone?</p>
+        </header>
+        <dl class="kpis">
+            <div class="kpi"><dt>Model value</dt><dd>$122.72 <small>base case</small></dd></div>
+            <div class="kpi"><dt>Market price (April 2026)</dt><dd>$232.80</dd></div>
+            <div class="kpi"><dt>WACC</dt><dd>6.58%</dd></div>
+            <div class="kpi"><dt>Terminal growth</dt><dd>2.50%</dd></div>
+        </dl>
+        <p class="asof">Market price as used in the model, April 2026.</p>
+        <p class="finding"><strong>Result:</strong> The base case comes out about 47% below the market price. No cell in the sensitivity grid (WACC 6.0% to 7.6%, terminal growth 2.0% to 3.3%) reaches the market price; the highest is about $208, at a 6.0% WACC and 3.3% growth.</p>
+        <p class="caveat"><strong>Caveat:</strong> The gap reads less as a sell signal than as the market paying for qualities a mechanical DCF doesn't capture, like low beta and recession-resistant demand.</p>
+        <ul class="files" aria-label="Files for the Waste Management DCF">
+            <li><a class="btn btn-secondary" href="/projects/dcf-wm/wm_dcf_model.xlsx">Excel model <span class="ft">.xlsx</span></a></li>
+            <li><a href="https://github.com/isaaclefohn/isaaclefohn.github.io/blob/main/projects/dcf-wm/build_model.py" target="_blank" rel="noopener">Python code <span class="ft">GitHub</span><span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        </ul>
+        <figure class="figure">
+            <a href="/projects/dcf-wm/wm_dcf_summary.png"><img src="/projects/dcf-wm/wm_dcf_summary.png" width="1400" height="620" loading="lazy" alt="Two charts. Left: free cash flow to the firm, four reported years and five projected years. Right: implied share price across WACC from 6.0% to 7.6% and terminal growth from 2.0% to 3.3%; the highest cell, about $208, is still below the $232.80 market price."></a>
+            <figcaption>Free cash flow to the firm, and the WACC by terminal-growth sensitivity grid. Market price April 2026. <span class="mobile-only">Tap the chart to enlarge.</span></figcaption>
+        </figure>
+        <details class="method">
+            <summary>Method and full write-up<span class="visually-hidden"> for the Waste Management DCF</span></summary>
+            <p><strong>Why WM:</strong> Waste Management is a steady, capital-intensive business with a low beta (0.55) and contract pricing that is often tied to inflation. That keeps the focus on valuation mechanics rather than on forecasting volatile revenue.</p>
+            <p><strong>Approach:</strong> Four years of reported financials (FY2022 to FY2025, from WM's 10-K data via Yahoo Finance) as the base. Revenue growth fades from 8% to 5% (Stericycle acquisition tailwind early on), and EBIT margin expands 130 bps, from 17.2% to 18.5%. WACC comes from CAPM (risk-free 4.25%, equity risk premium 5.5%, beta 0.55) plus an after-tax cost of debt, and terminal value uses the Gordon growth model at 2.5%. All drivers sit on one Assumptions tab, so any input can be changed in Excel.</p>
+            <p class="small">Built with: Python, Excel</p>
+        </details>
+    </article>
+
+    <p class="research-note">Independent student research for learning purposes. Not investment advice or a recommendation to buy or sell any security. I am not a licensed financial professional. Data from SEC EDGAR filings and Yahoo Finance as of the dates shown.</p>
+
+</div>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <p class="footer-ask">Seeking a Summer 2027 internship in wealth or asset management.</p>
+  <nav class="footer-links" aria-label="Contact"><ul>
+    <li><a href="mailto:kiwilefohn@gmail.com?subject=Summer%202027%20internship">Email</a></li>
+    <li><a href="tel:+15038477976">Call (503) 847-7976</a></li>
+    <li><a href="sms:+15038477976">Text</a></li>
+    <li><a href="https://www.linkedin.com/in/isaac-lefohn-472a152b0" target="_blank" rel="noopener">LinkedIn<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+    <li><a href="/Isaac_Lefohn_Resume.pdf">Resume (PDF)</a></li>
+  </ul></nav>
+  <p class="small">&copy; 2026 Isaac Lefohn &middot; Updated October 2026
+    <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" hidden>Dark theme</button></p>
+</div></footer>
+<script src="/script.js" defer></script>
 </body>
 </html>

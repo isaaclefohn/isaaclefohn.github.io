@@ -1,0 +1,17 @@
+# GitHub Pages (Jekyll) build settings for isaaclefohn.com.
+# The site is plain HTML/CSS/JS; this file only keeps internal files off the site.
+#
+# - Markdown notes are never published (they would otherwise render as public pages).
+# - Python build scripts stay in the repo (the "View Python source" links point to
+#   github.com, not to this site) but are not served from isaaclefohn.com.
+exclude:
+  - "*.md"
+  - "*.py"
+  - "__pycache__/"
+  # Build tools (e.g. tools/make_og_card.py, which draws og-card-2026-10.png,
+  # favicon.ico and apple-touch-icon.png) stay in the repo but are not served.
+  - "tools/"
+  # Frozen build inputs for the BANR memos: the build scripts read these from the
+  # repo; they are not meant to be browsed on the site.
+  - "projects/stock-pitch-banr/pinned_inputs_2026-04-23.json"
+  - "projects/banr-takeout/pinned_inputs_2026-04-23.json"

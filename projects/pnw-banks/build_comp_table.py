@@ -3,7 +3,7 @@ Pacific Northwest Regional Banks — Trading Multiples & Balance Sheet Comp Tabl
 
 Three publicly-traded regional banks with heavy Oregon/Washington exposure:
   COLB — Columbia Banking System (parent of Umpqua Bank post-Feb 2023 merger)
-  BANR — Banner Financial (Banner Bank)
+  BANR — Banner Corporation (Banner Bank)
   HFWA — Heritage Financial (Heritage Bank)
 
 Data sources (all free, no auth):
@@ -67,12 +67,19 @@ def latest_annual(facts, tag, unit="USD"):
 
 
 def first_available(facts, tags, unit="USD"):
-    """Try multiple tag names — banks use different XBRL conventions. First hit wins."""
+    """Try multiple tag names — banks use different XBRL conventions.
+
+    The MOST RECENT fiscal year wins, not the first tag in the list: banks switch
+    tags over time, and an abandoned tag still returns its last (stale) year. Taking
+    the first hit paired FY2023 BANR loans and FY2020 HFWA loans with FY2025 deposits
+    (fixed October 2026). Ties on the period end go to the earlier tag in the list.
+    """
+    best = None
     for t in tags:
         v = latest_annual(facts, t, unit)
-        if v is not None:
-            return v, t
-    return None, None
+        if v is not None and (best is None or v["end"] > best[0]["end"]):
+            best = (v, t)
+    return best or (None, None)
 
 
 # ---- Per-bank data extraction ----------------------------------------------
@@ -90,7 +97,9 @@ def extract_fundamentals(cik):
     loans, loans_tag = first_available(f, [
         "LoansAndLeasesReceivableNetReportedAmount",
         "LoansAndLeasesReceivableNetOfDeferredIncome",
-        "FinancingReceivableAfterAllowanceForCreditLossExcludingAccruedInterest",
+        # Current tags (2023+): COLB and HFWA use the first, BANR the second.
+        "FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss",
+        "NotesReceivableNet",
         "LoansReceivableNet",
     ])
 
